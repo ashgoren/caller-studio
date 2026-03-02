@@ -13,9 +13,9 @@ export type FormationRow = Tables['formations']['Row'];
 export type ProgressionRow = Tables['progressions']['Row'];
 
 export type FigureItem = {
+  id: string;
   phrase: string;
   beats: number | null;
-  order: number;
   description: string;
 };
 

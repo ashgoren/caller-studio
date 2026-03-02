@@ -22,7 +22,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
   const figuresLabel = [
     dance.dance_type?.name?.toLowerCase() !== 'contra' ? dance.dance_type?.name : null,
     dance.formation?.name,
-    dance.progression?.name?.toLowerCase() !== 'single' ? `${dance.progression?.name} progression` : null,
+    dance.progression?.name && dance.progression.name.toLowerCase() !== 'single' ? `${dance.progression?.name} progression` : null,
   ].filter(Boolean).join(' · ');
 
   return (
@@ -81,7 +81,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
               {dance.figures.map((figure, i) => {
                 const isNewPhrase = i === 0 || figure.phrase !== dance.figures[i - 1].phrase;
                 return (
-                  <Box key={i} sx={{ display: 'flex', gap: 2, mt: isNewPhrase && i > 0 ? 2 : 0.5 }}>
+                  <Box key={figure.id} sx={{ display: 'flex', gap: 2, mt: isNewPhrase && i > 0 ? 2 : 0.5 }}>
                     <Typography sx={{
                       width: 28, flexShrink: 0,
                       fontWeight: 700, fontSize: '0.8rem',

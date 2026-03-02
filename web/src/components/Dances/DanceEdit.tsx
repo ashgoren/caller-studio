@@ -293,6 +293,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
             onAdd={pendingFigures.addFigure}
             onUpdate={pendingFigures.updateFigure}
             onDelete={pendingFigures.deleteFigure}
+            onReorder={pendingFigures.reorderFigures}
           />
           <TextField
             label='Notes'
