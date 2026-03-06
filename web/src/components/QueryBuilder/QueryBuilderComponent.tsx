@@ -7,7 +7,9 @@ import { ModeToggle } from './ModeToggle';
 import { VisualQueryBuilder } from './VisualQueryBuilder';
 import { SQLEditor } from './SQLEditor';
 import { removeEmptyRules } from './utils';
+import { FigureFilterSection } from '@/components/FigureFilter/FigureFilterSection';
 import type { Field, RuleGroupType } from 'react-querybuilder';
+import type { FigureFilterState } from '@/lib/types/figureFilter';
 
 type QueryMode = 'visual' | 'sql';
 
@@ -18,9 +20,11 @@ type QueryBuilderComponentProps = {
   onQueryChange: (query: RuleGroupType) => void;
   filterOpen: boolean;
   setFilterOpen: (open: boolean) => void;
+  figureFilter?: FigureFilterState;
+  onFigureFilterChange?: (state: FigureFilterState) => void;
 };
 
-export const QueryBuilderComponent = ({ fields, defaultQuery, query, onQueryChange, filterOpen, setFilterOpen }: QueryBuilderComponentProps) => {
+export const QueryBuilderComponent = ({ fields, defaultQuery, query, onQueryChange, filterOpen, setFilterOpen, figureFilter, onFigureFilterChange }: QueryBuilderComponentProps) => {
   const [mode, setMode] = useState<QueryMode>('visual');
   const [sqlText, setSqlText] = useState('');
   const [sqlError, setSqlError] = useState<string | null>(null);
@@ -67,6 +71,10 @@ export const QueryBuilderComponent = ({ fields, defaultQuery, query, onQueryChan
           <VisualQueryBuilder fields={fields} query={query} onQueryChange={onQueryChange} />
         :
           <SQLEditor sqlText={sqlText} setSqlText={setSqlText} sqlError={sqlError} applySql={applySql} />
+        }
+
+        {figureFilter && onFigureFilterChange &&
+          <FigureFilterSection state={figureFilter} onChange={onFigureFilterChange} />
         }
       </Paper>
     </Collapse>

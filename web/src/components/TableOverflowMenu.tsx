@@ -33,6 +33,7 @@ export const TableOverflowMenu = ({ model, onClearFilters }: {
       cancellationText: 'Cancel',
     });
     if (!confirmed) return;
+    if (model === 'dance') clearPersistence('dance_figure_filter');
     clearPersistence(`mrt_${model}`);
     window.location.reload();
   };
