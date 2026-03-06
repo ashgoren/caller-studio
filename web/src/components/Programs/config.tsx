@@ -1,3 +1,5 @@
+import { newFieldRule } from '@/lib/fieldFilter';
+import type { FilterGroup } from '@/lib/types/fieldFilter';
 import { RelationCell } from '@/components/RelationCell';
 import { formatLocalDate } from '@/lib/utils';
 import type { MRT_ColumnDef } from 'material-react-table';
@@ -60,9 +62,10 @@ export const queryFields = [
   { name: 'danceNames', label: 'Dances', inputType: 'string' },
 ];
 
-export const defaultQuery = {
+export const defaultQuery: FilterGroup = {
+  id: 'root',
   combinator: 'and',
-  rules: []
+  rules: [newFieldRule()]
 };
 
 

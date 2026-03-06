@@ -1,4 +1,5 @@
-import { formatQuery, type RuleGroupType, type RuleType } from 'react-querybuilder';
+import { isFilterGroup, isFigureRule } from '@/lib/fieldFilter';
+import type { FilterGroup, FilterRule, FieldRule, FigureRule } from '@/lib/types/fieldFilter';
 
 const resolveFieldValue = (row: any, field: string): any => {
   const value = row[field];
@@ -11,7 +12,17 @@ const resolveFieldValue = (row: any, field: string): any => {
   return value;
 };
 
-const evaluateRule = (row: any, rule: RuleType): boolean => {
+const evaluateFigureRule = (row: any, rule: FigureRule): boolean => {
+  const figures = row.figures ?? [];
+  return figures.some((f: any) => {
+    if (rule.phrase && f.phrase !== rule.phrase) return false;
+    if (rule.beats !== null && f.beats !== rule.beats) return false;
+    if (rule.description && !f.description?.toLowerCase().includes(rule.description.toLowerCase())) return false;
+    return true;
+  });
+};
+
+const evaluateFieldRule = (row: any, rule: FieldRule): boolean => {
   const { field, operator, value: filterValue } = rule;
   const value = resolveFieldValue(row, field);
 
@@ -104,18 +115,23 @@ const evaluateRule = (row: any, rule: RuleType): boolean => {
   }
 };
 
-export const evaluateQuery = (row: any, query: RuleGroupType): boolean => {
+const evaluateRule = (row: any, rule: FilterRule): boolean => {
+  if (isFigureRule(rule)) return evaluateFigureRule(row, rule);
+  return evaluateFieldRule(row, rule as FieldRule);
+};
+
+export const evaluateQuery = (row: any, query: FilterGroup): boolean => {
   try {
     const { combinator, rules } = query;
     if (!rules.length) return true;
 
     const results = rules.map((rule) =>
-      'combinator' in rule ? evaluateQuery(row, rule) : evaluateRule(row, rule)
+      isFilterGroup(rule) ? evaluateQuery(row, rule) : evaluateRule(row, rule)
     );
 
     return combinator === 'and' ? results.every(Boolean) : results.some(Boolean);
   } catch (error) {
-    console.error(`Error evaluating query ${formatQuery(query, 'sql')}:`, error);
+    console.error(`Error evaluating query ${JSON.stringify(query)}:`, error);
     return true;
   }
 };

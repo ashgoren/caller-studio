@@ -223,6 +223,8 @@ export const useDeleteVenue = () => { ... };
 #### 4. Config — `src/components/Venues/config.tsx`
 
 ```typescript
+import { newFieldRule } from '@/lib/types/fieldFilter';
+import type { FilterGroup } from '@/lib/types/fieldFilter';
 import type { MRT_ColumnDef } from 'material-react-table';
 import type { Venue, VenueInsert } from '@/lib/types/database';
 
@@ -247,9 +249,10 @@ export const queryFields = [
   { name: 'location', label: 'Location', inputType: 'string' },
 ];
 
-export const defaultQuery = {
+export const defaultQuery: FilterGroup = {
+  id: 'root',
   combinator: 'and',
-  rules: [{ field: 'name', operator: 'contains', value: '' }],
+  rules: [newFieldRule()],
 };
 ```
 
@@ -369,11 +372,9 @@ export const Venues = () => {
 
       <QueryBuilderComponent
         fields={queryFields}
-        defaultQuery={defaultQuery}
         query={query}
         onQueryChange={setQuery}
         filterOpen={filterOpen}
-        setFilterOpen={setFilterOpen}
       />
 
       <MaterialReactTable table={table} />
@@ -781,7 +782,7 @@ No settings page, no routing changes, no realtime sync changes needed.
 
 ### Adding a Computed Field for Query Builder Filtering
 
-The query evaluator (`src/components/QueryBuilder/queryEvaluator.ts`) resolves field values from the dance row before applying filter operators. It has two resolution strategies:
+The query evaluator (`src/components/QueryBuilder/queryEvaluator.ts`) resolves field values from the dance row before applying filter operators. It has two resolution strategies for `FieldRule`, plus a separate path for `FigureRule`.
 
 **Automatic — FK lookup objects with a `.name` property:**
 Fields like `formation`, `dance_type`, `progression` resolve automatically. `row['formation']` returns `{ id, name, sort_order }`, and the evaluator extracts `.name`. No evaluator changes needed when adding a new FK lookup field — just add it to `queryFields` using the relation alias name (e.g. `'formation'`, not `'formation_id'`).
@@ -796,6 +797,9 @@ choreographerNames: sortedChoreographers.map(dc => dc.choreographer.name).join('
 // In config.tsx queryFields — must use the same string:
 { name: 'choreographerNames', label: 'Choreographers', inputType: 'string' },
 ```
+
+**Figure rules (Dances only):**
+`FigureRule` is a special rule type (not a `queryFields` entry) that matches against `row.figures`. It is enabled per-page via `showFigures` on `QueryBuilderComponent`. The evaluator checks whether any figure in the array satisfies all non-empty criteria (phrase, beats, description). No `queryFields` entry is needed — the Figures option appears automatically in the field selector dropdown when `showFigures` is set.
 
 ---
 

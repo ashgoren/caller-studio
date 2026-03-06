@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Fab, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router';
@@ -12,8 +12,6 @@ import { TableOverflowMenu } from '@/components/TableOverflowMenu';
 import { Spinner, ErrorMessage } from '@/components/shared';
 import { queryFields, defaultQuery, columns, tableInitialState } from './config';
 import { useDances } from '@/hooks/useDances';
-import { useFigureFilter } from '@/hooks/useFigureFilter';
-import { evaluateFigureFilter } from '@/components/FigureFilter/figureFilterEvaluator';
 import type { Dance } from '@/lib/types/database';
 
 export const Dances = () => {
@@ -23,27 +21,20 @@ export const Dances = () => {
   const navigate = useNavigate();
 
   const { data, error, isLoading } = useDances();
-  const { figureFilter, setFigureFilter, clearFigureFilter, activeRuleCount: figureActiveRuleCount } = useFigureFilter();
-
-  const filteredData = useMemo(
-    () => (data ?? []).filter(dance => evaluateFigureFilter(dance.figures, figureFilter)),
-    [data, figureFilter]
-  );
 
   const { table, query, setQuery } = useTable<Dance>({
     model: 'dance',
-    data: filteredData,
+    data,
     columns,
     defaultQuery,
     tableInitialState,
     onRowClick: (row) => navigate(`/dances/${row.id}`)
   });
 
-  const [filterOpen, setFilterOpen] = useState(countActiveRules(query.rules) + figureActiveRuleCount > 0);
+  const [filterOpen, setFilterOpen] = useState(countActiveRules(query.rules) > 0);
 
   const onClearFilters = () => {
     setQuery(defaultQuery);
-    clearFigureFilter();
     setFilterOpen(false);
   };
 
@@ -55,7 +46,7 @@ export const Dances = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <FilterButton
           onClick={() => setFilterOpen(prev => !prev)}
-          activeRuleCount={countActiveRules(query.rules) + figureActiveRuleCount}
+          activeRuleCount={countActiveRules(query.rules)}
         />
         <TableOverflowMenu
           model='dance'
@@ -68,8 +59,7 @@ export const Dances = () => {
         query={query}
         onQueryChange={setQuery}
         filterOpen={filterOpen}
-        figureFilter={figureFilter}
-        onFigureFilterChange={setFigureFilter}
+        showFigures
       />
 
       <MaterialReactTable table={table} />
