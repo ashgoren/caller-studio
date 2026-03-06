@@ -1,18 +1,12 @@
 import { useState } from 'react';
-import { Box, IconButton, Menu, MenuItem } from '@mui/material';
+import { IconButton, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useConfirm } from 'material-ui-confirm';
-import { FilterButton } from '@/components/QueryBuilder/FilterButton';
-import { countActiveRules } from '@/components/QueryBuilder/utils';
 import { clearPersistence } from '@/hooks/usePersistence';
-import type { RuleGroupType } from 'react-querybuilder';
-import type { Dispatch, SetStateAction } from 'react';
 import type { Model } from '@/lib/types/database';
 
-export const TableControls = ({ model, query, setFilterOpen, onClearFilters }: {
+export const TableOverflowMenu = ({ model, onClearFilters }: {
   model: Model;
-  query: RuleGroupType;
-  setFilterOpen: Dispatch<SetStateAction<boolean>>;
   onClearFilters: () => void;
 }) => {
   const confirm = useConfirm();
@@ -44,20 +38,14 @@ export const TableControls = ({ model, query, setFilterOpen, onClearFilters }: {
   };
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-      <FilterButton
-        onClick={() => setFilterOpen((prev: boolean) => !prev)}
-        activeRuleCount={countActiveRules(query.rules)}
-      />
-
+    <>
       <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)}>
         <MoreVertIcon />
       </IconButton>
-
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
         <MenuItem onClick={handleClearFilters}>Clear filters</MenuItem>
         <MenuItem onClick={handleClearState}>Clear all state</MenuItem>
       </Menu>
-    </Box>
+    </>
   );
 };

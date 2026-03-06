@@ -23,7 +23,7 @@ Supabase → src/hooks/ → Components
 
 - **`src/hooks/`** — TanStack Query v5 wrappers with Supabase calls inlined. Handle CRUD, caching, and invalidation. Primary models eager-load relations via `.select('*, relation(*)')`. Auxiliary tables use lightweight selects (junction IDs only for delete-guarding).
 - **`src/components/{Entity}/config.tsx`** — Column definitions for Material React Table, default form values (`newRecord`), query builder config.
-- **`TablePage`** — Generic wrapper connecting a data hook + column config to Material React Table. Used by primary models (Dances, Programs).
+- **`src/components/{Entity}/{Entity}s.tsx`** — Self-contained table page for primary models. Composes `useTable`, `QueryBuilderComponent`, `MaterialReactTable`, `FilterButton`, and `TableOverflowMenu` directly. Each model owns its own table page to allow model-specific filtering and controls.
 - **`src/components/{Entity}/{Entity}Page.tsx`** — Routing wrapper: loads record, manages view/edit toggle. Create mode handled via `id === 'new'`.
 - **`src/components/{Entity}/{Entity}View.tsx`** — View mode with explicit JSX. Owns delete flow.
 - **`src/components/{Entity}/{Entity}Edit.tsx`** — Edit/create form with explicit fields. Guards unsaved changes via `useBlocker` + `beforeunload`.
@@ -312,10 +312,21 @@ navigate('/venues');
 
 #### 8. Table Component — `src/components/Venues/Venues.tsx`
 
+Use `Dances.tsx` as the reference implementation. The pattern: call the data hook, pass data to `useTable`, manage `filterOpen` state, compose the controls bar + filter panel + table + FAB directly.
+
 ```typescript
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { Box, Fab, Tooltip } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { useNavigate } from 'react-router';
+import { useTable } from '@/hooks/useTable';
 import { useTitle } from '@/contexts/TitleContext';
-import { TablePage } from '@/components/TablePage';
+import { MaterialReactTable } from 'material-react-table';
+import { FilterButton } from '@/components/QueryBuilder/FilterButton';
+import { countActiveRules } from '@/components/QueryBuilder/utils';
+import { QueryBuilderComponent } from '@/components/QueryBuilder';
+import { TableOverflowMenu } from '@/components/TableOverflowMenu';
+import { Spinner, ErrorMessage } from '@/components/shared';
 import { useVenues } from '@/hooks/useVenues';
 import { columns, queryFields, defaultQuery, tableInitialState } from './config';
 import type { Venue } from '@/lib/types/database';
@@ -323,15 +334,60 @@ import type { Venue } from '@/lib/types/database';
 export const Venues = () => {
   const { setTitle } = useTitle();
   useEffect(() => setTitle('Venues'), [setTitle]);
+
+  const navigate = useNavigate();
+
+  const { data, error, isLoading } = useVenues();
+  const { table, query, setQuery } = useTable<Venue>({
+    model: 'venue',
+    data,
+    columns,
+    defaultQuery,
+    tableInitialState,
+    onRowClick: (row) => navigate(`/venues/${row.id}`),
+  });
+
+  const [filterOpen, setFilterOpen] = useState(countActiveRules(query.rules) > 0);
+
+  const onClearFilters = () => {
+    setQuery(defaultQuery);
+    setFilterOpen(false);
+  };
+
+  if (isLoading) return <Spinner />;
+  if (error) return <ErrorMessage error={error} />;
+
   return (
-    <TablePage<Venue>
-      model='venue'
-      useData={useVenues}
-      columns={columns}
-      queryFields={queryFields}
-      defaultQuery={defaultQuery}
-      tableInitialState={tableInitialState}
-    />
+    <>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <FilterButton
+          onClick={() => setFilterOpen(prev => !prev)}
+          activeRuleCount={countActiveRules(query.rules)}
+        />
+        <TableOverflowMenu model='venue' onClearFilters={onClearFilters} />
+      </Box>
+
+      <QueryBuilderComponent
+        fields={queryFields}
+        defaultQuery={defaultQuery}
+        query={query}
+        onQueryChange={setQuery}
+        filterOpen={filterOpen}
+        setFilterOpen={setFilterOpen}
+      />
+
+      <MaterialReactTable table={table} />
+
+      <Tooltip title='Add venue' placement='left'>
+        <Fab
+          color='secondary'
+          onClick={() => navigate('/venues/new')}
+          sx={{ position: 'fixed', bottom: 32, right: 32 }}
+        >
+          <AddIcon />
+        </Fab>
+      </Tooltip>
+    </>
   );
 };
 ```
@@ -760,7 +816,9 @@ choreographerNames: sortedChoreographers.map(dc => dc.choreographer.name).join('
 | Hook: localStorage persistence | `src/hooks/usePersistence.ts` |
 | Hook: Toast notifications | `src/hooks/useNotify.tsx` |
 | Hook: Realtime sync | `src/hooks/useRealtimeSync.ts` |
-| Generic table page | `src/components/TablePage.tsx` |
+| Table overflow menu | `src/components/TableOverflowMenu.tsx` |
+| Dance table page | `src/components/Dances/Dances.tsx` |
+| Program table page | `src/components/Programs/Programs.tsx` |
 | Relation edit UI | `src/components/RelationEditor.tsx` |
 | Relation display (table + view) | `src/components/RelationCell.tsx` |
 | Query builder evaluator | `src/components/QueryBuilder/queryEvaluator.ts` |
@@ -824,7 +882,7 @@ choreographerNames: sortedChoreographers.map(dc => dc.choreographer.name).join('
 - [ ] `{Model}Page.tsx` created (routing wrapper + view/edit toggle)
 - [ ] `{Model}View.tsx` created (explicit JSX view, delete flow, undo op)
 - [ ] `{Model}Edit.tsx` created (explicit form, `useBlocker` + `beforeunload`, `flushSync` + `isSaved` pattern)
-- [ ] `{Model}s.tsx` table component created
+- [ ] `{Model}s.tsx` table component created (use `Dances.tsx` as reference — self-contained composition of `useTable`, `QueryBuilderComponent`, `MaterialReactTable`, `FilterButton`, `TableOverflowMenu`)
 - [ ] `index.ts` created exporting `{Model}Page` and `{Model}s`
 - [ ] Routes added in `src/App.tsx`: `/{model}s` and `/{model}s/:id`
 - [ ] Nav link added in `src/components/layouts/NavBar.tsx`

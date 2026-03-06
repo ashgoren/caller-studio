@@ -1,24 +1,78 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { Box, Fab, Tooltip } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { useNavigate } from 'react-router';
+import { useTable } from '@/hooks/useTable';
 import { useTitle } from '@/contexts/TitleContext';
-import { TablePage } from '@/components/TablePage';
-import { useDances } from '@/hooks/useDances';
+import { MaterialReactTable } from 'material-react-table';
+import { FilterButton } from '@/components/QueryBuilder/FilterButton';
+import { countActiveRules } from '@/components/QueryBuilder/utils';
+import { QueryBuilderComponent } from '@/components/QueryBuilder';
+import { TableOverflowMenu } from '@/components/TableOverflowMenu';
+import { Spinner, ErrorMessage } from '@/components/shared';
 import { queryFields, defaultQuery, columns, tableInitialState } from './config';
+import { useDances } from '@/hooks/useDances';
 import type { Dance } from '@/lib/types/database';
 
 export const Dances = () => {
   const { setTitle } = useTitle();
   useEffect(() => setTitle('Dances'), [setTitle]);
+  
+  const navigate = useNavigate();
 
+  const { data, error, isLoading } = useDances();
+  const { table, query, setQuery } = useTable<Dance>({
+    model: 'dance',
+    data,
+    columns,
+    defaultQuery,
+    tableInitialState,
+    onRowClick: (row) => navigate(`/dances/${row.id}`)
+  });
+
+  const [filterOpen, setFilterOpen] = useState(countActiveRules(query.rules) > 0);
+
+  const onClearFilters = () => {
+    setQuery(defaultQuery);
+    setFilterOpen(false);
+  };
+
+  if (isLoading) return <Spinner />;
+  if (error) return <ErrorMessage error={error} />;
+  
   return (
     <>
-      <TablePage<Dance>
-        model='dance'
-        useData={useDances}
-        columns={columns}
-        queryFields={queryFields}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        <FilterButton
+          onClick={() => setFilterOpen(prev => !prev)}
+          activeRuleCount={countActiveRules(query.rules)}
+        />
+        <TableOverflowMenu
+          model='dance'
+          onClearFilters={onClearFilters}
+        />
+      </Box>
+
+      <QueryBuilderComponent
+        fields={queryFields}
         defaultQuery={defaultQuery}
-        tableInitialState={tableInitialState}
+        query={query}
+        onQueryChange={setQuery}
+        filterOpen={filterOpen}
+        setFilterOpen={setFilterOpen}
       />
+
+      <MaterialReactTable table={table} />
+
+      <Tooltip title='Add dance' placement='left'>
+        <Fab
+          color='secondary'
+          onClick={() => navigate('/dances/new')}
+          sx={{ position: 'fixed', bottom: 32, right: 32 }}
+        >
+          <AddIcon />
+        </Fab>
+      </Tooltip>
     </>
   );
 };
