@@ -200,4 +200,11 @@ const styles = {
   '& .queryBuilder-dragHandle': {
     display: { xs: 'none', sm: 'flex' },
   },
+  '& .queryBuilder > .ruleGroup': {
+    mt: 0,
+    p: 0,
+    border: 'none',
+    backgroundColor: 'transparent',
+  },
+  '& .queryBuilder > .ruleGroup > .ruleGroup-header': { display: 'none' },
 };

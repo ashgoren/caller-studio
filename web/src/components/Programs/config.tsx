@@ -62,7 +62,7 @@ export const queryFields = [
 
 export const defaultQuery = {
   combinator: 'and',
-  rules: [{ field: 'date', operator: '=', value: '' }]
+  rules: []
 };
 
 

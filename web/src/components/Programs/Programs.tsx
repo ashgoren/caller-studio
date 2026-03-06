@@ -55,11 +55,9 @@ export const Programs = () => {
 
       <QueryBuilderComponent
         fields={queryFields}
-        defaultQuery={defaultQuery}
         query={query}
         onQueryChange={setQuery}
         filterOpen={filterOpen}
-        setFilterOpen={setFilterOpen}
       />
 
       <MaterialReactTable table={table} />

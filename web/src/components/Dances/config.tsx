@@ -237,7 +237,7 @@ export const queryFields = [
 
 export const defaultQuery = {
   combinator: 'and',
-  rules: [{ field: 'title', operator: 'contains', value: '' }]
+  rules: []
 };
 
 

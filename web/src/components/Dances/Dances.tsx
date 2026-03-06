@@ -65,11 +65,9 @@ export const Dances = () => {
 
       <QueryBuilderComponent
         fields={queryFields}
-        defaultQuery={defaultQuery}
         query={query}
         onQueryChange={setQuery}
         filterOpen={filterOpen}
-        setFilterOpen={setFilterOpen}
         figureFilter={figureFilter}
         onFigureFilterChange={setFigureFilter}
       />

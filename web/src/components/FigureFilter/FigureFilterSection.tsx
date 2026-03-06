@@ -1,6 +1,6 @@
 import { Box, Button, Divider, IconButton, MenuItem, Select, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
 import { emptyFigureCriteria } from '@/lib/types/figureFilter';
 import type { FigureCriteria, FigureFilterState, FigureMatcher } from '@/lib/types/figureFilter';
 
@@ -59,7 +59,7 @@ export const FigureFilterSection = ({ state, onChange }: {
 
   return (
     <>
-      <Divider sx={{ my: 2 }} />
+      <Divider sx={{ mt: 3, mb: 2, borderWidth: 2 }} />
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: state.rules.length ? 1 : 0 }}>
         <Typography variant='body2' sx={{ fontWeight: 500 }}>Figures</Typography>
@@ -69,8 +69,8 @@ export const FigureFilterSection = ({ state, onChange }: {
           value={state.combinator}
           onChange={(_, value) => value && onChange({ ...state, combinator: value })}
         >
-          <ToggleButton value='and'>All (AND)</ToggleButton>
-          <ToggleButton value='or'>Any (OR)</ToggleButton>
+          <ToggleButton value='and' color='warning'>ALL</ToggleButton>
+          <ToggleButton value='or' color='info'>ANY</ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
@@ -83,7 +83,7 @@ export const FigureFilterSection = ({ state, onChange }: {
             />
             <Tooltip title='Remove rule'>
               <IconButton size='small' onClick={() => removeRule(index)}>
-                <DeleteIcon fontSize='small' />
+                <CloseIcon sx={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -92,9 +92,10 @@ export const FigureFilterSection = ({ state, onChange }: {
 
       <Button
         size='small'
+        color='secondary'
         startIcon={<AddIcon />}
         onClick={addRule}
-        sx={{ mt: state.rules.length ? 1 : 0 }}
+        sx={{ mt: state.rules.length ? 2 : 0 }}
       >
         Add figure rule
       </Button>
