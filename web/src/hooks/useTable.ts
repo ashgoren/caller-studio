@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { usePersistState, loadPersistence } from './usePersistence';
 import { useMaterialReactTable } from 'material-react-table';
 import { evaluateQuery } from '@/components/QueryBuilder/queryEvaluator';
-import type { RuleGroupType } from 'react-querybuilder';
+import type { FilterGroup } from '@/lib/types/fieldFilter';
 import type { MRT_RowData, MRT_ColumnDef, MRT_TableOptions } from 'material-react-table';
 import type { Model } from '@/lib/types/database';
 
@@ -10,7 +10,7 @@ export const useTable = <TData extends MRT_RowData>({ model, data, columns, defa
   model: Model,
   data: TData[] | undefined,
   columns: MRT_ColumnDef<TData>[],
-  defaultQuery : RuleGroupType,
+  defaultQuery : FilterGroup,
   tableInitialState: Partial<MRT_TableOptions<TData>>['initialState'],
   onRowClick?: (row: TData) => void,
 }) => {
@@ -26,7 +26,7 @@ export const useTable = <TData extends MRT_RowData>({ model, data, columns, defa
       pagination: tableInitialState?.pagination ?? { pageIndex: 0, pageSize: 50 }
     })
   );
-  const [query, setQuery] = useState<RuleGroupType>(initialState.query);
+  const [query, setQuery] = useState<FilterGroup>(initialState.query);
   const [sorting, setSorting] = useState(initialState.sorting);
   const [columnVisibility, setColumnVisibility] = useState(initialState.columnVisibility);
   const [columnOrder, setColumnOrder] = useState<string[]>(initialState.columnOrder);

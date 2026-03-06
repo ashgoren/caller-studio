@@ -1,3 +1,5 @@
+import { newFieldRule } from '@/lib/fieldFilter';
+import type { FilterGroup } from '@/lib/types/fieldFilter';
 import { ExternalLink } from '@/components/shared';
 import { TooltipCell } from '@/components/TooltipCell';
 import { RelationCell } from '@/components/RelationCell';
@@ -235,9 +237,10 @@ export const queryFields = [
   { name: 'programNames', label: 'Programs', inputType: 'string' },
 ];
 
-export const defaultQuery = {
+export const defaultQuery: FilterGroup = {
+  id: 'root',
   combinator: 'and',
-  rules: []
+  rules: [newFieldRule()]
 };
 
 
