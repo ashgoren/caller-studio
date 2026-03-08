@@ -1,4 +1,3 @@
-import { supabase } from '@/lib/supabase';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
@@ -10,7 +9,7 @@ import { useConfirm } from 'material-ui-confirm';
 import { closeSnackbar } from 'notistack';
 import { RelationEditor } from '@/components/RelationEditor';
 import { FiguresEditor } from './FiguresEditor';
-import { isValidUrl, parsePhrases } from './danceImport';
+import { isValidUrl, fetchAndResolveImport } from './danceImport';
 import { newRecord } from './config';
 import { useCreateDance, useUpdateDance, useDeleteDance } from '@/hooks/useDances';
 import { useAddChoreographerToDance, useRemoveChoreographerFromDance } from '@/hooks/useDancesChoreographers';
@@ -253,10 +252,10 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
 
   // ---------- Import Dance ----------
   const importDance = async () => {
-    if (pendingFigures.figures.length > 0) {
+    if (formData.title || formData.formation_id || formData.progression_id || dance?.dances_choreographers.length || pendingChoreographers.pendingAdds.length || pendingFigures.figures.length) {
       const { confirmed } = await confirm({
-        title: 'Replace existing figures?',
-        description: 'Importing will replace all existing figures.',
+        title: 'Replace existing data?',
+        description: 'Importing will replace existing title, choreographers, formation, progression, and figures. Notes and other attributes will be preserved.',
         confirmationText: 'Replace',
         cancellationText: 'Cancel',
       });
@@ -265,10 +264,25 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
 
     setImporting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('callers-box', { body: { url: formData.url } });
-      if (error) throw error;
-      pendingFigures.setFigures(parsePhrases(data.phrases));
-      toastSuccess('Choreography imported', { undo: false });
+      const result = await fetchAndResolveImport(formData.url!, {
+        formations: formations ?? [],
+        progressions: progressions ?? [],
+        choreographers: choreographers ?? [],
+      });
+
+      // Replace existing title, formation, progression
+      update('title', result.title);
+      if (result.formation_id) update('formation_id', result.formation_id);
+      if (result.progression_id) update('progression_id', result.progression_id);
+
+      // Replace existing choreographers with imported ones
+      for (const dc of dance?.dances_choreographers ?? []) pendingChoreographers.removeItem(dc.choreographer.id);
+      for (const id of result.choreographerIds) pendingChoreographers.addItem(id);
+
+      // Replace existing figures with imported ones
+      pendingFigures.setFigures(result.figures);
+
+      toastSuccess('Dance imported', { undo: false });
     } catch (err) {
       toastError('Import failed' + (err instanceof Error ? `: ${err.message}` : ''));
     } finally {

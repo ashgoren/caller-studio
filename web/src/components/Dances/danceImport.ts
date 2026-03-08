@@ -1,7 +1,38 @@
+import { supabase } from '@/lib/supabase';
 import type { FigureItem } from '@/lib/types/database';
+import type { CallersBoxData } from '@/lib/types/callers-box';
 
-export const isValidUrl = (url: string): boolean => {
-  return /^https:\/\/www\.ibiblio\.org\/contradance\/thecallersbox\/dance\.php\?id=\d+$/.test(url);
+type LookupItem = { id: number; name: string };
+
+export type ImportResult = {
+  title: string;
+  formation_id: number | null;
+  progression_id: number | null;
+  choreographerIds: number[];
+  figures: FigureItem[];
+};
+
+export const fetchAndResolveImport = async (
+  url: string,
+  lookups: { formations: LookupItem[]; progressions: LookupItem[]; choreographers: LookupItem[] }
+): Promise<ImportResult> => {
+  const { data, error } = await supabase.functions.invoke('callers-box', { body: { url } });
+  if (error) throw error;
+
+  const { Name, Authors, FormationBase, Direction, Progression, phrases } = data as CallersBoxData;
+
+  // Special case for Becket CCW, which is listed separately in our formations
+  const formation = FormationBase === 'Duple Minor - Becket' && Direction === 'CCW' ? 'Duple Minor - Becket CCW' : FormationBase;
+
+  return {
+    title: Name,
+    formation_id: lookups.formations.find(f => f.name.toLowerCase() === formation.toLowerCase())?.id ?? null,
+    progression_id: lookups.progressions.find(p => p.name.toLowerCase() === Progression?.toLowerCase())?.id ?? null,
+    choreographerIds: Authors
+      .map(author => lookups.choreographers.find(c => c.name.toLowerCase() === author.toLowerCase())?.id)
+      .filter((id): id is number => id !== undefined),
+    figures: parsePhrases(phrases),
+  };
 };
 
 export const parsePhrases = (phrases: { name: string; figures: string[] }[]): FigureItem[] => {
@@ -33,4 +64,8 @@ const normalizeRoles = (description: string): string => {
   );
 
   return result;
+};
+
+export const isValidUrl = (url: string): boolean => {
+  return /^https:\/\/www\.ibiblio\.org\/contradance\/thecallersbox\/dance\.php\?id=\d+$/.test(url);
 };

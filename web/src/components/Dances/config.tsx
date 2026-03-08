@@ -106,7 +106,7 @@ export const columns: MRT_ColumnDef<Dance>[] = [
   {
     accessorKey: 'formation_id',
     header: 'Formation',
-    Cell: ({ row }) => (row.original as Dance).formation?.name ?? '',
+    Cell: ({ row }) => (row.original as Dance).formation?.name?.replace('Duple Minor - Improper', 'Improper').replace('Duple Minor - Becket', 'Becket').replace('Duple Minor - Becket CCW', 'Becket CCW') ?? '',
     enableColumnFilter: false,
     size: 175,
     minSize: 100,
