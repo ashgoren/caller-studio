@@ -18,7 +18,12 @@ export const fetchAndResolveImport = async (
   createChoreographer: (name: string) => Promise<{ id: number }>
 ): Promise<ImportResult> => {
   const { data, error } = await supabase.functions.invoke('callers-box', { body: { url } });
-  if (error) throw error;
+  if (error) {
+    const body = error.context instanceof Response
+      ? await error.context.json().catch(() => null)
+      : null;
+    throw new Error(body?.msg ?? error.message);
+  }
 
   const { Name, Authors, FormationBase, Direction, Progression, phrases } = data as CallersBoxData;
 
