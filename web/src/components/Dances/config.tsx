@@ -77,6 +77,24 @@ export const columns: MRT_ColumnDef<Dance>[] = [
     meta: { inputType: 'relation' },
   },
   {
+    id: 'keyMoves',
+    header: '🔗 Key Moves',
+    enableColumnFilter: false,
+    size: 200,
+    minSize: 170,
+    Cell: ({ row }) => row.original.dances_key_moves.map(dkm => dkm.key_move.name).join(', '),
+    meta: { inputType: 'relation' },
+  },
+  {
+    id: 'vibes',
+    header: '🔗 Vibes',
+    enableColumnFilter: false,
+    size: 200,
+    minSize: 170,
+    Cell: ({ row }) => row.original.dances_vibes.map(dv => dv.vibe.name).join(', '),
+    meta: { inputType: 'relation' },
+  },
+  {
     accessorKey: 'dance_type_id',
     header: 'Dance Type',
     Cell: ({ row }) => (row.original as Dance).dance_type?.name ?? '',
@@ -104,21 +122,17 @@ export const columns: MRT_ColumnDef<Dance>[] = [
     meta: { inputType: 'select' },
   },
   {
-    id: 'keyMoves',
-    header: '🔗 Key Moves',
+    id: 'programs',
+    header: '🔗 Programs',
     enableColumnFilter: false,
-    size: 200,
-    minSize: 170,
-    Cell: ({ row }) => row.original.dances_key_moves.map(dkm => dkm.key_move.name).join(', '),
-    meta: { inputType: 'relation' },
-  },
-  {
-    id: 'vibes',
-    header: '🔗 Vibes',
-    enableColumnFilter: false,
-    size: 200,
-    minSize: 170,
-    Cell: ({ row }) => row.original.dances_vibes.map(dv => dv.vibe.name).join(', '),
+    size: 300,
+    minSize: 100,
+    Cell: ({ row }) => <RelationCell
+      items={row.original.programs_dances}
+      model='program'
+      getId={(joinRow) => joinRow.program.id}
+      getLabel={(joinRow) => `${joinRow.program.date} - ${joinRow.program.location}`}
+    />,
     meta: { inputType: 'relation' },
   },
   {
@@ -183,20 +197,6 @@ export const columns: MRT_ColumnDef<Dance>[] = [
     meta: { inputType: 'text' }
   },
   {
-    id: 'programs',
-    header: '🔗 Programs',
-    enableColumnFilter: false,
-    size: 300,
-    minSize: 100,
-    Cell: ({ row }) => <RelationCell
-      items={row.original.programs_dances}
-      model='program'
-      getId={(joinRow) => joinRow.program.id}
-      getLabel={(joinRow) => `${joinRow.program.date} - ${joinRow.program.location}`}
-    />,
-    meta: { inputType: 'relation' },
-  },
-  {
     accessorKey: 'created_at',
     header: 'Date Added',
     enableColumnFilter: false,
@@ -224,11 +224,11 @@ export const tableInitialState = {
 export const queryFields = [
   { name: 'title', label: 'Title', inputType: 'string' },
   { name: 'choreographerNames', label: 'Choreographers', inputType: 'string' },
+  { name: 'keyMoveNames', label: 'Key Moves', inputType: 'string' },
+  { name: 'vibeNames', label: 'Vibes', inputType: 'string' },
   { name: 'dance_type', label: 'Dance Type', inputType: 'string' },
   { name: 'formation', label: 'Formation', inputType: 'string' },
   { name: 'progression', label: 'Progression', inputType: 'string' },
-  { name: 'keyMoveNames', label: 'Key Moves', inputType: 'string' },
-  { name: 'vibeNames', label: 'Vibes', inputType: 'string' },
   { name: 'difficulty', label: 'Difficulty', inputType: 'number' },
   { name: 'notes', label: 'Notes', inputType: 'string' },
   { name: 'place_in_program', label: 'Place in Program', inputType: 'string' },
