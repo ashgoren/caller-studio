@@ -8,14 +8,16 @@ export const useNotify = () => {
   const { undo } = useUndoActions();
 
   return {
-    toastSuccess: (message: string) => enqueueSnackbar(message, {
+    toastSuccess: (message: string, options: { undo?: boolean } = {}) => enqueueSnackbar(message, {
       variant: 'success',
       anchorOrigin: { vertical: 'top', horizontal: 'right' },
       action: (snackbarId) => (
         <>
-          <Button size='small' color='inherit' onClick={undo}>
-            Undo
-          </Button>
+          {options.undo !== false && (
+            <Button size='small' color='inherit' onClick={undo}>
+              Undo
+            </Button>
+          )}
           <IconButton size='small' color='inherit' onClick={() => closeSnackbar(snackbarId)}>
             <CloseIcon fontSize='small' />
           </IconButton>

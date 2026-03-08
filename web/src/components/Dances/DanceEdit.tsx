@@ -257,7 +257,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
       const { data, error } = await supabase.functions.invoke('callers-box', { body: { url: formData.url } });
       if (error) throw error;
       pendingFigures.setFigures(parsePhrases(data.phrases));
-      toastSuccess('Choreography imported');
+      toastSuccess('Choreography imported', { undo: false });
     } catch (err) {
       toastError('Import failed' + (err instanceof Error ? `: ${err.message}` : ''));
     } finally {
