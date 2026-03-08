@@ -1,0 +1,23 @@
+import type { FigureItem } from '@/lib/types/database';
+
+export const isValidUrl = (url: string): boolean => {
+  return /^https:\/\/www\.ibiblio\.org\/contradance\/thecallersbox\/dance\.php\?id=\d+$/.test(url);
+};
+
+export const parsePhrases = (phrases: { name: string; figures: string[] }[]): FigureItem[] => {
+  const result: FigureItem[] = [];
+  for (const { name: phrase, figures } of phrases) {
+    for (const figure of figures) {
+      const match = figure.match(/^\((\d+)\) (.+)$/);
+      if (!match) throw new Error(`Unrecognized figure format: ${figure}`);
+      const [, beats, description] = match;
+      result.push({ id: crypto.randomUUID(), phrase, beats: Number(beats), description: normalizeRoles(description) });
+    }
+  }
+  return result;
+};
+
+const normalizeRoles = (description: string): string =>
+  description
+    .replace(/\b(Men|men|Gents|gents)\b/g, match => match[0] === match[0].toUpperCase() ? 'Larks' : 'larks')
+    .replace(/\b(Ladies|ladies|Women|women)\b/g, match => match[0] === match[0].toUpperCase() ? 'Robins' : 'robins');

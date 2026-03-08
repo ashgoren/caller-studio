@@ -25,9 +25,9 @@ export const useFigures = (
     setPendingFigures(figures.filter(figure => figure.id !== id));
   };
 
-  const reorderFigures = (newFigures: FigureItem[]) => {
+  const setFigures = (newFigures: FigureItem[]) => {
     setPendingFigures(newFigures);
   };
 
-  return { figures, addFigure, updateFigure, deleteFigure, reorderFigures, hasPendingChanges: pendingFigures !== null };
+  return { figures, addFigure, updateFigure, deleteFigure, setFigures, hasPendingChanges: pendingFigures !== null };
 };

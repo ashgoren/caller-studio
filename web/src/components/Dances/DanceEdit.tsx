@@ -1,13 +1,16 @@
+import { supabase } from '@/lib/supabase';
 import { useState, useMemo, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
-import { Box, Button, TextField, Checkbox, FormControlLabel, Typography, Autocomplete, Divider, Stack } from '@mui/material';
+import { Box, Button, TextField, Checkbox, FormControlLabel, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import DownloadIcon from '@mui/icons-material/Download';
 import { useConfirm } from 'material-ui-confirm';
 import { closeSnackbar } from 'notistack';
 import { RelationEditor } from '@/components/RelationEditor';
 import { FiguresEditor } from './FiguresEditor';
+import { isValidUrl, parsePhrases } from './danceImport';
 import { newRecord } from './config';
 import { useCreateDance, useUpdateDance, useDeleteDance } from '@/hooks/useDances';
 import { useAddChoreographerToDance, useRemoveChoreographerFromDance } from '@/hooks/useDancesChoreographers';
@@ -29,7 +32,7 @@ import type { Dance, DanceInsert, DanceUpdate } from '@/lib/types/database';
 export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: () => void }) => {
   const navigate = useNavigate();
   const confirm = useConfirm();
-  const { toastSuccess } = useNotify();
+  const { toastSuccess, toastError } = useNotify();
   const { pushAction, setFormActive } = useUndoActions();
   const { setTitle } = useTitle();
 
@@ -83,6 +86,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
   }));
   const [formData, setFormData] = useState<DanceUpdate>({ ...initialFormData });
   const [isSaved, setIsSaved] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const isSaving = isCreating || isUpdating;
 
@@ -235,6 +239,33 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
     }
   };
 
+
+  // ---------- Import Dance ----------
+  const importDance = async () => {
+    if (pendingFigures.figures.length > 0) {
+      const { confirmed } = await confirm({
+        title: 'Replace existing figures?',
+        description: 'Importing will replace all existing figures.',
+        confirmationText: 'Replace',
+        cancellationText: 'Cancel',
+      });
+      if (!confirmed) return;
+    }
+
+    setImporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('callers-box', { body: { url: formData.url } });
+      if (error) throw error;
+      pendingFigures.setFigures(parsePhrases(data.phrases));
+      toastSuccess('Choreography imported');
+    } catch (err) {
+      toastError('Import failed' + (err instanceof Error ? `: ${err.message}` : ''));
+    } finally {
+      setImporting(false);
+    }
+  };
+
+
   return (
     <Box sx={{ maxWidth: 1100, mx: 'auto' }}>
       <Typography variant='h5' sx={{ mb: 2.5 }}>
@@ -243,9 +274,19 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
 
       {/* Prominent header fields — full width */}
       <Stack spacing={2} sx={{ mb: 2.5 }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1.1fr' }, gap: 2 }}>
           <TextField label='Title' value={formData.title ?? ''} onChange={e => update('title', e.target.value)} fullWidth variant='standard' />
-          <TextField label='URL' value={formData.url ?? ''} onChange={e => update('url', e.target.value)} fullWidth variant='standard' />
+          <TextField
+            label='URL' value={formData.url ?? ''} onChange={e => update('url', e.target.value)} fullWidth variant='standard'
+            helperText={!formData.url && "Paste a Caller's Box URL to show the dance import button."}
+            slotProps={{ input: { endAdornment: isValidUrl(formData.url ?? '') && (
+              <InputAdornment position='end'>
+                <IconButton onClick={importDance} disabled={importing} size='small' title='Import from URL'>
+                  {importing ? <CircularProgress size={18} /> : <DownloadIcon fontSize='small' />}
+                </IconButton>
+              </InputAdornment>
+            )}}}
+          />
         </Box>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 3 }}>
           <RelationEditor
@@ -293,7 +334,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
             onAdd={pendingFigures.addFigure}
             onUpdate={pendingFigures.updateFigure}
             onDelete={pendingFigures.deleteFigure}
-            onReorder={pendingFigures.reorderFigures}
+            onReorder={pendingFigures.setFigures}
           />
           <TextField
             label='Notes'
@@ -373,6 +414,9 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
           </Button>
         </Box>
       </Box>
+
+
     </Box>
   );
 };
+
