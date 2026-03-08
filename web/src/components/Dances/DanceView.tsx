@@ -74,12 +74,12 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
           {figuresLabel && (
             <Typography variant='overline' color='text.secondary'>{figuresLabel}</Typography>
           )}
-          {dance.figures.length === 0 ? (
+          {(dance.figures ?? []).length === 0 ? (
             <Typography color='text.disabled' sx={{ mt: 0.5 }}>—</Typography>
           ) : (
             <Box sx={{ mt: figuresLabel ? 1 : 0 }}>
-              {dance.figures.map((figure, i) => {
-                const isNewPhrase = i === 0 || figure.phrase !== dance.figures[i - 1].phrase;
+              {(dance.figures ?? []).map((figure, i) => {
+                const isNewPhrase = i === 0 || figure.phrase !== (dance.figures ?? [])[i - 1].phrase;
                 return (
                   <Box key={figure.id} sx={{ display: 'flex', gap: 2, mt: isNewPhrase && i > 0 ? 2 : 0.5 }}>
                     <Typography sx={{
