@@ -14,7 +14,8 @@ export type ImportResult = {
 
 export const fetchAndResolveImport = async (
   url: string,
-  lookups: { formations: LookupItem[]; progressions: LookupItem[]; choreographers: LookupItem[] }
+  lookups: { formations: LookupItem[]; progressions: LookupItem[]; choreographers: LookupItem[] },
+  createChoreographer: (name: string) => Promise<{ id: number }>
 ): Promise<ImportResult> => {
   const { data, error } = await supabase.functions.invoke('callers-box', { body: { url } });
   if (error) throw error;
@@ -24,13 +25,22 @@ export const fetchAndResolveImport = async (
   // Special case for Becket CCW, which is listed separately in our formations
   const formation = FormationBase === 'Duple Minor - Becket' && Direction === 'CCW' ? 'Duple Minor - Becket CCW' : FormationBase;
 
+  const choreographerIds: number[] = [];
+  for (const author of Authors) {
+    const existing = lookups.choreographers.find(c => c.name.toLowerCase() === author.toLowerCase());
+    if (existing) {
+      choreographerIds.push(existing.id);
+    } else {
+      const created = await createChoreographer(author);
+      choreographerIds.push(created.id);
+    }
+  }
+
   return {
     title: Name,
     formation_id: lookups.formations.find(f => f.name.toLowerCase() === formation.toLowerCase())?.id ?? null,
     progression_id: lookups.progressions.find(p => p.name.toLowerCase() === Progression?.toLowerCase())?.id ?? null,
-    choreographerIds: Authors
-      .map(author => lookups.choreographers.find(c => c.name.toLowerCase() === author.toLowerCase())?.id)
-      .filter((id): id is number => id !== undefined),
+    choreographerIds,
     figures: parsePhrases(phrases),
   };
 };

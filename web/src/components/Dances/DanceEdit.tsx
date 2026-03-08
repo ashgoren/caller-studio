@@ -15,7 +15,7 @@ import { useCreateDance, useUpdateDance, useDeleteDance } from '@/hooks/useDance
 import { useAddChoreographerToDance, useRemoveChoreographerFromDance } from '@/hooks/useDancesChoreographers';
 import { useAddKeyMoveToDance, useRemoveKeyMoveFromDance } from '@/hooks/useDancesKeyMoves';
 import { useAddVibeToDance, useRemoveVibeFromDance } from '@/hooks/useDancesVibes';
-import { useChoreographers } from '@/hooks/useChoreographers';
+import { useChoreographers, useCreateChoreographer } from '@/hooks/useChoreographers';
 import { useKeyMoves } from '@/hooks/useKeyMoves';
 import { useVibes } from '@/hooks/useVibes';
 import { useDanceTypes } from '@/hooks/useDanceTypes';
@@ -58,6 +58,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
   const { mutateAsync: addVibe } = useAddVibeToDance();
   const { mutateAsync: removeVibe } = useRemoveVibeFromDance();
 
+  const { mutateAsync: createChoreographer } = useCreateChoreographer();
   const { data: choreographers } = useChoreographers();
   const { data: keyMoves } = useKeyMoves();
   const { data: vibes } = useVibes();
@@ -268,7 +269,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
         formations: formations ?? [],
         progressions: progressions ?? [],
         choreographers: choreographers ?? [],
-      });
+      }, (name) => createChoreographer({ name }));
 
       // Replace existing title, formation, progression
       update('title', result.title);
