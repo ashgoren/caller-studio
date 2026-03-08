@@ -17,7 +17,20 @@ export const parsePhrases = (phrases: { name: string; figures: string[] }[]): Fi
   return result;
 };
 
-const normalizeRoles = (description: string): string =>
-  description
+const normalizeRoles = (description: string): string => {
+  // Replace full words first
+  let result = description
     .replace(/\b(Men|men|Gents|gents)\b/g, match => match[0] === match[0].toUpperCase() ? 'Larks' : 'larks')
     .replace(/\b(Ladies|ladies|Women|women)\b/g, match => match[0] === match[0].toUpperCase() ? 'Robins' : 'robins');
+
+  // Replace role-pair abbreviations inside semicolon-delimited parenthetical groups
+  // e.g. (PR;WL;NR;ML) → (PR;RL;NR;LL)
+  // Only matches 2-letter codes where first letter is W or M followed by a second uppercase letter
+  result = result.replace(/\(([^)]*;[^)]*)\)/g, segment =>
+    segment.replace(/\b([WM])([A-Z])\b/g, (_, role, pos) =>
+      (role === 'W' ? 'R' : 'L') + pos
+    )
+  );
+
+  return result;
+};
