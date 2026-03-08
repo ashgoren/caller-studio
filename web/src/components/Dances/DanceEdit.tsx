@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
 import { Box, Button, TextField, Checkbox, FormControlLabel, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
@@ -87,6 +87,17 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
   const [formData, setFormData] = useState<DanceUpdate>({ ...initialFormData });
   const [isSaved, setIsSaved] = useState(false);
   const [importing, setImporting] = useState(false);
+  const contraDefaultApplied = useRef(false);
+
+  // Default dance_type_id to Contra (first type) once when types load, if field is still null
+  useEffect(() => {
+    if (danceTypes && !contraDefaultApplied.current && formData.dance_type_id === null) {
+      contraDefaultApplied.current = true;
+      const defaultId = danceTypes[0].id;
+      initialFormData.dance_type_id = defaultId;
+      setFormData(prev => ({ ...prev, dance_type_id: defaultId }));
+    }
+  }, [danceTypes, formData.dance_type_id, initialFormData]);
 
   const isSaving = isCreating || isUpdating;
 
