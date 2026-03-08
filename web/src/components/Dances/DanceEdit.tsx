@@ -276,9 +276,10 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
       if (result.formation_id) update('formation_id', result.formation_id);
       if (result.progression_id) update('progression_id', result.progression_id);
 
-      // Replace existing choreographers with imported ones
-      for (const dc of dance?.dances_choreographers ?? []) pendingChoreographers.removeItem(dc.choreographer.id);
-      for (const id of result.choreographerIds) pendingChoreographers.addItem(id);
+      // Replace existing choreographers with imported ones — diff to avoid stale-state issues
+      const existingIds = dance?.dances_choreographers.map(dc => dc.choreographer.id) ?? [];
+      for (const id of existingIds.filter(id => !result.choreographerIds.includes(id))) pendingChoreographers.removeItem(id);
+      for (const id of result.choreographerIds.filter(id => !existingIds.includes(id))) pendingChoreographers.addItem(id);
 
       // Replace existing figures with imported ones
       pendingFigures.setFigures(result.figures);
@@ -307,7 +308,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
             helperText={!formData.url && "Paste a Caller's Box URL to show the dance import button."}
             slotProps={{ input: { endAdornment: isValidUrl(formData.url ?? '') && (
               <InputAdornment position='end'>
-                <IconButton onClick={importDance} disabled={importing} size='small' title='Import from URL'>
+                <IconButton onClick={importDance} disabled={importing || !choreographers || !formations || !progressions} size='small' title='Import from URL'>
                   {importing ? <CircularProgress size={18} /> : <DownloadIcon fontSize='small' />}
                 </IconButton>
               </InputAdornment>
