@@ -82,5 +82,5 @@ const normalizeRoles = (description: string): string => {
 };
 
 export const isValidUrl = (url: string): boolean => {
-  return /^https:\/\/www\.ibiblio\.org\/contradance\/thecallersbox\/dance\.php\?id=\d+$/.test(url);
+  return /ibiblio\.org\/contradance\/thecallersbox\/dance\.php\?id=\d+$/.test(url);
 };
