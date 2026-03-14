@@ -4,6 +4,7 @@ import { Spinner, ErrorMessage } from '@/components/shared';
 import { useProgram } from '@/hooks/usePrograms';
 import { ProgramViewMode } from './ProgramView';
 import { ProgramEditMode } from './ProgramEdit';
+import { ProgramChoreographyView } from './ProgramChoreographyView';
 
 // Routing wrapper
 
@@ -13,16 +14,19 @@ export const ProgramPage = () => {
   return <ProgramDetailPage id={Number(id!)} />;
 };
 
-// Detail page with view/edit toggle
+// Detail page with view/edit/choreography toggle
+
+type Mode = 'view' | 'edit' | 'choreography';
 
 const ProgramDetailPage = ({ id }: { id: number }) => {
   const { data: program, isLoading, error } = useProgram(id);
-  const [isEditing, setIsEditing] = useState(false);
+  const [mode, setMode] = useState<Mode>('view');
 
   if (isLoading) return <Spinner />;
   if (error) return <ErrorMessage error={error} />;
   if (!program) return <ErrorMessage error={new Error('Program not found')} />;
 
-  if (isEditing) return <ProgramEditMode program={program} onCancel={() => setIsEditing(false)} />;
-  return <ProgramViewMode program={program} onEdit={() => setIsEditing(true)} />;
+  if (mode === 'edit') return <ProgramEditMode program={program} onCancel={() => setMode('view')} />;
+  if (mode === 'choreography') return <ProgramChoreographyView program={program} onBack={() => setMode('view')} />;
+  return <ProgramViewMode program={program} onEdit={() => setMode('edit')} onChoreography={() => setMode('choreography')} />;
 };

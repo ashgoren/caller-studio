@@ -33,8 +33,15 @@ export type Dance = Omit<DanceRow, 'figures'> & {
 export type DanceInsert = Tables['dances']['Insert'];
 export type DanceUpdate = Tables['dances']['Update'];
 
+export type ProgramDance = Omit<DanceRow, 'figures'> & {
+  figures: FigureItem[];
+  dance_type: DanceTypeRow | null;
+  formation: FormationRow | null;
+  progression: ProgressionRow | null;
+};
+
 export type ProgramRow = Tables['programs']['Row'];
-export type Program = ProgramRow & { programs_dances: { id: number; order: number; dance: DanceRow }[] };
+export type Program = ProgramRow & { programs_dances: { id: number; order: number; dance: ProgramDance }[] };
 export type ProgramInsert = Tables['programs']['Insert'];
 export type ProgramUpdate = Tables['programs']['Update'];
 

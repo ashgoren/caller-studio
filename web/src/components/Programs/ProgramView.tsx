@@ -8,7 +8,7 @@ import { useTitle } from '@/contexts/TitleContext';
 import { formatLocalDate } from '@/lib/utils';
 import type { Program } from '@/lib/types/database';
 
-export const ProgramViewMode = ({ program, onEdit }: { program: Program; onEdit: () => void }) => {
+export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: Program; onEdit: () => void; onChoreography: () => void }) => {
   const navigate = useNavigate();
   const { setTitle } = useTitle();
 
@@ -22,9 +22,14 @@ export const ProgramViewMode = ({ program, onEdit }: { program: Program; onEdit:
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/programs')} size='small'>
           Programs
         </Button>
-        <Tooltip title='Edit'>
-          <IconButton onClick={onEdit} size='small'><EditIcon fontSize='small' /></IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Button size='small' variant='outlined' color='secondary' onClick={onChoreography}>
+            Choreography
+          </Button>
+          <Tooltip title='Edit'>
+            <IconButton onClick={onEdit} size='small'><EditIcon fontSize='small' /></IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       {/* Title */}
