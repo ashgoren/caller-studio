@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Box, Button, Divider, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router';
+import { Box, Button, Divider, Link, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useTitle } from '@/contexts/TitleContext';
 import { formatLocalDate } from '@/lib/utils';
@@ -67,9 +68,16 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
               key={pd.id}
               sx={{ flex: 1, minWidth: DANCE_COL_MIN_WIDTH, px: 1.5, borderLeft: '1px solid', borderColor: 'divider' }}
             >
-              <Typography variant='subtitle2' fontWeight={700}>
+              <Link
+                component={RouterLink}
+                to={`/dances/${pd.dance.id}`}
+                variant='subtitle2'
+                fontWeight={700}
+                underline='hover'
+                color='inherit'
+              >
                 {pd.order}. {pd.dance.title}
-              </Typography>
+              </Link>
               {makeFiguresLabel(pd.dance) && (
                 <Typography variant='overline' color='text.secondary' sx={{ lineHeight: 1.6, display: 'block' }}>
                   {makeFiguresLabel(pd.dance)}
