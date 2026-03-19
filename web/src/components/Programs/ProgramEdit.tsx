@@ -227,7 +227,7 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button onClick={handleCancel} disabled={isSaving} color='secondary'>Cancel</Button>
-          <Button variant='contained' startIcon={<SaveIcon />} onClick={handleSave} disabled={isSaving} color='secondary'>
+          <Button variant='contained' startIcon={<SaveIcon />} onClick={handleSave} disabled={isSaving || (!isDirty && !hasPendingChanges)} color='secondary'>
             {isSaving ? 'Saving…' : isCreate ? 'Create' : 'Save'}
           </Button>
         </Box>
