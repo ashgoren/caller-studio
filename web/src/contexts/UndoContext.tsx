@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useCallback, useState, useMemo, useEffect, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useState, useMemo, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { queryClient } from '@/lib/react-query';
 import { closeSnackbar, enqueueSnackbar } from 'notistack';
 import { useNavigate, useLocation } from 'react-router';
+import type { ReactNode, RefObject, Dispatch, SetStateAction } from 'react';
 
 type UndoOp =
   | { type: 'insert'; table: string; record: Record<string, unknown> }
@@ -151,22 +152,26 @@ export const UndoProvider = ({ children }: { children: ReactNode }) => {
     setRedoStack([]);
   }, []);
 
-  const undo = useCallback(async () => {
+  const executeAction = useCallback(async (
+    sourceRef: RefObject<UndoAction[]>,
+    popStack: Dispatch<SetStateAction<UndoAction[]>>,
+    pushStack: Dispatch<SetStateAction<UndoAction[]>>,
+  ) => {
     if (isExecutingRef.current) return;
-    const action = undoStackRef.current.at(-1);
+    const action = sourceRef.current.at(-1);
     if (!action) return;
 
     isExecutingRef.current = true;
     setIsExecuting(true);
     try {
-      const undoOps = invertOps(action.ops);
+      const ops = invertOps(action.ops);
       closeSnackbar();
-      await executeOps(undoOps, () => enqueueSnackbar('Restored with some relations missing — linked records may have been deleted.', { variant: 'warning' }));
-      setUndoStack(prev => prev.slice(0, -1));
-      setRedoStack(prev => [...prev, { label: action.label, ops: undoOps }]);
-      navigateAwayIfOnDeletedRecord(undoOps, navigateRef.current, locationRef.current.pathname);
+      await executeOps(ops, () => enqueueSnackbar('Restored with some relations missing — linked records may have been deleted.', { variant: 'warning' }));
+      popStack(prev => prev.slice(0, -1));
+      pushStack(prev => [...prev, { label: action.label, ops }]);
+      navigateAwayIfOnDeletedRecord(ops, navigateRef.current, locationRef.current.pathname);
     } catch (e) {
-      console.error('Undo failed:', e);
+      console.error('Undo/redo failed:', e);
     } finally {
       await queryClient.refetchQueries({ type: 'active' });
       isExecutingRef.current = false;
@@ -174,28 +179,8 @@ export const UndoProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const redo = useCallback(async () => {
-    if (isExecutingRef.current) return;
-    const action = redoStackRef.current.at(-1);
-    if (!action) return;
-
-    isExecutingRef.current = true;
-    setIsExecuting(true);
-    try {
-      const redoOps = invertOps(action.ops);
-      closeSnackbar();
-      await executeOps(redoOps, () => enqueueSnackbar('Restored with some relations missing — linked records may have been deleted.', { variant: 'warning' }));
-      setRedoStack(prev => prev.slice(0, -1));
-      setUndoStack(prev => [...prev, { label: action.label, ops: redoOps }]);
-      navigateAwayIfOnDeletedRecord(redoOps, navigateRef.current, locationRef.current.pathname);
-    } catch (e) {
-      console.error('Redo failed:', e);
-    } finally {
-      await queryClient.refetchQueries({ type: 'active' });
-      isExecutingRef.current = false;
-      setIsExecuting(false);
-    }
-  }, []);
+  const undo = useCallback(() => executeAction(undoStackRef, setUndoStack, setRedoStack), [executeAction]);
+  const redo = useCallback(() => executeAction(redoStackRef, setRedoStack, setUndoStack), [executeAction]);
 
   const actions = useMemo(() => ({ pushAction, undo, redo, clearStacks, setFormActive }), [pushAction, undo, redo, clearStacks, setFormActive]);
 
