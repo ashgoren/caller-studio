@@ -20,6 +20,7 @@ type UndoState = {
   canRedo: boolean;
   undoLabel: string | null;
   redoLabel: string | null;
+  isExecuting: boolean;
 };
 
 type UndoActions = {
@@ -95,8 +96,6 @@ async function executeOps(ops: UndoOp[], onPartial?: () => void): Promise<void> 
     }
   }
 
-  // Invalidate all queries since we don't have enough info to target just relation tables
-  queryClient.invalidateQueries();
   if (skipped > 0) onPartial?.();
 }
 
@@ -123,6 +122,8 @@ export const UndoProvider = ({ children }: { children: ReactNode }) => {
   const locationRef = useRef(location);
 
   const [isFormActive, setFormActive] = useState(false);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const isExecutingRef = useRef(false);
 
   useEffect(() => { undoStackRef.current = undoStack; }, [undoStack]);
   useEffect(() => { redoStackRef.current = redoStack; }, [redoStack]);
@@ -137,6 +138,7 @@ export const UndoProvider = ({ children }: { children: ReactNode }) => {
     canRedo: !isFormActive && redoStack.length > 0,
     undoLabel: undoStack.at(-1)?.label ?? null,
     redoLabel: redoStack.at(-1)?.label ?? null,
+    isExecuting,
   };
 
   const pushAction = useCallback((action: UndoAction) => {
@@ -150,9 +152,12 @@ export const UndoProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const undo = useCallback(async () => {
+    if (isExecutingRef.current) return;
     const action = undoStackRef.current.at(-1);
     if (!action) return;
 
+    isExecutingRef.current = true;
+    setIsExecuting(true);
     try {
       const undoOps = invertOps(action.ops);
       closeSnackbar();
@@ -162,13 +167,20 @@ export const UndoProvider = ({ children }: { children: ReactNode }) => {
       navigateAwayIfOnDeletedRecord(undoOps, navigateRef.current, locationRef.current.pathname);
     } catch (e) {
       console.error('Undo failed:', e);
+    } finally {
+      await queryClient.refetchQueries({ type: 'active' });
+      isExecutingRef.current = false;
+      setIsExecuting(false);
     }
   }, []);
 
   const redo = useCallback(async () => {
+    if (isExecutingRef.current) return;
     const action = redoStackRef.current.at(-1);
     if (!action) return;
 
+    isExecutingRef.current = true;
+    setIsExecuting(true);
     try {
       const redoOps = invertOps(action.ops);
       closeSnackbar();
@@ -178,6 +190,10 @@ export const UndoProvider = ({ children }: { children: ReactNode }) => {
       navigateAwayIfOnDeletedRecord(redoOps, navigateRef.current, locationRef.current.pathname);
     } catch (e) {
       console.error('Redo failed:', e);
+    } finally {
+      await queryClient.refetchQueries({ type: 'active' });
+      isExecutingRef.current = false;
+      setIsExecuting(false);
     }
   }, []);
 

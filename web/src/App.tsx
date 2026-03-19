@@ -3,7 +3,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/react-query';
 import { TitleProvider } from './contexts/TitleContext';
-import { UndoProvider } from '@/contexts/UndoContext';
+import { UndoProvider, useUndoState } from '@/contexts/UndoContext';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router';
 import { Layout } from './components/layouts/Layout';
 import { Dances, DancePage } from './components/Dances';
@@ -23,26 +23,31 @@ const ProtectedRoute = () => {
   return <Outlet />;
 };
 
-const AppShell = () => {
+const AppInner = () => {
   const { user } = useAuth();
-  useRealtimeSync(user);
+  const { isExecuting } = useUndoState();
+  useRealtimeSync(user, isExecuting);
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <QueryClientProvider client={queryClient}>
-        <UndoProvider>
-          <TitleProvider>
-            <ConfirmProvider>
-              <Layout>
-                <Outlet />
-              </Layout>
-            </ConfirmProvider>
-          </TitleProvider>
-        </UndoProvider>
-      </QueryClientProvider>
-    </LocalizationProvider>
+    <TitleProvider>
+      <ConfirmProvider>
+        <Layout>
+          <Outlet />
+        </Layout>
+      </ConfirmProvider>
+    </TitleProvider>
   );
 };
+
+const AppShell = () => (
+  <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <QueryClientProvider client={queryClient}>
+      <UndoProvider>
+        <AppInner />
+      </UndoProvider>
+    </QueryClientProvider>
+  </LocalizationProvider>
+);
 
 const router = createBrowserRouter([
   {

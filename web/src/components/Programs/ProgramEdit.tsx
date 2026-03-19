@@ -8,6 +8,7 @@ import { useConfirm } from 'material-ui-confirm';
 import { closeSnackbar } from 'notistack';
 import { ProgramDancesEditor } from './ProgramDancesEditor';
 import { newRecord } from './config';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCreateProgram, useUpdateProgram, useDeleteProgram } from '@/hooks/usePrograms';
 import { useAddDanceToProgram, useRemoveDanceFromProgram } from '@/hooks/useProgramsDances';
 import { useDances } from '@/hooks/useDances';
@@ -21,6 +22,7 @@ import type { Program, ProgramInsert, ProgramUpdate } from '@/lib/types/database
 export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCancel?: () => void }) => {
   const navigate = useNavigate();
   const confirm = useConfirm();
+  const queryClient = useQueryClient();
   const { toastSuccess } = useNotify();
   const { pushAction, setFormActive } = useUndoActions();
   const { setTitle } = useTitle();
@@ -38,8 +40,8 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
 
   const isCreate = program === undefined;
 
-  const { mutateAsync: createProgram, isPending: isCreating } = useCreateProgram();
-  const { mutateAsync: updateProgram, isPending: isUpdating } = useUpdateProgram();
+  const { mutateAsync: createProgram } = useCreateProgram();
+  const { mutateAsync: updateProgram } = useUpdateProgram();
   const { mutateAsync: deleteProgram } = useDeleteProgram();
   const { mutateAsync: addDance } = useAddDanceToProgram();
   const { mutateAsync: removeDance } = useRemoveDanceFromProgram();
@@ -54,8 +56,7 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
   }));
   const [formData, setFormData] = useState<ProgramUpdate>({ ...initialFormData });
   const [isSaved, setIsSaved] = useState(false);
-
-  const isSaving = isCreating || isUpdating;
+  const [isSaving, setIsSaving] = useState(false);
 
 
   // ---------- Unsaved changes handling ----------
@@ -140,40 +141,46 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
     setFormData(prev => ({ ...prev, [key]: value }));
 
   const handleSave = async () => {
-    const { id: programId } = isCreate
-      ? await createProgram(formData as ProgramInsert)
-      : await updateProgram({ id: program!.id, updates: formData });
+    setIsSaving(true);
+    try {
+      const { id: programId } = isCreate
+        ? await createProgram(formData as ProgramInsert)
+        : await updateProgram({ id: program!.id, updates: formData });
 
-    const { added, removed } = await pendingDances.commitChanges(
-      (danceId, order) => addDance({ programId, danceId, order }),
-      (danceId) => removeDance({ programId, danceId }),
-    );
+      const { added, removed } = await pendingDances.commitChanges(
+        (danceId, order) => addDance({ programId, danceId, order }),
+        (danceId) => removeDance({ programId, danceId }),
+      );
 
-    if (isCreate) {
-      pushAction({
-        label: `Create Program: ${formatDate(formData)}`,
-        ops: [
-          { type: 'insert', table: 'programs', record: { id: programId, ...formData } },
-          ...relationOps('programs_dances', added, []),
-        ],
-      });
-      toastSuccess('Program created');
-      flushSync(() => setIsSaved(true));
-      navigate(`/programs/${programId}`);
-    } else {
-      pushAction({
-        label: `Edit Program: ${formatDate(formData)}`,
-        ops: [
-          {
-            type: 'update', table: 'programs', id: programId,
-            before: beforeValues(program!, formData, newRecord),
-            after: dbRecord(formData, newRecord),
-          },
-          ...relationOps('programs_dances', added, removed),
-        ],
-      });
-      toastSuccess('Program updated');
-      onCancel?.();
+      if (isCreate) {
+        pushAction({
+          label: `Create Program: ${formatDate(formData)}`,
+          ops: [
+            { type: 'insert', table: 'programs', record: { id: programId, ...formData } },
+            ...relationOps('programs_dances', added, []),
+          ],
+        });
+        toastSuccess('Program created');
+        flushSync(() => setIsSaved(true));
+        navigate(`/programs/${programId}`);
+      } else {
+        pushAction({
+          label: `Edit Program: ${formatDate(formData)}`,
+          ops: [
+            {
+              type: 'update', table: 'programs', id: programId,
+              before: beforeValues(program!, formData, newRecord),
+              after: dbRecord(formData, newRecord),
+            },
+            ...relationOps('programs_dances', added, removed),
+          ],
+        });
+        await queryClient.refetchQueries({ queryKey: ['program', programId] });
+        toastSuccess('Program updated');
+        onCancel?.();
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
