@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router'
-import { Box, Typography, IconButton, AppBar, Toolbar, Tooltip, Button, Menu, MenuItem } from '@mui/material';
+import { Box, Typography, IconButton, AppBar, Toolbar, Tooltip, Button, Menu, MenuItem, CircularProgress } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -24,7 +24,7 @@ export const NavBar = () => {
   const navigate = useNavigate();
   const { title } = useTitle();
   const { user, signOut } = useAuth();
-  const { canUndo, canRedo, undoLabel, redoLabel } = useUndoState();
+  const { canUndo, canRedo, undoLabel, redoLabel, isExecuting } = useUndoState();
   const { undo, redo, clearStacks } = useUndoActions();
 
   const handleToggleAccountMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -104,20 +104,26 @@ export const NavBar = () => {
 
           {user && (
             <>
-              <Tooltip title={canUndo ? `Undo: ${undoLabel}` : ''}>
-                <span>
-                  <IconButton color='inherit' onClick={undo} disabled={!canUndo}>
-                    <UndoIcon />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title={canRedo ? `Redo: ${redoLabel}` : ''}>
-                <span>
-                  <IconButton color='inherit' onClick={redo} disabled={!canRedo}>
-                    <RedoIcon />
-                  </IconButton>
-                </span>
-              </Tooltip>
+              {isExecuting ? (
+                <CircularProgress size={24} color='inherit' sx={{ mx: 1 }} />
+              ) : (
+                <>
+                  <Tooltip title={canUndo ? `Undo: ${undoLabel}` : ''}>
+                    <span>
+                      <IconButton color='inherit' onClick={undo} disabled={!canUndo}>
+                        <UndoIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title={canRedo ? `Redo: ${redoLabel}` : ''}>
+                    <span>
+                      <IconButton color='inherit' onClick={redo} disabled={!canRedo}>
+                        <RedoIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </>
+              )}
             </>
           )}
 
