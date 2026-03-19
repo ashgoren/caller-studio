@@ -53,6 +53,8 @@ function isDependent(op: UndoOp): boolean {
 
 function sortOps(ops: UndoOp[]): UndoOp[] {
   return [...ops].sort((a, b) => {
+    if (a.type === 'delete' && b.type === 'insert') return -1;
+    if (a.type === 'insert' && b.type === 'delete') return 1;
     if (a.type === 'insert' && b.type === 'insert') {
       return Number(isDependent(a)) - Number(isDependent(b));
     }
