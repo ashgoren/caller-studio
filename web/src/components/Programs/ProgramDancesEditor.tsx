@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { DragDropProvider } from '@dnd-kit/react';
 import { move } from '@dnd-kit/helpers';
 import { useSortable } from '@dnd-kit/react/sortable';
@@ -43,6 +43,7 @@ const SortableDanceItem = ({ dance, index, onRemove }: {
 };
 
 export const ProgramDancesEditor = ({ orderedDances, allDances, onAdd, onRemove, onReorder }: Props) => {
+  const [inputValue, setInputValue] = useState('');
   const usedIds = new Set(orderedDances.map(d => d.danceId));
   const availableDances = allDances
     .filter(d => !usedIds.has(d.id))
@@ -66,7 +67,9 @@ export const ProgramDancesEditor = ({ orderedDances, allDances, onAdd, onRemove,
       <Autocomplete
         size='small'
         value={null}
-        onChange={(_, value) => { if (value) onAdd(value); }}
+        inputValue={inputValue}
+        onInputChange={(_, value, reason) => { if (reason !== 'reset') setInputValue(value); }}
+        onChange={(_, value) => { if (value) { onAdd(value); setInputValue(''); } }}
         options={availableDances}
         getOptionLabel={dance => dance.title}
         renderInput={(params) => (
