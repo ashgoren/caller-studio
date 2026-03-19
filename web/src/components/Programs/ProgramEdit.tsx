@@ -11,7 +11,7 @@ import { newRecord } from './config';
 import { useCreateProgram, useUpdateProgram, useDeleteProgram } from '@/hooks/usePrograms';
 import { useAddDanceToProgram, useRemoveDanceFromProgram } from '@/hooks/useProgramsDances';
 import { useDances } from '@/hooks/useDances';
-import { usePendingRelations } from '@/hooks/usePendingRelations';
+import { usePendingDanceList } from '@/hooks/usePendingDanceList';
 import { useNotify } from '@/hooks/useNotify';
 import { useTitle } from '@/contexts/TitleContext';
 import { useUndoActions, dbRecord, beforeValues, relationOps } from '@/contexts/UndoContext';
@@ -46,9 +46,7 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
 
   const { data: dances } = useDances();
 
-  const pendingDances = usePendingRelations<{ danceId: number; order: number }>({
-    getId: ({ danceId }) => danceId,
-  });
+  const pendingDances = usePendingDanceList(program?.programs_dances ?? []);
 
   const [initialFormData] = useState<ProgramUpdate>(() => ({
     date: program?.date ?? newRecord.date,
@@ -147,7 +145,7 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
       : await updateProgram({ id: program!.id, updates: formData });
 
     const { added, removed } = await pendingDances.commitChanges(
-      ({ danceId, order }) => addDance({ programId, danceId, order }),
+      (danceId, order) => addDance({ programId, danceId, order }),
       (danceId) => removeDance({ programId, danceId }),
     );
 
@@ -204,9 +202,11 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
         </Box>
 
         <ProgramDancesEditor
-          programDances={program?.programs_dances ?? []}
-          dances={dances ?? []}
-          pending={pendingDances}
+          orderedDances={pendingDances.dances}
+          allDances={dances ?? []}
+          onAdd={pendingDances.addDance}
+          onRemove={pendingDances.removeDance}
+          onReorder={pendingDances.reorder}
         />
       </Stack>
 

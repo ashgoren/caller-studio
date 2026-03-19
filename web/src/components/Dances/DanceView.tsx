@@ -124,7 +124,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
                   items={dance.programs_dances}
                   model='program'
                   getId={pd => pd.program.id}
-                  getLabel={pd => `${pd.program.date} – ${pd.program.location}`}
+                  getLabel={pd => `${pd.program.date} - ${pd.program.location}`}
                 />
               </Box>
             </Box>

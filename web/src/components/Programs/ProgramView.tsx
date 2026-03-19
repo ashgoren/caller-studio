@@ -54,7 +54,7 @@ export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: 
               items={program.programs_dances}
               model='dance'
               getId={pd => pd.dance.id}
-              getLabel={pd => `${pd.order} – ${pd.dance.title}`}
+              getLabel={pd => `${pd.order} - ${pd.dance.title}`}
             />
           </Box>
         </Box>

@@ -24,7 +24,6 @@ const removeDanceFromProgram = async (programId: number, danceId: number) => {
   return data;
 };
 
-
 export const useAddDanceToProgram = () => {
   const { toastError } = useNotify();
   const queryClient = useQueryClient();
@@ -58,32 +57,3 @@ export const useRemoveDanceFromProgram = () => {
     onError: (err: Error) => toastError(err.message || 'Error removing dance from program')
   });
 };
-
-// export const useUpdateDanceOrderInProgram = () => {
-//   const { success, toastError } = useNotify();
-//   const queryClient = useQueryClient();
-//   return useMutation({
-//     mutationFn: ({ programId, danceId, order }: { programId: number; danceId: number; order: number }) =>
-//       updateDanceOrderInProgram(programId, danceId, order),
-//     onSuccess: (_, { programId }) => {
-//       queryClient.invalidateQueries({ queryKey: ['program', programId] });
-//       queryClient.invalidateQueries({ queryKey: ['programs'] });
-//       success('Dance order updated');
-//     },
-//     onError: (err: Error) => toastError(err.message || 'Error updating dance order')
-//   });
-// };
-
-// export const useReorderDancesInProgram = () => {
-//   const { toastError } = useNotify();
-//   const queryClient = useQueryClient();
-//   return useMutation({
-//     mutationFn: ({ programId, orderedDanceIds }: { programId: number; orderedDanceIds: number[] }) =>
-//       reorderDancesInProgram(programId, orderedDanceIds),
-//     onSuccess: (_, { programId }) => {
-//       queryClient.invalidateQueries({ queryKey: ['program', programId] });
-//       queryClient.invalidateQueries({ queryKey: ['programs'] });
-//     },
-//     onError: (err: Error) => toastError(err.message || 'Failed to reorder dances'),
-//   });
-// };
