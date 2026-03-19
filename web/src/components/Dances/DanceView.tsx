@@ -7,6 +7,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { ExternalLink } from '@/components/shared';
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
+import { makeFiguresLabel } from '@/components/Dances/danceUtils';
 import type { Dance } from '@/lib/types/database';
 
 export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => void }) => {
@@ -16,14 +17,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
   useEffect(() => setTitle(`Dance: ${dance.title}`), [setTitle, dance.title]);
 
   const choreographerNames = dance.dances_choreographers.map(dc => dc.choreographer.name).join(', ');
-
-  // Label shown above figures: "Dance Type · Formation · Progression"
-  // Skips display of defaults ("contra" / "single progression")
-  const figuresLabel = [
-    dance.dance_type?.name?.toLowerCase() !== 'contra' ? dance.dance_type?.name : null,
-    dance.formation?.name?.replace('Duple Minor - Improper', 'Improper').replace('Duple Minor - Becket', 'Becket').replace('Duple Minor - Becket CCW', 'Becket CCW'),
-    dance.progression?.name && dance.progression.name.toLowerCase() !== 'single' ? `${dance.progression?.name} progression` : null,
-  ].filter(Boolean).join(' · ');
+  const figuresLabel = makeFiguresLabel(dance);
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto' }}>

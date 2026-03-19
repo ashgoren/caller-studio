@@ -21,14 +21,14 @@ export type FigureItem = {
 
 export type DanceRow = Tables['dances']['Row'];
 export type Dance = Omit<DanceRow, 'figures'> & {
-  figures: FigureItem[],
-  programs_dances: { id: number; order: number; program: ProgramRow }[],
-  dances_choreographers: { id: number; choreographer: ChoreographerRow }[],
-  dances_key_moves: { id: number; key_move: KeyMoveRow }[],
-  dances_vibes: { id: number; vibe: VibeRow }[],
-  dance_type: DanceTypeRow | null,
-  formation: FormationRow | null,
-  progression: ProgressionRow | null,
+  figures: FigureItem[];
+  programs_dances: { id: number; order: number; program: ProgramRow }[];
+  dances_choreographers: { id: number; choreographer: ChoreographerRow }[];
+  dances_key_moves: { id: number; key_move: KeyMoveRow }[];
+  dances_vibes: { id: number; vibe: VibeRow }[];
+  dance_type: DanceTypeRow | null;
+  formation: FormationRow | null;
+  progression: ProgressionRow | null;
 };
 export type DanceInsert = Tables['dances']['Insert'];
 export type DanceUpdate = Tables['dances']['Update'];

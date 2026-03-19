@@ -1,36 +1,19 @@
-import { useEffect } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { Box, Button, Divider, Link, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useTitle } from '@/contexts/TitleContext';
 import { formatLocalDate } from '@/lib/utils';
-import type { Program, ProgramDance } from '@/lib/types/database';
+import { makeFiguresLabel } from '@/components/Dances/danceUtils';
+import type { Program } from '@/lib/types/database';
 
-const PHRASE_COL_WIDTH = 36;
+const PHRASE_COL_WIDTH = 28;
 const DANCE_COL_MIN_WIDTH = 200;
 
-const makeFiguresLabel = (dance: ProgramDance) => [
-  dance.dance_type?.name?.toLowerCase() !== 'contra' ? dance.dance_type?.name : null,
-  dance.formation?.name
-    ?.replace('Duple Minor - Improper', 'Improper')
-    .replace('Duple Minor - Becket', 'Becket')
-    .replace('Duple Minor - Becket CCW', 'Becket CCW'),
-  dance.progression?.name && dance.progression.name.toLowerCase() !== 'single'
-    ? `${dance.progression.name} progression`
-    : null,
-].filter(Boolean).join(' · ');
-
 export const ProgramChoreographyView = ({ program, onBack }: { program: Program; onBack: () => void }) => {
-  const { setTitle } = useTitle();
-  useEffect(
-    () => setTitle(`Choreography: ${program.date ? formatLocalDate(program.date) : 'unknown'}`),
-    [setTitle, program.date],
-  );
+  const programDances = program.programs_dances;
 
-  const programDances = program.programs_dances; // already sorted by order from query
-
+  // For contras this is usually just ['A1', 'A2', 'B1', 'B2']
   const allPhrases = [...new Set(
-    programDances.flatMap(pd => (pd.dance.figures ?? []).map(f => f.phrase)),
+    programDances.flatMap(pd => (pd.dance.figures ?? []).map(f => f.phrase))
   )];
 
   return (
@@ -39,7 +22,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
       {/* Nav */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, maxWidth: 900, mx: 'auto' }}>
         <Button startIcon={<ArrowBackIcon />} onClick={onBack} size='small' color='secondary'>
-          {program.date ? formatLocalDate(program.date) : 'Program'}
+          Program
         </Button>
       </Box>
 
@@ -54,8 +37,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
           </Typography>
         )}
       </Box>
-
-      <Divider sx={{ mb: 2 }} />
+      <Divider sx={{ mb: 4, maxWidth: 900, mx: 'auto' }} />
 
       {/* Choreography grid */}
       <Box sx={{ overflowX: 'auto' }}>
@@ -74,7 +56,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
                 variant='subtitle2'
                 fontWeight={700}
                 underline='hover'
-                color='inherit'
+                color='secondary'
               >
                 {pd.order}. {pd.dance.title}
               </Link>

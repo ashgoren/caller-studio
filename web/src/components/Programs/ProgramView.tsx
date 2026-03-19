@@ -19,7 +19,7 @@ export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: 
 
       {/* Nav + actions */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/programs')} size='small'>
+        <Button color='secondary' startIcon={<ArrowBackIcon />} onClick={() => navigate('/programs')} size='small'>
           Programs
         </Button>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
