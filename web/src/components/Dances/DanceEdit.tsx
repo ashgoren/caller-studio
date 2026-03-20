@@ -437,7 +437,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
         maxWidth='md'
         PaperProps={{ sx: { height: '90vh' } }}
       >
-        <DialogTitle>Walkthrough</DialogTitle>
+        <DialogTitle>{dance?.title} • Walkthrough</DialogTitle>
         <DialogContent>
           <Suspense fallback={<CircularProgress size={24} />}>
             <MarkdownEditor
