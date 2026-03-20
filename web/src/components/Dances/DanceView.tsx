@@ -33,12 +33,13 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
       * { color: black !important; border-color: black !important; font-family: Georgia, serif !important; }
       p { margin: 0 0 1em 0 !important; font-size: 11pt !important; }
       p:last-child { margin-bottom: 0 !important; }
+      .print-dance-title { font-size: 24pt !important; font-weight: bold !important; margin: 0 0 0.5em 0 !important; font-family: Georgia, serif !important; }
       h1 { font-size: 24pt !important; font-weight: bold !important; margin: 0 0 0.4em 0 !important; }
       h2 { font-size: 18pt !important; font-weight: bold !important; margin: 0 0 0.4em 0 !important; }
       h3 { font-size: 14pt !important; font-weight: bold !important; margin: 0 0 0.4em 0 !important; }
       ul, ol { margin: 0 0 0.6em 0 !important; padding-left: 1.4em !important; font-size: 11pt !important; }
       li { font-size: 11pt !important; }
-      hr { margin: 1.4em 0 !important; }
+      hr { margin: 1.4em 0 !important; border-color: #888 !important; }
     `,
   });
 
@@ -149,23 +150,22 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
           )}
 
           <Dialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} fullWidth maxWidth='md' fullScreen={fullScreenDialog}>
-            <DialogContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant='h6' sx={{ fontWeight: 600 }}>
-                  Walkthrough — {dance.title}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                  {!fullScreenDialog && (
-                    <Tooltip title='Print'>
-                      <IconButton size='small' onClick={() => printWalkthrough()}><PrintIcon fontSize='small' /></IconButton>
-                    </Tooltip>
-                  )}
-                  <Tooltip title='Close'>
-                    <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
+            <DialogContent sx={{ position: 'relative' }}>
+              <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5, zIndex: 1 }}>
+                {!fullScreenDialog && (
+                  <Tooltip title='Print'>
+                    <IconButton size='small' onClick={() => printWalkthrough()}><PrintIcon fontSize='small' /></IconButton>
                   </Tooltip>
-                </Box>
+                )}
+                <Tooltip title='Close'>
+                  <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
+                </Tooltip>
               </Box>
-              <Box ref={walkthroughPrintRef} sx={{
+              <Box ref={walkthroughPrintRef}>
+              <Typography variant='h4' className='print-dance-title' sx={{ fontWeight: 600, mb: 2, pr: 8 }}>
+                {dance.title}
+              </Typography>
+              <Box sx={{
                 fontFamily: 'system-ui, -apple-system, sans-serif',
                 fontSize: { xs: '0.9rem', sm: '1.05rem' },
                 lineHeight: 1.7,
@@ -178,6 +178,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
                 '& hr': { margin: '1.4em 0', borderColor: 'divider' },
               }}>
                 <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.walkthrough ?? ''}</Markdown>
+              </Box>
               </Box>
             </DialogContent>
           </Dialog>
