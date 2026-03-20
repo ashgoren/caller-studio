@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, IconButton, Stack, Tooltip, Typography, useMediaQuery } from '@mui/material';
+import { Box, Button, Dialog, DialogContent, Divider, IconButton, Stack, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import { useReactToPrint } from 'react-to-print';
 import EditIcon from '@mui/icons-material/Edit';
@@ -149,29 +149,31 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
           )}
 
           <Dialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} fullWidth maxWidth='md' fullScreen={fullScreenDialog}>
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              Walkthrough — {dance.title}
-              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                {!fullScreenDialog && (
-                  <Tooltip title='Print'>
-                    <IconButton size='small' onClick={() => printWalkthrough()}><PrintIcon fontSize='small' /></IconButton>
-                  </Tooltip>
-                )}
-                <Tooltip title='Close'>
-                  <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
-                </Tooltip>
-              </Box>
-            </DialogTitle>
             <DialogContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant='h6' sx={{ fontWeight: 600 }}>
+                  Walkthrough — {dance.title}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                  {!fullScreenDialog && (
+                    <Tooltip title='Print'>
+                      <IconButton size='small' onClick={() => printWalkthrough()}><PrintIcon fontSize='small' /></IconButton>
+                    </Tooltip>
+                  )}
+                  <Tooltip title='Close'>
+                    <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
               <Box ref={walkthroughPrintRef} sx={{
                 fontFamily: 'system-ui, -apple-system, sans-serif',
-                fontSize: '1.05rem',
+                fontSize: { xs: '0.9rem', sm: '1.05rem' },
                 lineHeight: 1.7,
                 '& p': { margin: '0 0 1em 0' },
                 '& p:last-child': { marginBottom: 0 },
-                '& h1': { fontSize: '1.6rem', fontWeight: 700, mt: 0, mb: '0.4em' },
-                '& h2': { fontSize: '1.35rem', fontWeight: 700, mt: 0, mb: '0.4em' },
-                '& h3': { fontSize: '1.15rem', fontWeight: 700, mt: 0, mb: '0.4em' },
+                '& h1': { fontSize: { xs: '1.3rem', sm: '1.6rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
+                '& h2': { fontSize: { xs: '1.15rem', sm: '1.35rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
+                '& h3': { fontSize: { xs: '1rem', sm: '1.15rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
                 '& ul, & ol': { pl: '1.4em', mb: '1em' },
                 '& hr': { margin: '1.4em 0', borderColor: 'divider' },
               }}>
