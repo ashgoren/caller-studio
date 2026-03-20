@@ -6,6 +6,8 @@ import { RelationCell } from '@/components/RelationCell';
 import type { MRT_ColumnDef } from 'material-react-table'
 import type { Dance, DanceInsert } from '@/lib/types/database';
 import '@tanstack/react-table';
+import { Tooltip } from '@mui/material';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 
 // NEW RECORD CONFIG
 
@@ -32,7 +34,19 @@ export const columns: MRT_ColumnDef<Dance>[] = [
   {
     accessorKey: 'title',
     header: 'Title',
-    // Cell: ({row}) => linkTitle(row.original.title, row.original.url),
+    Cell: ({ row }) => {
+      const noFigures = !row.original.figures?.length;
+      return (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {row.original.title}
+          {noFigures && (
+            <Tooltip title="No figures" placement="right">
+              <WarningAmberRoundedIcon sx={{ fontSize: 16, color: 'warning.main', flexShrink: 0 }} />
+            </Tooltip>
+          )}
+        </span>
+      );
+    },
     size: 250,
     minSize: 100,
     meta: { inputType: 'text' },
