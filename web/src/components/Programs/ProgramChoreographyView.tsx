@@ -37,12 +37,12 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
     pageStyle: `
       @page { size: landscape; margin: 0.4in; }
       html, body { margin: 0; padding: 0; height: auto !important; overflow: visible !important; }
-      body { font-family: Georgia, serif !important; font-size: 9pt !important; color: black !important; }
+      body { font-family: Georgia, serif !important; font-size: 8pt !important; color: black !important; }
       * { color: black !important; font-family: Georgia, serif !important; box-sizing: border-box !important; }
       table { border-collapse: collapse !important; width: 100% !important; }
-      th { font-size: 9pt !important; font-weight: bold !important; }
-      td { font-size: 8.5pt !important; }
-      .phrase-cell { font-weight: bold !important; font-size: 9pt !important; white-space: nowrap !important; text-align: center !important; }
+      th { font-size: 8pt !important; font-weight: bold !important; }
+      td { font-size: 7.5pt !important; }
+      .phrase-cell { font-weight: bold !important; font-size: 8pt !important; white-space: nowrap !important; text-align: center !important; }
     `,
   });
 
@@ -197,9 +197,9 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
                         <td key={pd.id} style={{ border: '1px solid #aaa', padding: '4pt 5pt', verticalAlign: 'top' }}>
                           {figures.length === 0 ? '—' : figures.map(fig => (
                             <div key={fig.id} style={{ display: 'flex', gap: '4pt', marginTop: '2pt' }}>
-                              {fig.beats != null && (
-                                <span style={{ flexShrink: 0, color: '#555' }}>({fig.beats})</span>
-                              )}
+                              <span style={{ flexShrink: 0, width: '2em', color: '#555' }}>
+                                {fig.beats != null ? `(${fig.beats})` : ''}
+                              </span>
                               <span>{fig.description}</span>
                             </div>
                           ))}
