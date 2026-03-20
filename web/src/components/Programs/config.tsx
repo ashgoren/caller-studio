@@ -61,6 +61,7 @@ export const queryFields = [
   { name: 'date', label: 'Date', inputType: 'date' },
   { name: 'location', label: 'Location', inputType: 'string' },
   { name: 'danceNames', label: 'Dances', inputType: 'string' },
+  { name: 'notes', label: 'Notes', inputType: 'string' },
 ];
 
 export const defaultQuery: FilterGroup = {
