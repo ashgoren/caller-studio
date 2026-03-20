@@ -153,9 +153,11 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               Walkthrough — {dance.title}
               <Box sx={{ display: 'flex', gap: 0.5 }}>
-                <Tooltip title='Print'>
-                  <IconButton size='small' onClick={() => printWalkthrough()}><PrintIcon fontSize='small' /></IconButton>
-                </Tooltip>
+                {!fullScreenDialog && (
+                  <Tooltip title='Print'>
+                    <IconButton size='small' onClick={() => printWalkthrough()}><PrintIcon fontSize='small' /></IconButton>
+                  </Tooltip>
+                )}
                 <Tooltip title='Close'>
                   <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
                 </Tooltip>
