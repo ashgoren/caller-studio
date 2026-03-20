@@ -1,6 +1,10 @@
+import { useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link as RouterLink } from 'react-router';
-import { Box, Button, Divider, Link, Typography } from '@mui/material';
+import { Box, Button, Divider, IconButton, Link, Tooltip, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PrintIcon from '@mui/icons-material/Print';
+import { useReactToPrint } from 'react-to-print';
 import { formatLocalDate } from '@/lib/utils';
 import { makeFiguresLabel } from '@/components/Dances/danceUtils';
 import type { Program } from '@/lib/types/database';
@@ -16,14 +20,46 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
     programDances.flatMap(pd => (pd.dance.figures ?? []).map(f => f.phrase))
   )];
 
+  const printRef = useRef<HTMLDivElement>(null);
+  const printTitle = (() => {
+    const parts: string[] = [];
+    if (program.date) {
+      const [year, month, day] = program.date.split('-').map(Number);
+      parts.push(new Date(year, month - 1, day).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }).replace(',', ''));
+    }
+    if (program.location) parts.push(program.location);
+    parts.push('Choreography');
+    return parts.join(' - ');
+  })();
+  const printChoreography = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: printTitle,
+    pageStyle: `
+      @page { size: landscape; margin: 0.4in; }
+      html, body { margin: 0; padding: 0; height: auto !important; overflow: visible !important; }
+      body { font-family: Georgia, serif !important; font-size: 9pt !important; color: black !important; }
+      * { color: black !important; font-family: Georgia, serif !important; box-sizing: border-box !important; }
+      table { border-collapse: collapse !important; width: 100% !important; }
+      th, td { border: 1px solid #aaa !important; padding: 4pt 5pt !important; vertical-align: top !important; }
+      th { font-size: 9pt !important; font-weight: bold !important; }
+      td { font-size: 8.5pt !important; }
+      .phrase-cell { font-weight: bold !important; font-size: 9pt !important; white-space: nowrap !important; }
+    `,
+  });
+
   return (
     <Box>
 
       {/* Nav */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, maxWidth: 900, mx: 'auto' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, maxWidth: 900, mx: 'auto' }}>
         <Button startIcon={<ArrowBackIcon />} onClick={onBack} size='small' color='secondary'>
           Program
         </Button>
+        {allPhrases.length > 0 && (
+          <Tooltip title='Print choreography'>
+            <IconButton size='small' onClick={() => printChoreography()}><PrintIcon fontSize='small' /></IconButton>
+          </Tooltip>
+        )}
       </Box>
 
       {/* Title */}
@@ -120,6 +156,59 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
           ))
         )}
       </Box>
+
+      {createPortal(
+        <div style={{ position: 'fixed', top: '-100vh', left: 0, width: '1000px' }}>
+          <div ref={printRef} style={{ background: 'white', color: 'black', fontFamily: 'Georgia, serif' }}>
+            <div style={{ fontSize: '16pt', fontWeight: 'bold', marginBottom: '0.1em' }}>
+              {program.date ? formatLocalDate(program.date) : 'No date'}
+            </div>
+            {program.location && (
+              <div style={{ fontSize: '11pt', marginBottom: '0.6em' }}>{program.location}</div>
+            )}
+            <table>
+              <thead>
+                <tr>
+                  <th style={{ width: '2em' }} />
+                  {programDances.map(pd => (
+                    <th key={pd.id} style={{ textAlign: 'left' }}>
+                      <div>{pd.order}. {pd.dance.title}</div>
+                      {makeFiguresLabel(pd.dance) && (
+                        <div style={{ fontWeight: 'normal', fontSize: '7.5pt', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {makeFiguresLabel(pd.dance)}
+                        </div>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {allPhrases.map(phrase => (
+                  <tr key={phrase}>
+                    <td className='phrase-cell'>{phrase}</td>
+                    {programDances.map(pd => {
+                      const figures = (pd.dance.figures ?? []).filter(f => f.phrase === phrase);
+                      return (
+                        <td key={pd.id}>
+                          {figures.length === 0 ? '—' : figures.map(fig => (
+                            <div key={fig.id} style={{ display: 'flex', gap: '4pt', marginTop: '2pt' }}>
+                              {fig.beats != null && (
+                                <span style={{ flexShrink: 0, color: '#555' }}>({fig.beats})</span>
+                              )}
+                              <span>{fig.description}</span>
+                            </div>
+                          ))}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>,
+        document.body
+      )}
 
     </Box>
   );
