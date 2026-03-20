@@ -40,7 +40,6 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
       body { font-family: Georgia, serif !important; font-size: 9pt !important; color: black !important; }
       * { color: black !important; font-family: Georgia, serif !important; box-sizing: border-box !important; }
       table { border-collapse: collapse !important; width: 100% !important; }
-      th, td { border: 1px solid #aaa !important; padding: 4pt 5pt !important; vertical-align: top !important; }
       th { font-size: 9pt !important; font-weight: bold !important; }
       td { font-size: 8.5pt !important; }
       .phrase-cell { font-weight: bold !important; font-size: 9pt !important; white-space: nowrap !important; }
@@ -169,9 +168,9 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
             <table>
               <thead>
                 <tr>
-                  <th style={{ width: '2em' }} />
+                  <th style={{ width: '2em', border: '1px solid #aaa', padding: '4pt 5pt', verticalAlign: 'top' }} />
                   {programDances.map(pd => (
-                    <th key={pd.id} style={{ textAlign: 'left' }}>
+                    <th key={pd.id} style={{ textAlign: 'left', border: '1px solid #aaa', padding: '4pt 5pt', verticalAlign: 'top' }}>
                       <div>{pd.order}. {pd.dance.title}</div>
                       {makeFiguresLabel(pd.dance) && (
                         <div style={{ fontWeight: 'normal', fontSize: '7.5pt', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -180,16 +179,17 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
                       )}
                     </th>
                   ))}
+                  <th style={{ width: 0, padding: 0, border: '1px solid #aaa' }} />
                 </tr>
               </thead>
               <tbody>
                 {allPhrases.map(phrase => (
                   <tr key={phrase}>
-                    <td className='phrase-cell'>{phrase}</td>
+                    <td className='phrase-cell' style={{ border: '1px solid #aaa', padding: '4pt 5pt', verticalAlign: 'top' }}>{phrase}</td>
                     {programDances.map(pd => {
                       const figures = (pd.dance.figures ?? []).filter(f => f.phrase === phrase);
                       return (
-                        <td key={pd.id}>
+                        <td key={pd.id} style={{ border: '1px solid #aaa', padding: '4pt 5pt', verticalAlign: 'top' }}>
                           {figures.length === 0 ? '—' : figures.map(fig => (
                             <div key={fig.id} style={{ display: 'flex', gap: '4pt', marginTop: '2pt' }}>
                               {fig.beats != null && (
@@ -201,6 +201,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
                         </td>
                       );
                     })}
+                    <td style={{ width: 0, padding: 0, border: '1px solid #aaa' }} />
                   </tr>
                 ))}
               </tbody>
