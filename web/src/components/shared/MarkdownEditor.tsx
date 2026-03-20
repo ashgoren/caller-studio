@@ -10,6 +10,7 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   height?: number | string;
+  dragbar?: boolean;
 }
 
 const withTitle = (command: ICommand, title: string): ICommand => ({
@@ -38,7 +39,7 @@ const extraToolbar = [
   withTitle(commands.fullscreen, 'Fullscreen'),
 ];
 
-export const MarkdownEditor = ({ label, value, onChange, height = 200 }: Props) => {
+export const MarkdownEditor = ({ label, value, onChange, height = 200, dragbar = true }: Props) => {
   const { mode, systemMode } = useColorScheme();
   const colorMode = mode === 'system' ? (systemMode ?? 'light') : (mode ?? 'light');
 
@@ -58,6 +59,7 @@ export const MarkdownEditor = ({ label, value, onChange, height = 200 }: Props) 
           value={value}
           onChange={v => onChange(v ?? '')}
           height={height}
+          visibleDragbar={dragbar}
           preview='edit'
           commands={toolbar}
           extraCommands={extraToolbar}

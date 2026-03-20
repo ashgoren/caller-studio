@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
-import { Box, Button, Dialog, DialogContent, DialogTitle, TextField, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
-import CloseIcon from '@mui/icons-material/Close';
+
 import ArticleIcon from '@mui/icons-material/Article';
 import { useConfirm } from 'material-ui-confirm';
 import { closeSnackbar } from 'notistack';
@@ -432,23 +432,27 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
 
       <Dialog
         open={walkthroughOpen}
-        onClose={() => setWalkthroughOpen(false)}
+        onClose={(_, reason) => { if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') setWalkthroughOpen(false); }}
         fullWidth
         maxWidth='md'
         PaperProps={{ sx: { height: '90vh' } }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Walkthrough
-          <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
-        </DialogTitle>
+        <DialogTitle>Walkthrough</DialogTitle>
         <DialogContent>
           <MarkdownEditor
             label=''
             value={formData.walkthrough ?? ''}
             onChange={v => update('walkthrough', v)}
-            height='calc(90vh - 120px)'
+            height='calc(90vh - 140px)'
+            dragbar={false}
           />
+          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 1 }}>
+            Changes are saved when you save the dance.
+          </Typography>
         </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setWalkthroughOpen(false)}>Done</Button>
+        </DialogActions>
       </Dialog>
 
       <Box sx={{ display: 'flex', mt: 3, justifyContent: 'space-between', alignItems: 'center' }}>
