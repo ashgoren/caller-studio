@@ -1,9 +1,11 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, Button, Divider, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import CloseIcon from '@mui/icons-material/Close';
+import ArticleIcon from '@mui/icons-material/Article';
 import Markdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
@@ -16,6 +18,7 @@ import type { Dance } from '@/lib/types/database';
 export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => void }) => {
   const navigate = useNavigate();
   const { setTitle } = useTitle();
+  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
 
   useEffect(() => setTitle(`Dance: ${dance.title}`), [setTitle, dance.title]);
 
@@ -124,29 +127,34 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
           )}
 
           {dance.walkthrough && (
-            <Box component='fieldset' sx={{
-              mt: 3,
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 1,
-              px: 2,
-              pt: 1,
-              pb: 2,
-              '& p': { margin: '0 0 0.75em 0' },
-              '& p:last-child': { marginBottom: 0 },
-              '& hr': { margin: '1em 0', borderColor: 'divider' },
-            }}>
-              <Typography
-                component='legend'
-                variant='caption'
-                color='text.secondary'
-                sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5, px: 0.5 }}
+            <Box sx={{ mt: 3 }}>
+              <Button
+                size='small'
+                variant='outlined'
+                color='secondary'
+                startIcon={<ArticleIcon />}
+                onClick={() => setWalkthroughOpen(true)}
               >
                 Walkthrough
-              </Typography>
-              <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.walkthrough}</Markdown>
+              </Button>
             </Box>
           )}
+
+          <Dialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} fullWidth maxWidth='md'>
+            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              Walkthrough — {dance.title}
+              <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
+            </DialogTitle>
+            <DialogContent>
+              <Box sx={{
+                '& p': { margin: '0 0 0.75em 0' },
+                '& p:last-child': { marginBottom: 0 },
+                '& hr': { margin: '1em 0', borderColor: 'divider' },
+              }}>
+                <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.walkthrough ?? ''}</Markdown>
+              </Box>
+            </DialogContent>
+          </Dialog>
 
           {dance.programs_dances.length > 0 && (
             <Box sx={{ mt: 3 }}>

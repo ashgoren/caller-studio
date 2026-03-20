@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
 import { Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { MarkdownEditor } from '@/components/shared';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useConfirm } from 'material-ui-confirm';
@@ -216,11 +217,10 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
           onRemove={pendingDances.removeDance}
           onReorder={pendingDances.reorder}
         />
-        <TextField
-          label='Notes (supports markdown)'
+        <MarkdownEditor
+          label='Notes'
           value={formData.notes ?? ''}
-          onChange={e => update('notes', e.target.value)}
-          fullWidth multiline variant='standard'
+          onChange={v => update('notes', v)}
         />
       </Stack>
 

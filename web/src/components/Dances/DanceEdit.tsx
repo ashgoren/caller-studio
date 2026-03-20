@@ -1,13 +1,16 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
-import { Box, Button, TextField, Checkbox, FormControlLabel, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
+import { Box, Button, Dialog, DialogContent, DialogTitle, TextField, Checkbox, FormControlLabel, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
+import CloseIcon from '@mui/icons-material/Close';
+import ArticleIcon from '@mui/icons-material/Article';
 import { useConfirm } from 'material-ui-confirm';
 import { closeSnackbar } from 'notistack';
 import { RelationEditor } from '@/components/RelationEditor';
+import { MarkdownEditor } from '@/components/shared';
 import { FiguresEditor } from './FiguresEditor';
 import { isValidUrl, fetchAndResolveImport } from './danceImport';
 import { newRecord } from './config';
@@ -87,6 +90,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
   }));
   const [formData, setFormData] = useState<DanceUpdate>({ ...initialFormData });
   const [isSaved, setIsSaved] = useState(false);
+  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const contraDefaultApplied = useRef(false);
 
@@ -364,21 +368,13 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
             onDelete={pendingFigures.deleteFigure}
             onReorder={pendingFigures.setFigures}
           />
-          <TextField
-            label='Notes (supports markdown)'
-            value={formData.notes ?? ''}
-            onChange={e => update('notes', e.target.value)}
-            fullWidth multiline variant='standard'
-            // helperText='Markdown supported'
-            sx={{ mt: 4 }}
-          />
-          <TextField
-            label='Walkthrough (supports markdown)'
-            value={formData.walkthrough ?? ''}
-            onChange={e => update('walkthrough', e.target.value)}
-            fullWidth multiline variant='standard'
-            sx={{ mt: 4 }}
-          />
+          <Box sx={{ mt: 4 }}>
+            <MarkdownEditor
+              label='Notes'
+              value={formData.notes ?? ''}
+              onChange={v => update('notes', v)}
+            />
+          </Box>
         </Box>
 
         {/* Right: Attributes */}
@@ -434,6 +430,38 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
         </Box>
 
       </Box>
+
+      <Box sx={{ mt: 3 }}>
+        <Button
+          variant='outlined'
+          color='secondary'
+          startIcon={<ArticleIcon />}
+          onClick={() => setWalkthroughOpen(true)}
+        >
+          {formData.walkthrough ? 'Edit Walkthrough' : 'Add Walkthrough'}
+        </Button>
+      </Box>
+
+      <Dialog
+        open={walkthroughOpen}
+        onClose={() => setWalkthroughOpen(false)}
+        fullWidth
+        maxWidth='md'
+        PaperProps={{ sx: { height: '90vh' } }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          Walkthrough
+          <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <MarkdownEditor
+            label=''
+            value={formData.walkthrough ?? ''}
+            onChange={v => update('walkthrough', v)}
+            height='calc(90vh - 120px)'
+          />
+        </DialogContent>
+      </Dialog>
 
       <Box sx={{ display: 'flex', mt: 3, justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
