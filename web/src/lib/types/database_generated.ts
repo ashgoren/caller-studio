@@ -81,11 +81,9 @@ export type Database = {
           figures: Json
           formation_id: number | null
           id: number
-          moves: string | null
           notes: string | null
           place_in_program: string | null
           progression_id: number | null
-          swing_16: boolean | null
           title: string
           url: string | null
           user_id: string
@@ -99,11 +97,9 @@ export type Database = {
           figures?: Json
           formation_id?: number | null
           id?: number
-          moves?: string | null
           notes?: string | null
           place_in_program?: string | null
           progression_id?: number | null
-          swing_16?: boolean | null
           title: string
           url?: string | null
           user_id?: string
@@ -117,11 +113,9 @@ export type Database = {
           figures?: Json
           formation_id?: number | null
           id?: number
-          moves?: string | null
           notes?: string | null
           place_in_program?: string | null
           progression_id?: number | null
-          swing_16?: boolean | null
           title?: string
           url?: string | null
           user_id?: string

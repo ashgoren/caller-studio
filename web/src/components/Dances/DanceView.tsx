@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -199,11 +199,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
             <SidebarField label='Difficulty'>
               {dance.difficulty != null ? String(dance.difficulty) : undefined}
             </SidebarField>
-            <SidebarField label='16-beat swing?'>
-              {dance.swing_16 === true ? 'Yes' : dance.swing_16 === false ? 'No' : undefined}
-            </SidebarField>
             <SidebarField label='Place in Program'>{dance.place_in_program || undefined}</SidebarField>
-            <SidebarField label='Moves'>{dance.moves || undefined}</SidebarField>
             <SidebarField label='Video'>
               {dance.video ? <ExternalLink url={dance.video} title='Video' /> : undefined}
             </SidebarField>

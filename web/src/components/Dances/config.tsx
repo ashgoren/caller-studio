@@ -18,8 +18,8 @@ export const newRecord: DanceInsert = {
   notes: '',
   walkthrough: '',
   place_in_program: '',
-  moves: '',
-  swing_16: null,
+
+
   url: '',
   video: '',
   figures: [],
@@ -81,7 +81,7 @@ export const columns: MRT_ColumnDef<Dance>[] = [
     id: 'keyMoves',
     header: '🔗 Key Moves',
     enableColumnFilter: false,
-    size: 200,
+    size: 170,
     minSize: 170,
     Cell: ({ row }) => row.original.dances_key_moves.map(dkm => dkm.key_move.name).join(', '),
     meta: { inputType: 'relation' },
@@ -90,7 +90,7 @@ export const columns: MRT_ColumnDef<Dance>[] = [
     id: 'vibes',
     header: '🔗 Vibes',
     enableColumnFilter: false,
-    size: 200,
+    size: 170,
     minSize: 170,
     Cell: ({ row }) => row.original.dances_vibes.map(dv => dv.vibe.name).join(', '),
     meta: { inputType: 'relation' },
@@ -170,24 +170,6 @@ export const columns: MRT_ColumnDef<Dance>[] = [
     meta: { inputType: 'text' }
   },
   {
-    accessorKey: 'moves',
-    header: 'Moves',
-    size: 200,
-    minSize: 120,
-    filterFn: 'includesString',
-    Cell: ({ row }) => row.original.moves ? <TooltipCell content={row.original.moves} /> : null,
-    meta: { inputType: 'text' }
-  },
-  {
-    accessorKey: 'swing_16',
-    header: '16-beat swing?',
-    size: 200,
-    minSize: 120,
-    filterFn: 'equalsString',
-    Cell: ({ row }) => row.original.swing_16 ? 'true' : row.original.swing_16 === false ? 'false' : '',
-    meta: { inputType: 'boolean' }
-  },
-  {
     accessorKey: 'video',
     header: 'Video',
     Cell: ({ row }) => linkVideo(row.original.video),
@@ -233,8 +215,7 @@ export const queryFields = [
   { name: 'difficulty', label: 'Difficulty', inputType: 'number' },
   { name: 'notes', label: 'Notes', inputType: 'string' },
   { name: 'place_in_program', label: 'Place in Program', inputType: 'string' },
-  { name: 'moves', label: 'Moves', inputType: 'string' },
-  { name: 'swing_16', label: '16-beat swing?', inputType: 'boolean' },
+
   { name: 'programNames', label: 'Programs', inputType: 'string' },
 ];
 

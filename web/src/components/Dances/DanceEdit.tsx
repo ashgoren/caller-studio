@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
-import { Box, Button, Dialog, DialogContent, DialogTitle, TextField, Checkbox, FormControlLabel, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
+import { Box, Button, Dialog, DialogContent, DialogTitle, TextField, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -82,11 +82,11 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
     formation_id: dance?.formation_id ?? newRecord.formation_id,
     progression_id: dance?.progression_id ?? newRecord.progression_id,
     difficulty: dance?.difficulty ?? newRecord.difficulty,
-    swing_16: dance?.swing_16 ?? newRecord.swing_16,
+
     notes: dance?.notes ?? newRecord.notes,
     walkthrough: dance?.walkthrough ?? newRecord.walkthrough,
     place_in_program: dance?.place_in_program ?? newRecord.place_in_program,
-    moves: dance?.moves ?? newRecord.moves,
+
   }));
   const [formData, setFormData] = useState<DanceUpdate>({ ...initialFormData });
   const [isSaved, setIsSaved] = useState(false);
@@ -412,19 +412,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
               variant='standard'
               sx={{ width: 100 }}
             />
-            <FormControlLabel
-              label='16-beat swing?'
-              control={
-                <Checkbox
-                  checked={Boolean(formData.swing_16)}
-                  onChange={e => update('swing_16', e.target.checked)}
-                  sx={{ pl: 0 }}
-                />
-              }
-            />
-
             <TextField label='Place in Program' value={formData.place_in_program ?? ''} onChange={e => update('place_in_program', e.target.value)} fullWidth multiline variant='standard' />
-            <TextField label='Moves' value={formData.moves ?? ''} onChange={e => update('moves', e.target.value)} fullWidth multiline variant='standard' />
             <TextField label='Video' value={formData.video ?? ''} onChange={e => update('video', e.target.value)} fullWidth variant='standard' />
           </Stack>
         </Box>
