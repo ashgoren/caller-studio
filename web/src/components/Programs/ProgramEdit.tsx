@@ -53,6 +53,7 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
   const [initialFormData] = useState<ProgramUpdate>(() => ({
     date: program?.date ?? newRecord.date,
     location: program?.location ?? newRecord.location,
+    notes: program?.notes ?? newRecord.notes,
   }));
   const [formData, setFormData] = useState<ProgramUpdate>({ ...initialFormData });
   const [isSaved, setIsSaved] = useState(false);
@@ -214,6 +215,12 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
           onAdd={pendingDances.addDance}
           onRemove={pendingDances.removeDance}
           onReorder={pendingDances.reorder}
+        />
+        <TextField
+          label='Notes (supports markdown)'
+          value={formData.notes ?? ''}
+          onChange={e => update('notes', e.target.value)}
+          fullWidth multiline variant='standard'
         />
       </Stack>
 

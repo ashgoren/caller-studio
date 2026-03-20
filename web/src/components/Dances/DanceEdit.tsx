@@ -81,6 +81,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
     difficulty: dance?.difficulty ?? newRecord.difficulty,
     swing_16: dance?.swing_16 ?? newRecord.swing_16,
     notes: dance?.notes ?? newRecord.notes,
+    walkthrough: dance?.walkthrough ?? newRecord.walkthrough,
     place_in_program: dance?.place_in_program ?? newRecord.place_in_program,
     moves: dance?.moves ?? newRecord.moves,
   }));
@@ -364,9 +365,17 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
             onReorder={pendingFigures.setFigures}
           />
           <TextField
-            label='Notes'
+            label='Notes (supports markdown)'
             value={formData.notes ?? ''}
             onChange={e => update('notes', e.target.value)}
+            fullWidth multiline variant='standard'
+            // helperText='Markdown supported'
+            sx={{ mt: 4 }}
+          />
+          <TextField
+            label='Walkthrough (supports markdown)'
+            value={formData.walkthrough ?? ''}
+            onChange={e => update('walkthrough', e.target.value)}
             fullWidth multiline variant='standard'
             sx={{ mt: 4 }}
           />

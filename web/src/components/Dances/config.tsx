@@ -16,6 +16,7 @@ export const newRecord: DanceInsert = {
   progression_id: null,
   difficulty: null,
   notes: '',
+  walkthrough: '',
   place_in_program: '',
   moves: '',
   swing_16: null,

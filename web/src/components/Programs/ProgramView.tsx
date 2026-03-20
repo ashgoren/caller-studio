@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Box, Button, Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import Markdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkGfm from 'remark-gfm';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { RelationCell } from '@/components/RelationCell';
@@ -59,6 +62,31 @@ export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: 
           </Box>
         </Box>
       </Stack>
+
+      {program.notes && (
+        <Box component='fieldset' sx={{
+          mt: 3,
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 1,
+          px: 2,
+          pt: 1,
+          pb: 2,
+          '& p': { margin: '0 0 0.75em 0' },
+          '& p:last-child': { marginBottom: 0 },
+          '& hr': { margin: '1em 0', borderColor: 'divider' },
+        }}>
+          <Typography
+            component='legend'
+            variant='caption'
+            color='text.secondary'
+            sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5, px: 0.5 }}
+          >
+            Notes
+          </Typography>
+          <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{program.notes}</Markdown>
+        </Box>
+      )}
 
     </Box>
   );

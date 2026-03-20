@@ -1,9 +1,12 @@
 import { useEffect, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, Button, Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Divider, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import Markdown from 'react-markdown'
+import remarkBreaks from 'remark-breaks'
+import remarkGfm from 'remark-gfm'
 import { ExternalLink } from '@/components/shared';
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
@@ -96,17 +99,52 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
           )}
 
           {dance.notes && (
-            <Box sx={{ mt: 3 }}>
+            <Box component='fieldset' sx={{
+              mt: 3,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              px: 2,
+              pt: 1,
+              pb: 2,
+              '& p': { margin: '0 0 0.75em 0' },
+              '& p:last-child': { marginBottom: 0 },
+              '& hr': { margin: '1em 0', borderColor: 'divider' },
+            }}>
               <Typography
+                component='legend'
                 variant='caption'
                 color='text.secondary'
-                sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5 }}
+                sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5, px: 0.5 }}
               >
                 Notes
               </Typography>
-              <Typography variant='body1' sx={{ mt: 0.25, whiteSpace: 'pre-wrap' }}>
-                {dance.notes}
+              <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.notes}</Markdown>
+            </Box>
+          )}
+
+          {dance.walkthrough && (
+            <Box component='fieldset' sx={{
+              mt: 3,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              px: 2,
+              pt: 1,
+              pb: 2,
+              '& p': { margin: '0 0 0.75em 0' },
+              '& p:last-child': { marginBottom: 0 },
+              '& hr': { margin: '1em 0', borderColor: 'divider' },
+            }}>
+              <Typography
+                component='legend'
+                variant='caption'
+                color='text.secondary'
+                sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5, px: 0.5 }}
+              >
+                Walkthrough
               </Typography>
+              <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.walkthrough}</Markdown>
             </Box>
           )}
 

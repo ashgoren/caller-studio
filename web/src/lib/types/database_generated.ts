@@ -90,6 +90,7 @@ export type Database = {
           url: string | null
           user_id: string
           video: string | null
+          walkthrough: string | null
         }
         Insert: {
           created_at?: string
@@ -107,6 +108,7 @@ export type Database = {
           url?: string | null
           user_id?: string
           video?: string | null
+          walkthrough?: string | null
         }
         Update: {
           created_at?: string
@@ -124,6 +126,7 @@ export type Database = {
           url?: string | null
           user_id?: string
           video?: string | null
+          walkthrough?: string | null
         }
         Relationships: [
           {
@@ -302,6 +305,7 @@ export type Database = {
           date: string | null
           id: number
           location: string | null
+          notes: string | null
           user_id: string
         }
         Insert: {
@@ -309,6 +313,7 @@ export type Database = {
           date?: string | null
           id?: number
           location?: string | null
+          notes?: string | null
           user_id?: string
         }
         Update: {
@@ -316,6 +321,7 @@ export type Database = {
           date?: string | null
           id?: number
           location?: string | null
+          notes?: string | null
           user_id?: string
         }
         Relationships: []

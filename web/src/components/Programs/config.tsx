@@ -10,6 +10,7 @@ import type { Program, ProgramInsert } from '@/lib/types/database';
 export const newRecord: ProgramInsert = {
   date: null,
   location: '',
+  notes: '',
 }
 
 // TABLE & DRAWER CONFIG
