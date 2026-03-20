@@ -143,20 +143,6 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
             </Box>
           )}
 
-          {dance.walkthrough && (
-            <Box sx={{ mt: 3 }}>
-              <Button
-                size='small'
-                variant='outlined'
-                color='secondary'
-                startIcon={<ArticleIcon />}
-                onClick={() => setWalkthroughOpen(true)}
-              >
-                Walkthrough
-              </Button>
-            </Box>
-          )}
-
           <Dialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} fullWidth maxWidth='md'>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               Walkthrough — {dance.title}
@@ -180,29 +166,24 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
             </DialogContent>
           </Dialog>
 
-          {dance.programs_dances.length > 0 && (
-            <Box sx={{ mt: 3 }}>
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5 }}
-              >
-                Programs
-              </Typography>
-              <Box sx={{ mt: 0.25 }}>
-                <RelationCell
-                  items={dance.programs_dances}
-                  model='program'
-                  getId={pd => pd.program.id}
-                  getLabel={pd => `${pd.program.date} - ${pd.program.location}`}
-                />
-              </Box>
-            </Box>
-          )}
         </Box>
 
         {/* Right: Metadata sidebar */}
         <Box sx={{ flexShrink: 0, width: { xs: '100%', md: 280 } }}>
+
+          {dance.walkthrough && (
+            <Box sx={{ mb: 2 }}>
+              <Button
+                size='small'
+                variant='outlined'
+                color='secondary'
+                startIcon={<ArticleIcon />}
+                onClick={() => setWalkthroughOpen(true)}
+              >
+                Walkthrough
+              </Button>
+            </Box>
+          )}
 
           <Stack spacing={1.5}>
             <SidebarField label='Key Move'>
@@ -236,6 +217,20 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
               {new Date(dance.created_at).toISOString().split('T')[0]}
             </SidebarField>
           </Stack>
+
+          {dance.programs_dances.length > 0 && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <SidebarField label='Programs'>
+                <RelationCell
+                  items={dance.programs_dances}
+                  model='program'
+                  getId={pd => pd.program.id}
+                  getLabel={pd => `${pd.program.date} - ${pd.program.location}`}
+                />
+              </SidebarField>
+            </>
+          )}
 
         </Box>
 

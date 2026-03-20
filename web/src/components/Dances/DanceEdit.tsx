@@ -414,20 +414,18 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
             />
             <TextField label='Place in Program' value={formData.place_in_program ?? ''} onChange={e => update('place_in_program', e.target.value)} fullWidth multiline variant='standard' />
             <TextField label='Video' value={formData.video ?? ''} onChange={e => update('video', e.target.value)} fullWidth variant='standard' />
+            <Button
+              variant='outlined'
+              color='secondary'
+              startIcon={<ArticleIcon />}
+              onClick={() => setWalkthroughOpen(true)}
+              sx={{ alignSelf: 'flex-start', mt: 1 }}
+            >
+              {formData.walkthrough ? 'Edit Walkthrough' : 'Add Walkthrough'}
+            </Button>
           </Stack>
         </Box>
 
-      </Box>
-
-      <Box sx={{ mt: 3 }}>
-        <Button
-          variant='outlined'
-          color='secondary'
-          startIcon={<ArticleIcon />}
-          onClick={() => setWalkthroughOpen(true)}
-        >
-          {formData.walkthrough ? 'Edit Walkthrough' : 'Add Walkthrough'}
-        </Button>
       </Box>
 
       <Dialog
@@ -455,7 +453,8 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
         </DialogActions>
       </Dialog>
 
-      <Box sx={{ display: 'flex', mt: 3, justifyContent: 'space-between', alignItems: 'center' }}>
+      <Divider sx={{ mt: 4 }} />
+      <Box sx={{ display: 'flex', mt: 2, justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           {!isCreate && (
             <Button color='error' startIcon={<DeleteIcon />} onClick={handleDelete} disabled={isSaving}>
