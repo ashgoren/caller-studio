@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { Box, Button, Dialog, DialogContent, Divider, IconButton, Stack, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
@@ -23,6 +24,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const fullScreenDialog = useMediaQuery('(max-width: 900px)');
   const walkthroughPrintRef = useRef<HTMLDivElement>(null);
+  const choreographyPrintRef = useRef<HTMLDivElement>(null);
   const printWalkthrough = useReactToPrint({
     contentRef: walkthroughPrintRef,
     documentTitle: `${dance.title} - Walkthrough`,
@@ -42,6 +44,17 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
       hr { margin: 1.4em 0 !important; border-color: #888 !important; }
     `,
   });
+  const printChoreography = useReactToPrint({
+    contentRef: choreographyPrintRef,
+    documentTitle: dance.title,
+    pageStyle: `
+      @page { size: 8.5in 11in; margin: 0.5in 0.6in; }
+      html, body { margin: 0; padding: 0; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+      body { font-family: Georgia, serif !important; font-size: 11pt !important; line-height: 1.5 !important; color: black !important; }
+      * { color: black !important; border-color: #aaa !important; font-family: Georgia, serif !important; box-shadow: none !important; }
+      span, p, div { background: transparent !important; }
+    `,
+  });
 
   useEffect(() => setTitle(`Dance: ${dance.title}`), [setTitle, dance.title]);
 
@@ -56,9 +69,16 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/dances')} size='small' color='secondary'>
           Dances
         </Button>
-        <Tooltip title='Edit'>
-          <IconButton onClick={onEdit} size='small'><EditIcon fontSize='small' /></IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          {(dance.figures ?? []).length > 0 && (
+            <Tooltip title='Print choreography'>
+              <IconButton size='small' onClick={() => printChoreography()}><PrintIcon fontSize='small' /></IconButton>
+            </Tooltip>
+          )}
+          <Tooltip title='Edit'>
+            <IconButton onClick={onEdit} size='small'><EditIcon fontSize='small' /></IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       {/* Title + choreographers */}
@@ -149,40 +169,6 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
             </Box>
           )}
 
-          <Dialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} fullWidth maxWidth='md' fullScreen={fullScreenDialog}>
-            <DialogContent sx={{ position: 'relative' }}>
-              <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5, zIndex: 1 }}>
-                {!fullScreenDialog && (
-                  <Tooltip title='Print'>
-                    <IconButton size='small' onClick={() => printWalkthrough()}><PrintIcon fontSize='small' /></IconButton>
-                  </Tooltip>
-                )}
-                <Tooltip title='Close'>
-                  <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
-                </Tooltip>
-              </Box>
-              <Box ref={walkthroughPrintRef}>
-              <Typography variant='h4' className='print-dance-title' sx={{ fontWeight: 600, mb: 2, pr: 8 }}>
-                {dance.title}
-              </Typography>
-              <Box sx={{
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                fontSize: { xs: '0.9rem', sm: '1.05rem' },
-                lineHeight: 1.7,
-                '& p': { margin: '0 0 1em 0' },
-                '& p:last-child': { marginBottom: 0 },
-                '& h1': { fontSize: { xs: '1.3rem', sm: '1.6rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
-                '& h2': { fontSize: { xs: '1.15rem', sm: '1.35rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
-                '& h3': { fontSize: { xs: '1rem', sm: '1.15rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
-                '& ul, & ol': { pl: '1.4em', mb: '1em' },
-                '& hr': { margin: '1.4em 0', borderColor: 'divider' },
-              }}>
-                <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.walkthrough ?? ''}</Markdown>
-              </Box>
-              </Box>
-            </DialogContent>
-          </Dialog>
-
         </Box>
 
         {/* Right: Metadata sidebar */}
@@ -252,6 +238,67 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
         </Box>
 
       </Box>
+
+      <Dialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} fullWidth maxWidth='md' fullScreen={fullScreenDialog}>
+        <DialogContent sx={{ position: 'relative' }}>
+          <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5, zIndex: 1 }}>
+            {!fullScreenDialog && (
+              <Tooltip title='Print'>
+                <IconButton size='small' onClick={() => printWalkthrough()}><PrintIcon fontSize='small' /></IconButton>
+              </Tooltip>
+            )}
+            <Tooltip title='Close'>
+              <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
+            </Tooltip>
+          </Box>
+          <Box ref={walkthroughPrintRef}>
+            <Typography variant='h4' className='print-dance-title' sx={{ fontWeight: 600, mb: 2, pr: 8 }}>
+              {dance.title}
+            </Typography>
+            <Box sx={{
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontSize: { xs: '0.9rem', sm: '1.05rem' },
+              lineHeight: 1.7,
+              '& p': { margin: '0 0 1em 0' },
+              '& p:last-child': { marginBottom: 0 },
+              '& h1': { fontSize: { xs: '1.3rem', sm: '1.6rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
+              '& h2': { fontSize: { xs: '1.15rem', sm: '1.35rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
+              '& h3': { fontSize: { xs: '1rem', sm: '1.15rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
+              '& ul, & ol': { pl: '1.4em', mb: '1em' },
+              '& hr': { margin: '1.4em 0', borderColor: 'divider' },
+            }}>
+              <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.walkthrough ?? ''}</Markdown>
+            </Box>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      {createPortal(
+        <div style={{ position: 'fixed', top: '-100vh', left: 0, width: '680px' }}>
+          <div ref={choreographyPrintRef} style={{ background: 'white', color: 'black', fontFamily: 'Georgia, serif' }}>
+            <div style={{ fontSize: '26pt', fontWeight: 'bold', lineHeight: 1.2, marginBottom: '0.15em' }}>{dance.title}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.6em' }}>
+              <span style={{ fontSize: '13pt', fontStyle: 'italic' }}>{choreographerNames ? `by ${choreographerNames}` : ''}</span>
+              <span style={{ fontSize: '10pt', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{figuresLabel ?? ''}</span>
+            </div>
+            <hr style={{ border: 'none', borderTop: '1px solid black', margin: '0 0 1.2em 0' }} />
+            <div>
+              {(dance.figures ?? []).map((figure, i) => {
+                const isNewPhrase = i === 0 || figure.phrase !== (dance.figures ?? [])[i - 1].phrase;
+                return (
+                  <div key={figure.id} style={{ display: 'flex', marginTop: isNewPhrase && i > 0 ? '1em' : '0.3em' }}>
+                    <span style={{ width: '2.2em', flexShrink: 0, fontWeight: 'bold', fontSize: '11pt' }}>{isNewPhrase ? figure.phrase : ''}</span>
+                    <span style={{ width: '3em', flexShrink: 0, color: '#666', fontSize: '11pt' }}>{figure.beats != null ? `(${figure.beats})` : ''}</span>
+                    <span style={{ fontSize: '11pt' }}>{figure.description}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
     </Box>
   );
 };
