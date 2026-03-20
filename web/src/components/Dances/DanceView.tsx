@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, IconButton, Stack, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import { useReactToPrint } from 'react-to-print';
 import EditIcon from '@mui/icons-material/Edit';
@@ -21,19 +21,25 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
   const navigate = useNavigate();
   const { setTitle } = useTitle();
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
+  const theme = useTheme();
+  const fullScreenDialog = useMediaQuery(theme.breakpoints.down('md'));
   const walkthroughPrintRef = useRef<HTMLDivElement>(null);
   const printWalkthrough = useReactToPrint({
     contentRef: walkthroughPrintRef,
     documentTitle: `${dance.title} - Walkthrough`,
     pageStyle: `
-      @page { size: 5in 7in; margin: 0.4in; }
-      body { font-family: serif; font-size: 11pt; line-height: 1.5; color: black; }
-      * { color: black !important; }
-      p { margin: 0 0 0.6em 0; }
-      p:last-child { margin-bottom: 0; }
-      h1 { font-size: 14pt; } h2 { font-size: 13pt; } h3 { font-size: 12pt; }
-      ul, ol { margin: 0 0 0.6em 0; padding-left: 1.4em; }
-      hr { margin: 0.8em 0; }
+      @page { size: 8.5in 11in; margin: 0.4in; }
+      html, body { margin: 0; padding: 0; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+      body { font-family: Georgia, serif !important; font-size: 11pt !important; line-height: 1.4 !important; color: black !important; }
+      * { color: black !important; border-color: black !important; font-family: Georgia, serif !important; }
+      p { margin: 0 0 1em 0 !important; font-size: 11pt !important; }
+      p:last-child { margin-bottom: 0 !important; }
+      h1 { font-size: 24pt !important; font-weight: bold !important; margin: 0 0 0.4em 0 !important; }
+      h2 { font-size: 18pt !important; font-weight: bold !important; margin: 0 0 0.4em 0 !important; }
+      h3 { font-size: 14pt !important; font-weight: bold !important; margin: 0 0 0.4em 0 !important; }
+      ul, ol { margin: 0 0 0.6em 0 !important; padding-left: 1.4em !important; font-size: 11pt !important; }
+      li { font-size: 11pt !important; }
+      hr { margin: 1.4em 0 !important; }
     `,
   });
 
@@ -143,7 +149,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
             </Box>
           )}
 
-          <Dialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} fullWidth maxWidth='md'>
+          <Dialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} fullWidth maxWidth='md' fullScreen={fullScreenDialog}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               Walkthrough — {dance.title}
               <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -157,9 +163,16 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
             </DialogTitle>
             <DialogContent>
               <Box ref={walkthroughPrintRef} sx={{
-                '& p': { margin: '0 0 0.75em 0' },
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontSize: '1.05rem',
+                lineHeight: 1.7,
+                '& p': { margin: '0 0 1em 0' },
                 '& p:last-child': { marginBottom: 0 },
-                '& hr': { margin: '1em 0', borderColor: 'divider' },
+                '& h1': { fontSize: '1.6rem', fontWeight: 700, mt: 0, mb: '0.4em' },
+                '& h2': { fontSize: '1.35rem', fontWeight: 700, mt: 0, mb: '0.4em' },
+                '& h3': { fontSize: '1.15rem', fontWeight: 700, mt: 0, mb: '0.4em' },
+                '& ul, & ol': { pl: '1.4em', mb: '1em' },
+                '& hr': { margin: '1.4em 0', borderColor: 'divider' },
               }}>
                 <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.walkthrough ?? ''}</Markdown>
               </Box>
