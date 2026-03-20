@@ -24,7 +24,7 @@ const toolbar = [
   commands.divider,
   commands.group(
     [commands.title1, commands.title2, commands.title3],
-    { ...commands.title, buttonProps: { title: 'Heading' } }
+    { name: 'title', groupName: 'title', buttonProps: { title: 'Heading' } }
   ),
   commands.divider,
   withTitle(commands.link, 'Link'),
