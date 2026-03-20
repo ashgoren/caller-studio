@@ -32,7 +32,7 @@ export const columns: MRT_ColumnDef<Dance>[] = [
   {
     accessorKey: 'title',
     header: 'Title',
-    Cell: ({row}) => linkTitle(row.original.title, row.original.url),
+    // Cell: ({row}) => linkTitle(row.original.title, row.original.url),
     size: 250,
     minSize: 100,
     meta: { inputType: 'text' },
@@ -228,8 +228,8 @@ export const defaultQuery: FilterGroup = {
 
 // HELPERS
 
-const linkTitle = (title: string, url?: string | null) =>
-  url ? <ExternalLink url={url} title={title} /> : title;
+// const linkTitle = (title: string, url?: string | null) =>
+//   url ? <ExternalLink url={url} title={title} /> : title;
 
 const linkVideo = (video?: string | null) =>
   video ? <ExternalLink url={video} title='Video' /> : null;
