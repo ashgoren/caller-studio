@@ -1,6 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import PrintIcon from '@mui/icons-material/Print';
+import { useReactToPrint } from 'react-to-print';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -19,6 +21,21 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
   const navigate = useNavigate();
   const { setTitle } = useTitle();
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
+  const walkthroughPrintRef = useRef<HTMLDivElement>(null);
+  const printWalkthrough = useReactToPrint({
+    contentRef: walkthroughPrintRef,
+    documentTitle: `${dance.title} - Walkthrough`,
+    pageStyle: `
+      @page { size: 5in 7in; margin: 0.4in; }
+      body { font-family: serif; font-size: 11pt; line-height: 1.5; color: black; }
+      * { color: black !important; }
+      p { margin: 0 0 0.6em 0; }
+      p:last-child { margin-bottom: 0; }
+      h1 { font-size: 14pt; } h2 { font-size: 13pt; } h3 { font-size: 12pt; }
+      ul, ol { margin: 0 0 0.6em 0; padding-left: 1.4em; }
+      hr { margin: 0.8em 0; }
+    `,
+  });
 
   useEffect(() => setTitle(`Dance: ${dance.title}`), [setTitle, dance.title]);
 
@@ -146,7 +163,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
               <IconButton size='small' onClick={() => setWalkthroughOpen(false)}><CloseIcon fontSize='small' /></IconButton>
             </DialogTitle>
             <DialogContent>
-              <Box sx={{
+              <Box ref={walkthroughPrintRef} sx={{
                 '& p': { margin: '0 0 0.75em 0' },
                 '& p:last-child': { marginBottom: 0 },
                 '& hr': { margin: '1em 0', borderColor: 'divider' },
@@ -154,6 +171,9 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
                 <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.walkthrough ?? ''}</Markdown>
               </Box>
             </DialogContent>
+            <DialogActions>
+              <Button startIcon={<PrintIcon />} onClick={() => printWalkthrough()}>Print</Button>
+            </DialogActions>
           </Dialog>
 
           {dance.programs_dances.length > 0 && (
