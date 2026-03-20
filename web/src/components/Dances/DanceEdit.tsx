@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
@@ -10,7 +10,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import { useConfirm } from 'material-ui-confirm';
 import { closeSnackbar } from 'notistack';
 import { RelationEditor } from '@/components/RelationEditor';
-import { MarkdownEditor } from '@/components/shared';
+const MarkdownEditor = lazy(() => import('@/components/shared/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
 import { FiguresEditor } from './FiguresEditor';
 import { isValidUrl, fetchAndResolveImport } from './danceImport';
 import { newRecord } from './config';
@@ -369,11 +369,13 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
             onReorder={pendingFigures.setFigures}
           />
           <Box sx={{ mt: 4 }}>
-            <MarkdownEditor
-              label='Notes'
-              value={formData.notes ?? ''}
-              onChange={v => update('notes', v)}
-            />
+            <Suspense fallback={<CircularProgress size={24} />}>
+              <MarkdownEditor
+                label='Notes'
+                value={formData.notes ?? ''}
+                onChange={v => update('notes', v)}
+              />
+            </Suspense>
           </Box>
         </Box>
 
@@ -437,13 +439,15 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
       >
         <DialogTitle>Walkthrough</DialogTitle>
         <DialogContent>
-          <MarkdownEditor
-            label=''
-            value={formData.walkthrough ?? ''}
-            onChange={v => update('walkthrough', v)}
-            height='calc(90vh - 140px)'
-            dragbar={false}
-          />
+          <Suspense fallback={<CircularProgress size={24} />}>
+            <MarkdownEditor
+              label=''
+              value={formData.walkthrough ?? ''}
+              onChange={v => update('walkthrough', v)}
+              height='calc(90vh - 140px)'
+              dragbar={false}
+            />
+          </Suspense>
           <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 1 }}>
             Changes are saved when you save the dance.
           </Typography>

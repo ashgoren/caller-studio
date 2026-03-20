@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
-import { Box, Button, Stack, TextField, Typography } from '@mui/material';
-import { MarkdownEditor } from '@/components/shared';
+import { Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+
+const MarkdownEditor = lazy(() => import('@/components/shared/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useConfirm } from 'material-ui-confirm';
@@ -217,11 +218,13 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
           onRemove={pendingDances.removeDance}
           onReorder={pendingDances.reorder}
         />
-        <MarkdownEditor
-          label='Notes'
-          value={formData.notes ?? ''}
-          onChange={v => update('notes', v)}
-        />
+        <Suspense fallback={<CircularProgress size={24} />}>
+          <MarkdownEditor
+            label='Notes'
+            value={formData.notes ?? ''}
+            onChange={v => update('notes', v)}
+          />
+        </Suspense>
       </Stack>
 
       <Box sx={{ display: 'flex', mt: 3, justifyContent: 'space-between', alignItems: 'center' }}>

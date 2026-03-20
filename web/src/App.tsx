@@ -5,16 +5,26 @@ import { queryClient } from './lib/react-query';
 import { TitleProvider } from './contexts/TitleContext';
 import { UndoProvider, useUndoState } from '@/contexts/UndoContext';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router';
-import { Layout } from './components/layouts/Layout';
-import { Dances, DancePage } from './components/Dances';
-import { Programs, ProgramPage } from './components/Programs';
-import { SettingsPage, ChoreographersList, KeyMovesList, VibesList } from './components/Settings';
+import { lazy, Suspense } from 'react';
+import { Layout } from '@/components/layouts/Layout';
 import { Spinner } from '@/components/shared';
 import { SignInPage } from '@/components/auth/SignInPage';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { logEnvironment } from './lib/utils';
+
+const Dances             = lazy(() => import('./components/Dances').then(m => ({ default: m.Dances })));
+const DancePage          = lazy(() => import('./components/Dances').then(m => ({ default: m.DancePage })));
+const Programs           = lazy(() => import('./components/Programs').then(m => ({ default: m.Programs })));
+const ProgramPage        = lazy(() => import('./components/Programs').then(m => ({ default: m.ProgramPage })));
+const SettingsPage       = lazy(() => import('./components/Settings').then(m => ({ default: m.SettingsPage })));
+const ChoreographersList = lazy(() => import('./components/Settings').then(m => ({ default: m.ChoreographersList })));
+const KeyMovesList       = lazy(() => import('./components/Settings').then(m => ({ default: m.KeyMovesList })));
+const VibesList          = lazy(() => import('./components/Settings').then(m => ({ default: m.VibesList })));
+
+// Prefetch main app module in the background while the user is on the sign-in page
+import('./components/Dances');
 
 const ProtectedRoute = () => {
   const { user, authLoading } = useAuth();
@@ -32,7 +42,9 @@ const AppInner = () => {
     <TitleProvider>
       <ConfirmProvider>
         <Layout>
-          <Outlet />
+          <Suspense fallback={<Spinner />}>
+            <Outlet />
+          </Suspense>
         </Layout>
       </ConfirmProvider>
     </TitleProvider>
