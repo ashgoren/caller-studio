@@ -110,6 +110,10 @@ export const RuleRow = ({ rule, fields, index, showFigures, onUpdate, onRemove }
           <MenuItem value='__figure__'>Figures</MenuItem>
           {fields.map(f => <MenuItem key={f.name} value={f.name}>{f.label}</MenuItem>)}
         </Select>
+        <Select size='small' value={rule.negate ? 'not' : 'has'} onChange={e => onUpdate({ ...rule, negate: e.target.value === 'not' })} sx={{ width: 110 }}>
+          <MenuItem value='has'>has</MenuItem>
+          <MenuItem value='not'>has no</MenuItem>
+        </Select>
         <Select size='small' value={rule.phrase} displayEmpty onChange={e => onUpdate({ ...rule, phrase: e.target.value })} sx={{ width: 130 }}>
           <MenuItem value=''>Any phrase</MenuItem>
           {PHRASES.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
@@ -162,8 +166,8 @@ export const RuleRow = ({ rule, fields, index, showFigures, onUpdate, onRemove }
         sx={{ width: 150 }}
       >
         <MenuItem value='' disabled><em>Select field</em></MenuItem>
-        {fields.map(f => <MenuItem key={f.name} value={f.name}>{f.label}</MenuItem>)}
         {showFigures && <MenuItem value='__figure__'>Figures</MenuItem>}
+        {fields.map(f => <MenuItem key={f.name} value={f.name}>{f.label}</MenuItem>)}
       </Select>
       {rule.field && (
         <Select

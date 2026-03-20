@@ -9,6 +9,7 @@ export type FieldRule = {
 export type FigureRule = {
   id: string;
   type: 'figure';
+  negate: boolean;      // true = dance must NOT have a matching figure
   phrase: string;       // '' = any phrase
   beats: number | null; // null = any beats
   description: string;  // '' = any description (contains match)

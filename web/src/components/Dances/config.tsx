@@ -20,8 +20,6 @@ export const newRecord: DanceInsert = {
   notes: '',
   walkthrough: '',
   place_in_program: '',
-
-
   url: '',
   video: '',
   figures: [],
@@ -229,7 +227,6 @@ export const queryFields = [
   { name: 'difficulty', label: 'Difficulty', inputType: 'number' },
   { name: 'notes', label: 'Notes', inputType: 'string' },
   { name: 'place_in_program', label: 'Place in Program', inputType: 'string' },
-
   { name: 'programNames', label: 'Programs', inputType: 'string' },
 ];
 

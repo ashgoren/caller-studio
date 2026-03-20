@@ -14,12 +14,13 @@ const resolveFieldValue = (row: any, field: string): any => {
 
 const evaluateFigureRule = (row: any, rule: FigureRule): boolean => {
   const figures = row.figures ?? [];
-  return figures.some((f: any) => {
+  const match = figures.some((f: any) => {
     if (rule.phrase && f.phrase !== rule.phrase) return false;
     if (rule.beats !== null && f.beats !== rule.beats) return false;
     if (rule.description && !f.description?.toLowerCase().includes(rule.description.toLowerCase())) return false;
     return true;
   });
+  return rule.negate ? !match : match;
 };
 
 const evaluateFieldRule = (row: any, rule: FieldRule): boolean => {
