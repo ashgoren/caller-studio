@@ -7,12 +7,16 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import ArticleIcon from '@mui/icons-material/Article';
+import GridOnIcon from '@mui/icons-material/GridOn';
 import { useConfirm } from 'material-ui-confirm';
 import { closeSnackbar } from 'notistack';
 import { RelationEditor } from '@/components/RelationEditor';
 const MarkdownEditor = lazy(() => import('@/components/shared/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
 import { FiguresEditor } from './FiguresEditor';
+import { CueGridEditor } from './CueGridEditor';
+import { CELL_HEIGHT, GRID_NATURAL_HEIGHT, GRID_NATURAL_WIDTH } from './cueGridConstants';
 import { isValidUrl, fetchAndResolveImport } from './danceImport';
+import { makeFiguresLabel } from './danceUtils';
 import { newRecord } from './config';
 import { useCreateDance, useUpdateDance, useDeleteDance } from '@/hooks/useDances';
 import { useAddChoreographerToDance, useRemoveChoreographerFromDance } from '@/hooks/useDancesChoreographers';
@@ -29,7 +33,7 @@ import { useFigures } from '@/hooks/useFigures';
 import { useNotify } from '@/hooks/useNotify';
 import { useTitle } from '@/contexts/TitleContext';
 import { useUndoActions, dbRecord, beforeValues, relationOps } from '@/contexts/UndoContext';
-import type { Dance, DanceInsert, DanceUpdate } from '@/lib/types/database';
+import type { Dance, DanceInsert, DanceUpdate, CueGridData } from '@/lib/types/database';
 
 export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: () => void }) => {
   const navigate = useNavigate();
@@ -86,11 +90,38 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
     notes: dance?.notes ?? newRecord.notes,
     walkthrough: dance?.walkthrough ?? newRecord.walkthrough,
     place_in_program: dance?.place_in_program ?? newRecord.place_in_program,
+    cues: dance?.cues ?? null,
 
   }));
   const [formData, setFormData] = useState<DanceUpdate>({ ...initialFormData });
   const [isSaved, setIsSaved] = useState(false);
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
+  const [cuesOpen, setCuesOpen] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  const cuesEditorScale = Math.min(1, (windowWidth - 96) / (GRID_NATURAL_WIDTH + 18));
+
+  const figuresLabel = useMemo(() => makeFiguresLabel({
+    dance_type: (danceTypes ?? []).find(dt => dt.id === formData.dance_type_id),
+    formation: (formations ?? []).find(f => f.id === formData.formation_id),
+    progression: (progressions ?? []).find(p => p.id === formData.progression_id),
+  }), [danceTypes, formations, progressions, formData.dance_type_id, formData.formation_id, formData.progression_id]);
+
+  // Group figures by phrase in encounter order — used to align with cue grid sections
+  const pendingFigureItems = pendingFigures.figures;
+  const figureGroups = useMemo(() => {
+    const groups: { phrase: string; figures: typeof pendingFigureItems }[] = [];
+    for (const figure of pendingFigureItems) {
+      const last = groups[groups.length - 1];
+      if (last && last.phrase === figure.phrase) last.figures.push(figure);
+      else groups.push({ phrase: figure.phrase, figures: [figure] });
+    }
+    return groups;
+  }, [pendingFigureItems]);
   const [importing, setImporting] = useState(false);
   const contraDefaultApplied = useRef(false);
 
@@ -425,6 +456,15 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
             >
               {formData.walkthrough ? 'Edit Walkthrough' : 'Add Walkthrough'}
             </Button>
+            <Button
+              variant='outlined'
+              color='secondary'
+              startIcon={<GridOnIcon />}
+              onClick={() => setCuesOpen(true)}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              {formData.cues ? 'Edit Cues' : 'Add Cues'}
+            </Button>
           </Stack>
         </Box>
 
@@ -454,6 +494,60 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setWalkthroughOpen(false)}>Done</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={cuesOpen}
+        onClose={(_, reason) => { if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') setCuesOpen(false); }}
+        fullWidth
+        maxWidth='lg'
+        PaperProps={{ sx: { height: '90vh' } }}
+      >
+        <DialogTitle>{[dance?.title, figuresLabel].filter(Boolean).join(' • ') || 'Edit Cues'}</DialogTitle>
+        <DialogContent sx={{ display: 'flex', gap: 3, overflow: { xs: 'auto', md: 'hidden' }, p: 2 }}>
+
+          {/* Left: figures reference — hidden below ~1012px */}
+          <Box sx={{ width: 340, flexShrink: 0, overflowY: 'auto', pr: 2, '@media (max-width: 1011px)': { display: 'none' } }}>
+            {pendingFigures.figures.length === 0 ? (
+              <Typography color='text.disabled' variant='body2'>No figures added yet.</Typography>
+            ) : (
+              <Box sx={{ position: 'relative', height: GRID_NATURAL_HEIGHT + 18 }}>
+                {figureGroups.map(({ phrase, figures }, phraseIdx) => (
+                  <Box key={phrase} sx={{ position: 'absolute', top: 15 + CELL_HEIGHT + phraseIdx * (CELL_HEIGHT * 2 + 1), left: 0, right: 0 }}>
+                    {figures.map((figure, figIdx) => (
+                      <Box key={figure.id ?? figIdx} sx={{ display: 'flex', gap: 2, mt: figIdx > 0 ? 0.5 : 0 }}>
+                        <Typography sx={{ width: 28, flexShrink: 0, fontWeight: 700, fontSize: '0.8rem', color: 'text.secondary', pt: '3px', userSelect: 'none' }}>
+                          {figIdx === 0 ? phrase : ''}
+                        </Typography>
+                        <Typography sx={{ width: 30, flexShrink: 0, color: 'text.disabled', fontSize: '0.875rem' }}>
+                          {figure.beats != null ? `(${figure.beats})` : ''}
+                        </Typography>
+                        <Typography variant='body2'>{figure.description}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+
+          {/* Right: cue grid editor */}
+          <Box sx={{ flex: 1, overflowY: { xs: 'visible', md: 'auto' }, overflowX: 'hidden', minWidth: 0 }}>
+            <Box sx={{ transform: `scale(${cuesEditorScale})`, transformOrigin: 'top left', width: GRID_NATURAL_WIDTH + 18 }}>
+              <CueGridEditor
+                value={formData.cues as CueGridData | null}
+                onChange={v => update('cues', v)}
+              />
+            </Box>
+          </Box>
+
+        </DialogContent>
+        <DialogActions>
+          <Typography variant='caption' color='text.secondary' sx={{ flex: 1, ml: 2 }}>
+            Changes are saved when you save the dance.
+          </Typography>
+          <Button onClick={() => setCuesOpen(false)}>Done</Button>
         </DialogActions>
       </Dialog>
 

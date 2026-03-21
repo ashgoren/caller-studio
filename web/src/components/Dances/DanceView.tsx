@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { Box, Button, Dialog, DialogContent, Divider, IconButton, Stack, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
@@ -9,6 +8,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CloseIcon from '@mui/icons-material/Close';
 import ArticleIcon from '@mui/icons-material/Article';
+import GridOnIcon from '@mui/icons-material/GridOn';
 import Markdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
@@ -16,15 +16,28 @@ import { ExternalLink } from '@/components/shared';
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
 import { makeFiguresLabel } from '@/components/Dances/danceUtils';
+import { CueGridView } from '@/components/Dances/CueGrid';
+import { GRID_NATURAL_WIDTH, GRID_NATURAL_HEIGHT } from '@/components/Dances/cueGridConstants';
+import { DancePrintPortals } from '@/components/Dances/DancePrintPortals';
 import type { Dance } from '@/lib/types/database';
 
 export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => void }) => {
   const navigate = useNavigate();
   const { setTitle } = useTitle();
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
-  const fullScreenDialog = useMediaQuery('(max-width: 900px)');
+  const [cuesOpen, setCuesOpen] = useState(false);
+  const isNarrow = useMediaQuery('(max-width: 900px)');
+  const [windowWidth, setWindowWidth] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  const cuesScale = isNarrow ? Math.min(1, (windowWidth - 16) / GRID_NATURAL_WIDTH) : 1;
   const walkthroughPrintRef = useRef<HTMLDivElement>(null);
   const choreographyPrintRef = useRef<HTMLDivElement>(null);
+  const cuesPrintRef = useRef<HTMLDivElement>(null);
+  const combinedPrintRef = useRef<HTMLDivElement>(null);
   const printWalkthrough = useReactToPrint({
     contentRef: walkthroughPrintRef,
     documentTitle: `${dance.title} - Walkthrough`,
@@ -44,6 +57,30 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
       hr { margin: 1.4em 0 !important; border-color: #888 !important; }
     `,
   });
+  const printCues = useReactToPrint({
+    contentRef: cuesPrintRef,
+    documentTitle: `${dance.title} - Cues`,
+    pageStyle: `
+      @page { size: 5in 7in; margin: 0.15in; }
+      html, body { margin: 0; padding: 0; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+      body { font-family: "Roboto", "Helvetica", "Arial", sans-serif !important; color: black !important; }
+      * { color: black !important; box-shadow: none !important; background: transparent !important; }
+      table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+      td { word-break: break-word; text-align: center; vertical-align: middle; }
+    `,
+  });
+  const printCombined = useReactToPrint({
+    contentRef: combinedPrintRef,
+    documentTitle: `${dance.title} - Combined`,
+    pageStyle: `
+      @page { size: 8.5in 11in; margin: 0.25in 3.5in 0.25in 0.25in; }
+      html, body { margin: 0; padding: 0; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+      body { color: black !important; }
+      * { color: black !important; box-shadow: none !important; background: transparent !important; }
+      table { border-collapse: collapse; table-layout: fixed; }
+      td { word-break: break-word; text-align: center; vertical-align: middle; }
+    `,
+  });
   const printChoreography = useReactToPrint({
     contentRef: choreographyPrintRef,
     documentTitle: dance.title,
@@ -60,6 +97,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
 
   const choreographerNames = dance.dances_choreographers.map(dc => dc.choreographer.name).join(', ');
   const figuresLabel = makeFiguresLabel(dance);
+  const figures = dance.figures;
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto' }}>
@@ -70,9 +108,9 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
           Dances
         </Button>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
-          {(dance.figures ?? []).length > 0 && (
-            <Tooltip title='Print choreography'>
-              <IconButton size='small' onClick={() => printChoreography()}><PrintIcon fontSize='small' /></IconButton>
+          {figures.length > 0 && dance.cues && Object.keys(dance.cues).length > 0 && (
+            <Tooltip title='Print combined (8.5×11)'>
+              <IconButton size='small' onClick={() => printCombined()}><PrintIcon fontSize='small' /></IconButton>
             </Tooltip>
           )}
           <Tooltip title='Edit'>
@@ -114,15 +152,42 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
 
         {/* Left: Figures + Notes */}
         <Box sx={{ flex: '1 1 0', minWidth: 0 }}>
-          {figuresLabel && (
-            <Typography variant='overline' color='text.secondary'>{figuresLabel}</Typography>
-          )}
-          {(dance.figures ?? []).length === 0 ? (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+            <Box>
+              {figuresLabel && (
+                <Typography variant='overline' color='text.secondary'>{figuresLabel}</Typography>
+              )}
+            </Box>
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              {figures.length > 0 && (
+                <Tooltip title='Print choreography'>
+                  <IconButton size='small' onClick={() => printChoreography()}>
+                    <PrintIcon fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              )}
+              {dance.walkthrough && (
+                <Tooltip title='Walkthrough'>
+                  <IconButton size='small' onClick={() => setWalkthroughOpen(true)}>
+                    <ArticleIcon fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              )}
+              {dance.cues && Object.keys(dance.cues).length > 0 && (
+                <Tooltip title='Cues'>
+                  <IconButton size='small' onClick={() => setCuesOpen(true)}>
+                    <GridOnIcon fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          </Box>
+          {figures.length === 0 ? (
             <Typography color='text.disabled' sx={{ mt: 0.5 }}>—</Typography>
           ) : (
-            <Box sx={{ mt: figuresLabel ? 1 : 0 }}>
-              {(dance.figures ?? []).map((figure, i) => {
-                const isNewPhrase = i === 0 || figure.phrase !== (dance.figures ?? [])[i - 1].phrase;
+            <Box>
+              {figures.map((figure, i) => {
+                const isNewPhrase = i === 0 || figure.phrase !== figures[i - 1].phrase;
                 return (
                   <Box key={figure.id} sx={{ display: 'flex', gap: 2, mt: isNewPhrase && i > 0 ? 2 : 0.5 }}>
                     <Typography sx={{
@@ -173,20 +238,6 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
 
         {/* Right: Metadata sidebar */}
         <Box sx={{ flexShrink: 0, width: { xs: '100%', md: 280 } }}>
-
-          {dance.walkthrough && (
-            <Box sx={{ mb: 2 }}>
-              <Button
-                size='small'
-                variant='outlined'
-                color='secondary'
-                startIcon={<ArticleIcon />}
-                onClick={() => setWalkthroughOpen(true)}
-              >
-                Walkthrough
-              </Button>
-            </Box>
-          )}
 
           <Stack spacing={1.5}>
             <SidebarField label='Key Move'>
@@ -239,10 +290,10 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
 
       </Box>
 
-      <Dialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} fullWidth maxWidth='md' fullScreen={fullScreenDialog}>
+      <Dialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} fullWidth maxWidth='md' fullScreen={isNarrow}>
         <DialogContent sx={{ position: 'relative' }}>
           <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5, zIndex: 1 }}>
-            {!fullScreenDialog && (
+            {!isNarrow && (
               <Tooltip title='Print'>
                 <IconButton size='small' onClick={() => printWalkthrough()}><PrintIcon fontSize='small' /></IconButton>
               </Tooltip>
@@ -273,31 +324,47 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
         </DialogContent>
       </Dialog>
 
-      {createPortal(
-        <div style={{ position: 'fixed', top: '-100vh', left: 0, width: '680px' }}>
-          <div ref={choreographyPrintRef} style={{ background: 'white', color: 'black', fontFamily: 'Georgia, serif' }}>
-            <div style={{ fontSize: '26pt', fontWeight: 'bold', lineHeight: 1.2, marginBottom: '0.15em' }}>{dance.title}</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.6em' }}>
-              <span style={{ fontSize: '13pt', fontStyle: 'italic' }}>{choreographerNames ? `by ${choreographerNames}` : ''}</span>
-              <span style={{ fontSize: '10pt', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{figuresLabel ?? ''}</span>
-            </div>
-            <hr style={{ border: 'none', borderTop: '1px solid black', margin: '0 0 1.2em 0' }} />
-            <div>
-              {(dance.figures ?? []).map((figure, i) => {
-                const isNewPhrase = i === 0 || figure.phrase !== (dance.figures ?? [])[i - 1].phrase;
-                return (
-                  <div key={figure.id} style={{ display: 'flex', marginTop: isNewPhrase && i > 0 ? '1em' : '0.3em' }}>
-                    <span style={{ width: '2.2em', flexShrink: 0, fontWeight: 'bold', fontSize: '11pt' }}>{isNewPhrase ? figure.phrase : ''}</span>
-                    <span style={{ width: '3em', flexShrink: 0, color: '#666', fontSize: '11pt' }}>{figure.beats != null ? `(${figure.beats})` : ''}</span>
-                    <span style={{ fontSize: '11pt' }}>{figure.description}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      <Dialog open={cuesOpen} onClose={() => setCuesOpen(false)} maxWidth='sm' fullScreen={isNarrow}>
+        {isNarrow ? (
+          /* Compact fullscreen: no border/label, proportionally scaled table */
+          <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0, p: 0.5 }}>
+              <Tooltip title='Close'>
+                <IconButton size='small' onClick={() => setCuesOpen(false)}><CloseIcon fontSize='small' /></IconButton>
+              </Tooltip>
+            </Box>
+            <Box sx={{ overflow: 'hidden', height: GRID_NATURAL_HEIGHT * cuesScale, flexShrink: 0 }}>
+              <Box sx={{ transform: `scale(${cuesScale})`, transformOrigin: 'top left', ml: '8px', width: GRID_NATURAL_WIDTH }}>
+                <CueGridView cues={dance.cues} />
+              </Box>
+            </Box>
+          </DialogContent>
+        ) : (
+          /* Normal: toolbar header + grid */
+          <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5, px: 1, py: 0.5, borderBottom: 1, borderColor: 'divider' }}>
+              <Tooltip title='Print cues'>
+                <IconButton size='small' onClick={() => printCues()}><PrintIcon fontSize='small' /></IconButton>
+              </Tooltip>
+              <Tooltip title='Close'>
+                <IconButton size='small' onClick={() => setCuesOpen(false)}><CloseIcon fontSize='small' /></IconButton>
+              </Tooltip>
+            </Box>
+            <Box sx={{ p: 2, overflow: 'auto' }}>
+              <CueGridView cues={dance.cues} />
+            </Box>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      <DancePrintPortals
+        dance={dance}
+        figuresLabel={figuresLabel}
+        choreographerNames={choreographerNames}
+        cuesPrintRef={cuesPrintRef}
+        combinedPrintRef={combinedPrintRef}
+        choreographyPrintRef={choreographyPrintRef}
+      />
 
     </Box>
   );

@@ -19,9 +19,12 @@ export type FigureItem = {
   description: string;
 };
 
+export type CueGridData = Record<string, string>;
+
 export type DanceRow = Tables['dances']['Row'];
-export type Dance = Omit<DanceRow, 'figures'> & {
+export type Dance = Omit<DanceRow, 'figures' | 'cues'> & {
   figures: FigureItem[];
+  cues: CueGridData | null;
   programs_dances: { id: number; order: number; program: ProgramRow }[];
   dances_choreographers: { id: number; choreographer: ChoreographerRow }[];
   dances_key_moves: { id: number; key_move: KeyMoveRow }[];

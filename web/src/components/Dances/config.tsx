@@ -23,6 +23,7 @@ export const newRecord: DanceInsert = {
   url: '',
   video: '',
   figures: [],
+  cues: null,
 };
 
 
