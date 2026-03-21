@@ -91,20 +91,23 @@ export const DancePrintPortals = ({
   choreographerNames,
   combinedPrintRef,
   choreographyPrintRef,
+  choreographyFigures,
 }: {
   dance: Dance;
   figuresLabel: string;
   choreographerNames: string;
   combinedPrintRef: RefObject<HTMLDivElement | null>;
   choreographyPrintRef: RefObject<HTMLDivElement | null>;
+  choreographyFigures?: FigureItem[];
 }) => {
   const { figures, cues, title } = dance;
+  const printFigures = choreographyFigures ?? figures;
   const hasCues = !!cues && Object.keys(cues).length > 0;
 
   return (
     <>
       {/* Combined print — 8.5×11, choreography top half / cues bottom half */}
-      {figures.length > 0 && hasCues && createPortal(
+      {printFigures.length > 0 && hasCues && createPortal(
         <div style={{ position: 'fixed', top: '-100vh', left: 0, width: 456 }}>
           <div ref={combinedPrintRef} style={{ background: 'white', color: 'black' }}>
             <div style={{ height: 504, overflow: 'hidden', boxSizing: 'border-box', borderBottom: '2px dashed #999' }}>
@@ -115,7 +118,7 @@ export const DancePrintPortals = ({
               {choreographerNames && <div style={{ fontSize: '10pt', fontStyle: 'italic', marginBottom: '0.3em', fontFamily: 'Georgia, serif' }}>by {choreographerNames}</div>}
               <hr style={{ border: 'none', borderTop: '1px solid black', margin: '0.2em 0 0.8em 0' }} />
               <div style={{ fontFamily: 'Georgia, serif' }}>
-                <PrintFigureList figures={figures} fontSize='10pt' phraseGap='0.8em' contGap='0.25em' beatsWidth='2.8em' />
+                <PrintFigureList figures={printFigures} fontSize='10pt' phraseGap='0.8em' contGap='0.25em' beatsWidth='2.8em' />
               </div>
             </div>
             <div style={{ height: 504, overflow: 'hidden', boxSizing: 'border-box' }}>
@@ -127,7 +130,7 @@ export const DancePrintPortals = ({
       )}
 
       {/* Choreography-only print — 8.5×11 */}
-      {figures.length > 0 && createPortal(
+      {printFigures.length > 0 && createPortal(
         <div style={{ position: 'fixed', top: '-100vh', left: 0, width: '680px' }}>
           <div ref={choreographyPrintRef} style={{ background: 'white', color: 'black', fontFamily: 'Georgia, serif' }}>
             <div style={{ fontSize: '26pt', fontWeight: 'bold', lineHeight: 1.2, marginBottom: '0.15em' }}>{title}</div>
@@ -136,7 +139,7 @@ export const DancePrintPortals = ({
               <span style={{ fontSize: '10pt', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{figuresLabel}</span>
             </div>
             <hr style={{ border: 'none', borderTop: '1px solid black', margin: '0 0 1.2em 0' }} />
-            <PrintFigureList figures={figures} fontSize='11pt' phraseGap='1em' contGap='0.3em' beatsWidth='3em' />
+            <PrintFigureList figures={printFigures} fontSize='11pt' phraseGap='1em' contGap='0.3em' beatsWidth='3em' />
           </div>
         </div>,
         document.body

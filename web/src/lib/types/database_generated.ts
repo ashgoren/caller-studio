@@ -75,6 +75,7 @@ export type Database = {
       }
       dances: {
         Row: {
+          calling_figures: Json | null
           created_at: string
           cues: Json | null
           dance_type_id: number | null
@@ -92,6 +93,7 @@ export type Database = {
           walkthrough: string | null
         }
         Insert: {
+          calling_figures?: Json | null
           created_at?: string
           cues?: Json | null
           dance_type_id?: number | null
@@ -109,6 +111,7 @@ export type Database = {
           walkthrough?: string | null
         }
         Update: {
+          calling_figures?: Json | null
           created_at?: string
           cues?: Json | null
           dance_type_id?: number | null

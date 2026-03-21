@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
-import { Box, Button, TextField, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
+import { Box, Button, TextField, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -74,6 +74,9 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
   const pendingKeyMoves = usePendingRelations();
   const pendingVibes = usePendingRelations();
   const pendingFigures = useFigures(dance);
+  const pendingCallingFigures = useFigures(dance ? { figures: dance.calling_figures ?? [] } : undefined);
+  const [figureMode, setFigureMode] = useState<'choreography' | 'calling'>('choreography');
+  const [callingEnabled, setCallingEnabled] = useState(dance?.calling_figures !== null && dance?.calling_figures !== undefined);
 
   const [initialFormData] = useState<DanceUpdate>(() => ({
     title: dance?.title ?? newRecord.title,
@@ -130,7 +133,8 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
     pendingChoreographers.hasPendingChanges ||
     pendingKeyMoves.hasPendingChanges ||
     pendingVibes.hasPendingChanges ||
-    pendingFigures.hasPendingChanges;
+    pendingFigures.hasPendingChanges ||
+    (callingEnabled && (dance?.calling_figures == null || pendingCallingFigures.hasPendingChanges));
 
   // Warn on in-app navigation
   const blocker = useBlocker(!isSaved && (isDirty || hasPendingChanges));
@@ -181,7 +185,11 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
     setFormData(prev => ({ ...prev, [key]: value }));
 
   const handleSave = async () => {
-    const updatesWithFigures = { ...formData, figures: pendingFigures.figures };
+    const updatesWithFigures = {
+      ...formData,
+      figures: pendingFigures.figures,
+      calling_figures: callingEnabled ? pendingCallingFigures.figures : (dance?.calling_figures ?? null),
+    };
 
     const { id: danceId } = isCreate
       ? await createDance(updatesWithFigures as DanceInsert)
@@ -260,6 +268,16 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
     navigate('/dances');
   };
 
+
+  // ---------- Figure mode toggle ----------
+  const handleFigureModeChange = (_: React.MouseEvent, v: 'choreography' | 'calling' | null) => {
+    if (!v) return;
+    if (v === 'calling' && !callingEnabled) {
+      setCallingEnabled(true);
+      pendingCallingFigures.setFigures([...pendingFigures.figures]);
+    }
+    setFigureMode(v);
+  };
 
   // ---------- Import Dance ----------
   const importDance = async () => {
@@ -362,13 +380,38 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
 
         {/* Left: Figures + Notes */}
         <Box sx={{ flex: '1 1 0', minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
-          <FiguresEditor
-            figures={pendingFigures.figures}
-            onAdd={pendingFigures.addFigure}
-            onUpdate={pendingFigures.updateFigure}
-            onDelete={pendingFigures.deleteFigure}
-            onReorder={pendingFigures.setFigures}
-          />
+          <Box sx={{ mb: 2 }}>
+            <ToggleButtonGroup
+              value={figureMode}
+              exclusive
+              onChange={handleFigureModeChange}
+              size='small'
+            >
+              <ToggleButton value='choreography' sx={{ py: 0.25, px: 1, fontSize: '0.7rem', lineHeight: 1.5 }}>
+                Choreography
+              </ToggleButton>
+              <ToggleButton value='calling' sx={{ py: 0.25, px: 1, fontSize: '0.7rem', lineHeight: 1.5 }}>
+                Calling
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+          {figureMode === 'choreography' ? (
+            <FiguresEditor
+              figures={pendingFigures.figures}
+              onAdd={pendingFigures.addFigure}
+              onUpdate={pendingFigures.updateFigure}
+              onDelete={pendingFigures.deleteFigure}
+              onReorder={pendingFigures.setFigures}
+            />
+          ) : (
+            <FiguresEditor
+              figures={pendingCallingFigures.figures}
+              onAdd={pendingCallingFigures.addFigure}
+              onUpdate={pendingCallingFigures.updateFigure}
+              onDelete={pendingCallingFigures.deleteFigure}
+              onReorder={pendingCallingFigures.setFigures}
+            />
+          )}
           <Box sx={{ mt: 4 }}>
             <Suspense fallback={<CircularProgress size={24} />}>
               <MarkdownEditor

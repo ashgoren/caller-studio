@@ -24,6 +24,7 @@ export const newRecord: DanceInsert = {
   video: '',
   figures: [],
   cues: null,
+  calling_figures: null,
 };
 
 

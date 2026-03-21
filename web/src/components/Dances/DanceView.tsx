@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
-import { Box, Button, Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Divider, IconButton, Stack, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -29,6 +29,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
 
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [cuesOpen, setCuesOpen] = useState(false);
+  const [figureMode, setFigureMode] = useState<'choreography' | 'calling'>('choreography');
 
   const choreographyPrintRef = useRef<HTMLDivElement>(null);
   const combinedPrintRef = useRef<HTMLDivElement>(null);
@@ -37,7 +38,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
 
   const choreographerNames = dance.dances_choreographers.map(dc => dc.choreographer.name).join(', ');
   const figuresLabel = makeFiguresLabel(dance);
-  const figures = dance.figures;
+  const figures = figureMode === 'calling' ? (dance.calling_figures ?? []) : dance.figures;
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto' }}>
@@ -92,14 +93,22 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
 
         {/* Left: Figures + Notes */}
         <Box sx={{ flex: '1 1 0', minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-            <Box>
-              {figuresLabel && (
-                <Typography variant='overline' color='text.secondary'>{figuresLabel}</Typography>
-              )}
-            </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <ToggleButtonGroup
+              value={figureMode}
+              exclusive
+              onChange={(_, v) => { if (v) setFigureMode(v); }}
+              size='small'
+            >
+              <ToggleButton value='choreography' sx={{ py: 0.25, px: 1, fontSize: '0.7rem', lineHeight: 1.5 }}>
+                Choreography
+              </ToggleButton>
+              <ToggleButton value='calling' disabled={!dance.calling_figures} sx={{ py: 0.25, px: 1, fontSize: '0.7rem', lineHeight: 1.5 }}>
+                Calling
+              </ToggleButton>
+            </ToggleButtonGroup>
             <Box sx={{ display: 'flex', gap: 0.5 }}>
-              {figures.length > 0 && (
+              {dance.figures.length > 0 && (
                 <Tooltip title='Print choreography'>
                   <IconButton size='small' onClick={() => printChoreography()}>
                     <PrintIcon fontSize='small' />
@@ -122,6 +131,9 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
               )}
             </Box>
           </Box>
+          {figuresLabel && (
+            <Typography variant='overline' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>{figuresLabel}</Typography>
+          )}
           {figures.length === 0 ? (
             <Typography color='text.disabled' sx={{ mt: 0.5 }}>—</Typography>
           ) : (
@@ -237,6 +249,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
         choreographerNames={choreographerNames}
         combinedPrintRef={combinedPrintRef}
         choreographyPrintRef={choreographyPrintRef}
+        choreographyFigures={figures}
       />
 
     </Box>
