@@ -21,7 +21,7 @@ import { WalkthroughViewDialog } from './WalkthroughViewDialog';
 import { CuesViewDialog } from './CuesViewDialog';
 import type { Dance } from '@/lib/types/database';
 
-export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => void }) => {
+export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }: { dance: Dance; onEdit: () => void; figureMode: 'choreography' | 'calling'; onFigureModeChange: (mode: 'choreography' | 'calling') => void }) => {
   const navigate = useNavigate();
 
   const { setTitle } = useTitle();
@@ -29,7 +29,6 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
 
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [cuesOpen, setCuesOpen] = useState(false);
-  const [figureMode, setFigureMode] = useState<'choreography' | 'calling'>('choreography');
 
   const choreographyPrintRef = useRef<HTMLDivElement>(null);
   const combinedPrintRef = useRef<HTMLDivElement>(null);
@@ -97,7 +96,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
             <ToggleButtonGroup
               value={figureMode}
               exclusive
-              onChange={(_, v) => { if (v) setFigureMode(v); }}
+              onChange={(_, v) => { if (v) onFigureModeChange(v); }}
               size='small'
             >
               <ToggleButton value='choreography' sx={{ py: 0.25, px: 1, fontSize: '0.7rem', lineHeight: 1.5 }}>
@@ -154,7 +153,7 @@ export const DanceViewMode = ({ dance, onEdit }: { dance: Dance; onEdit: () => v
                     <Typography sx={{ width: 30, flexShrink: 0, color: 'text.disabled', fontSize: '0.875rem' }}>
                       {figure.beats != null ? `(${figure.beats})` : ''}
                     </Typography>
-                    <Typography>{figure.description}</Typography>
+                    <Typography dangerouslySetInnerHTML={{ __html: figure.description }} />
                   </Box>
                 );
               })}

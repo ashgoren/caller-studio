@@ -26,7 +26,7 @@ const PrintFigureList = ({
         <div key={figure.id} style={{ display: 'flex', marginTop: isNewPhrase && i > 0 ? phraseGap : contGap }}>
           <span style={{ width: '2.2em', flexShrink: 0, fontWeight: 'bold', fontSize }}>{isNewPhrase ? figure.phrase : ''}</span>
           <span style={{ width: beatsWidth, flexShrink: 0, color: '#666', fontSize }}>{figure.beats != null ? `(${figure.beats})` : ''}</span>
-          <span style={{ fontSize }}>{figure.description}</span>
+          <span style={{ fontSize }} dangerouslySetInnerHTML={{ __html: figure.description }} />
         </div>
       );
     })}

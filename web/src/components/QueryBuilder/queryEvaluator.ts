@@ -17,7 +17,7 @@ const evaluateFigureRule = (row: any, rule: FigureRule): boolean => {
   const match = figures.some((f: any) => {
     if (rule.phrase && f.phrase !== rule.phrase) return false;
     if (rule.beats !== null && f.beats !== rule.beats) return false;
-    if (rule.description && !f.description?.toLowerCase().includes(rule.description.toLowerCase())) return false;
+    if (rule.description && !(f.description?.replace(/<[^>]*>/g, '') ?? '').toLowerCase().includes(rule.description.toLowerCase())) return false;
     return true;
   });
   return rule.negate ? !match : match;

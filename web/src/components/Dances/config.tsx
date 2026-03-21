@@ -83,7 +83,7 @@ export const columns: MRT_ColumnDef<Dance>[] = [
             <div key={index} style={{ display: 'flex', gap: 8 }}>
               <span style={{ width: 28, flexShrink: 0 }}>{figure.phrase}</span>
               <span style={{ width: 24, flexShrink: 0 }}>{figure.beats ?? ''}</span>
-              <span>{figure.description}</span>
+              <span dangerouslySetInnerHTML={{ __html: figure.description }} />
             </div>
           ))}
         </div>

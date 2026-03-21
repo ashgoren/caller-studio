@@ -18,11 +18,12 @@ export const DancePage = () => {
 const DanceDetailPage = ({ id }: { id: number }) => {
   const { data: dance, isLoading, error } = useDance(id);
   const [isEditing, setIsEditing] = useState(false);
+  const [figureMode, setFigureMode] = useState<'choreography' | 'calling'>('choreography');
 
   if (isLoading) return <Spinner />;
   if (error) return <ErrorMessage error={error} />;
   if (!dance) return <ErrorMessage error={new Error('Dance not found')} />;
 
-  if (isEditing) return <DanceEditMode dance={dance} onCancel={() => setIsEditing(false)} />;
-  return <DanceViewMode dance={dance} onEdit={() => setIsEditing(true)} />;
+  if (isEditing) return <DanceEditMode dance={dance} onCancel={() => setIsEditing(false)} figureMode={figureMode} onFigureModeChange={setFigureMode} />;
+  return <DanceViewMode dance={dance} onEdit={() => setIsEditing(true)} figureMode={figureMode} onFigureModeChange={setFigureMode} />;
 };

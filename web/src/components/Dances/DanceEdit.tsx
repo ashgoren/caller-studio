@@ -34,7 +34,7 @@ import { useUndoActions, dbRecord, beforeValues, relationOps } from '@/contexts/
 import type { Dance, DanceInsert, DanceUpdate, CueGridData } from '@/lib/types/database';
 const MarkdownEditor = lazy(() => import('@/components/shared/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
 
-export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: () => void }) => {
+export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode = 'choreography', onFigureModeChange }: { dance?: Dance; onCancel?: () => void; figureMode?: 'choreography' | 'calling'; onFigureModeChange?: (mode: 'choreography' | 'calling') => void }) => {
   const navigate = useNavigate();
   const confirm = useConfirm();
   const { toastSuccess, toastError } = useNotify();
@@ -75,7 +75,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
   const pendingVibes = usePendingRelations();
   const pendingFigures = useFigures(dance);
   const pendingCallingFigures = useFigures(dance ? { figures: dance.calling_figures ?? [] } : undefined);
-  const [figureMode, setFigureMode] = useState<'choreography' | 'calling'>('choreography');
+  const [figureMode, setFigureMode] = useState<'choreography' | 'calling'>(initialFigureMode);
   const [callingEnabled, setCallingEnabled] = useState(dance?.calling_figures !== null && dance?.calling_figures !== undefined);
 
   const [initialFormData] = useState<DanceUpdate>(() => ({
@@ -277,6 +277,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
       pendingCallingFigures.setFigures([...pendingFigures.figures]);
     }
     setFigureMode(v);
+    onFigureModeChange?.(v);
   };
 
   // ---------- Import Dance ----------

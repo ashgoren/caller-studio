@@ -65,7 +65,7 @@ export const CuesEditDialog = ({ open, onClose, title, figuresLabel, figures, va
                       <Typography sx={{ width: 30, flexShrink: 0, color: 'text.disabled', fontSize: '0.875rem' }}>
                         {figure.beats != null ? `(${figure.beats})` : ''}
                       </Typography>
-                      <Typography variant='body2'>{figure.description}</Typography>
+                      <Typography variant='body2' dangerouslySetInnerHTML={{ __html: figure.description }} />
                     </Box>
                   ))}
                 </Box>
