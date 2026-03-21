@@ -1,9 +1,10 @@
 import { createPortal } from 'react-dom';
 import type { RefObject } from 'react';
 import { SECTIONS, COLS, INTRO_COLS, cellKey } from './cueGridConstants';
+import { PRINT_CUES_COMBINED } from './printStyles';
 import type { Dance, FigureItem, CueGridData } from '@/lib/types/database';
 
-// --- Shared print helpers (file-private) ---
+// --- Shared print helpers ---
 
 const PrintFigureList = ({
   figures,
@@ -32,7 +33,7 @@ const PrintFigureList = ({
   </>
 );
 
-const PrintCuesTable = ({
+export const PrintCuesTable = ({
   cues,
   cellHeight,
   labelPaddingTop,
@@ -88,14 +89,12 @@ export const DancePrintPortals = ({
   dance,
   figuresLabel,
   choreographerNames,
-  cuesPrintRef,
   combinedPrintRef,
   choreographyPrintRef,
 }: {
   dance: Dance;
   figuresLabel: string;
   choreographerNames: string;
-  cuesPrintRef: RefObject<HTMLDivElement | null>;
   combinedPrintRef: RefObject<HTMLDivElement | null>;
   choreographyPrintRef: RefObject<HTMLDivElement | null>;
 }) => {
@@ -104,22 +103,6 @@ export const DancePrintPortals = ({
 
   return (
     <>
-      {/* Standalone cues print — 5×7 */}
-      {hasCues && createPortal(
-        <div style={{ position: 'fixed', top: '-100vh', left: 0, width: 448 }}>
-          <div ref={cuesPrintRef} style={{ background: 'white', color: 'black', fontFamily: '"Roboto","Helvetica","Arial",sans-serif', fontSize: '14px', lineHeight: 1.4 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <div style={{ fontSize: '17px', fontWeight: 'bold' }}>{title}</div>
-              {figuresLabel && <div style={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '12px' }}>{figuresLabel}</div>}
-            </div>
-            {choreographerNames && <div style={{ fontStyle: 'italic', marginBottom: '0.2em', fontSize: '12px' }}>by {choreographerNames}</div>}
-            <hr style={{ border: 'none', borderTop: '1px solid black', margin: '0.2em 0 0.4em' }} />
-            <PrintCuesTable cues={cues} cellHeight={61} labelPaddingTop={20} cellPadding='4px 3px' />
-          </div>
-        </div>,
-        document.body
-      )}
-
       {/* Combined print — 8.5×11, choreography top half / cues bottom half */}
       {figures.length > 0 && hasCues && createPortal(
         <div style={{ position: 'fixed', top: '-100vh', left: 0, width: 456 }}>
@@ -136,7 +119,7 @@ export const DancePrintPortals = ({
               </div>
             </div>
             <div style={{ height: 504, overflow: 'hidden', boxSizing: 'border-box' }}>
-              <PrintCuesTable cues={cues} cellHeight={55} labelPaddingTop={16} cellPadding='3px' />
+              <PrintCuesTable cues={cues} {...PRINT_CUES_COMBINED} />
             </div>
           </div>
         </div>,

@@ -1,22 +1,20 @@
 import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
+import { Box, Button, TextField, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
-
 import ArticleIcon from '@mui/icons-material/Article';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import { useConfirm } from 'material-ui-confirm';
 import { closeSnackbar } from 'notistack';
 import { RelationEditor } from '@/components/RelationEditor';
-const MarkdownEditor = lazy(() => import('@/components/shared/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
 import { FiguresEditor } from './FiguresEditor';
-import { CueGridEditor } from './CueGridEditor';
-import { CELL_HEIGHT, GRID_NATURAL_HEIGHT, GRID_NATURAL_WIDTH } from './cueGridConstants';
 import { isValidUrl, fetchAndResolveImport } from './danceImport';
 import { makeFiguresLabel } from './danceUtils';
+import { WalkthroughEditDialog } from './WalkthroughEditDialog';
+import { CuesEditDialog } from './CuesEditDialog';
 import { newRecord } from './config';
 import { useCreateDance, useUpdateDance, useDeleteDance } from '@/hooks/useDances';
 import { useAddChoreographerToDance, useRemoveChoreographerFromDance } from '@/hooks/useDancesChoreographers';
@@ -34,18 +32,19 @@ import { useNotify } from '@/hooks/useNotify';
 import { useTitle } from '@/contexts/TitleContext';
 import { useUndoActions, dbRecord, beforeValues, relationOps } from '@/contexts/UndoContext';
 import type { Dance, DanceInsert, DanceUpdate, CueGridData } from '@/lib/types/database';
+const MarkdownEditor = lazy(() => import('@/components/shared/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
 
 export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: () => void }) => {
   const navigate = useNavigate();
   const confirm = useConfirm();
   const { toastSuccess, toastError } = useNotify();
   const { pushAction, setFormActive } = useUndoActions();
-  const { setTitle } = useTitle();
 
-  useEffect(
-    () => setTitle(dance?.title ? `Edit: ${dance.title}` : 'New Dance'),
-    [setTitle, dance?.title]
-  );
+  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
+  const [cuesOpen, setCuesOpen] = useState(false);
+
+  const { setTitle } = useTitle();
+  useEffect(() => setTitle(dance?.title ? `Edit: ${dance.title}` : 'New Dance'), [setTitle, dance?.title]);
 
   useEffect(() => {
     setFormActive(true);
@@ -53,18 +52,15 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
     return () => setFormActive(false);
   }, [setFormActive]);
 
-  const isCreate = dance === undefined;
-
   const { mutateAsync: createDance, isPending: isCreating } = useCreateDance();
   const { mutateAsync: updateDance, isPending: isUpdating } = useUpdateDance();
   const { mutateAsync: deleteDance } = useDeleteDance();
-  const { mutateAsync: addChoreographer } = useAddChoreographerToDance();
-  const { mutateAsync: removeChoreographer } = useRemoveChoreographerFromDance();
   const { mutateAsync: addKeyMove } = useAddKeyMoveToDance();
   const { mutateAsync: removeKeyMove } = useRemoveKeyMoveFromDance();
   const { mutateAsync: addVibe } = useAddVibeToDance();
   const { mutateAsync: removeVibe } = useRemoveVibeFromDance();
-
+  const { mutateAsync: addChoreographer } = useAddChoreographerToDance();
+  const { mutateAsync: removeChoreographer } = useRemoveChoreographerFromDance();
   const { mutateAsync: createChoreographer } = useCreateChoreographer();
   const { data: choreographers } = useChoreographers();
   const { data: keyMoves } = useKeyMoves();
@@ -72,6 +68,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
   const { data: danceTypes } = useDanceTypes();
   const { data: formations } = useFormations();
   const { data: progressions } = useProgressions();
+  const isSaving = isCreating || isUpdating;
 
   const pendingChoreographers = usePendingRelations();
   const pendingKeyMoves = usePendingRelations();
@@ -86,46 +83,19 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
     formation_id: dance?.formation_id ?? newRecord.formation_id,
     progression_id: dance?.progression_id ?? newRecord.progression_id,
     difficulty: dance?.difficulty ?? newRecord.difficulty,
-
     notes: dance?.notes ?? newRecord.notes,
     walkthrough: dance?.walkthrough ?? newRecord.walkthrough,
     place_in_program: dance?.place_in_program ?? newRecord.place_in_program,
     cues: dance?.cues ?? null,
-
   }));
   const [formData, setFormData] = useState<DanceUpdate>({ ...initialFormData });
-  const [isSaved, setIsSaved] = useState(false);
-  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
-  const [cuesOpen, setCuesOpen] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(() => window.innerWidth);
-  useEffect(() => {
-    const handler = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
-  const cuesEditorScale = Math.min(1, (windowWidth - 96) / (GRID_NATURAL_WIDTH + 18));
 
-  const figuresLabel = useMemo(() => makeFiguresLabel({
-    dance_type: (danceTypes ?? []).find(dt => dt.id === formData.dance_type_id),
-    formation: (formations ?? []).find(f => f.id === formData.formation_id),
-    progression: (progressions ?? []).find(p => p.id === formData.progression_id),
-  }), [danceTypes, formations, progressions, formData.dance_type_id, formData.formation_id, formData.progression_id]);
-
-  // Group figures by phrase in encounter order — used to align with cue grid sections
-  const pendingFigureItems = pendingFigures.figures;
-  const figureGroups = useMemo(() => {
-    const groups: { phrase: string; figures: typeof pendingFigureItems }[] = [];
-    for (const figure of pendingFigureItems) {
-      const last = groups[groups.length - 1];
-      if (last && last.phrase === figure.phrase) last.figures.push(figure);
-      else groups.push({ phrase: figure.phrase, figures: [figure] });
-    }
-    return groups;
-  }, [pendingFigureItems]);
   const [importing, setImporting] = useState(false);
-  const contraDefaultApplied = useRef(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const isCreate = dance === undefined;
 
-  // Default dance_type_id to Contra (first type) once when types load, if field is still null
+  // Default dance_type_id to Contra once when types load (if field is still null)
+  const contraDefaultApplied = useRef(false);
   useEffect(() => {
     if (danceTypes && !contraDefaultApplied.current && formData.dance_type_id === null) {
       contraDefaultApplied.current = true;
@@ -135,7 +105,11 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
     }
   }, [danceTypes, formData.dance_type_id, initialFormData]);
 
-  const isSaving = isCreating || isUpdating;
+  const figuresLabel = useMemo(() => makeFiguresLabel({
+    dance_type: (danceTypes ?? []).find(dt => dt.id === formData.dance_type_id),
+    formation: (formations ?? []).find(f => f.id === formData.formation_id),
+    progression: (progressions ?? []).find(p => p.id === formData.progression_id),
+  }), [danceTypes, formations, progressions, formData.dance_type_id, formData.formation_id, formData.progression_id]);
 
 
   // ---------- Unsaved changes handling ----------
@@ -198,37 +172,6 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
   };
 
 
-  // ---------- Delete ----------
-
-  const handleDelete = async () => {
-    const { confirmed } = await confirm({
-      title: 'Delete Dance',
-      description: `Are you sure you want to delete "${dance!.title}"?`,
-      confirmationText: 'Delete',
-      cancellationText: 'Cancel',
-    });
-    if (!confirmed) return;
-    await deleteDance({ id: dance!.id });
-    pushAction({
-      label: `Delete Dance: ${dance!.title}`,
-      ops: [
-        { type: 'delete', table: 'dances', id: dance!.id, record: dbRecord(dance!, newRecord) },
-        ...relationOps('dances_choreographers', [],
-          dance!.dances_choreographers.map(dc => ({ id: dc.id, dance_id: dance!.id, choreographer_id: dc.choreographer.id }))),
-        ...relationOps('dances_key_moves', [],
-          dance!.dances_key_moves.map(dkm => ({ id: dkm.id, dance_id: dance!.id, key_move_id: dkm.key_move.id }))),
-        ...relationOps('dances_vibes', [],
-          dance!.dances_vibes.map(dv => ({ id: dv.id, dance_id: dance!.id, vibe_id: dv.vibe.id }))),
-        ...relationOps('programs_dances', [],
-          dance!.programs_dances.map(pd => ({ id: pd.id, dance_id: dance!.id, program_id: pd.program.id, order: pd.order }))),
-      ],
-    });
-    toastSuccess('Dance deleted');
-    flushSync(() => setIsSaved(true));
-    navigate('/dances');
-  };
-
-
   // ---------- Form handling ----------
 
   const update = (key: keyof DanceUpdate, value: unknown) =>
@@ -284,6 +227,34 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
       toastSuccess('Dance updated');
       onCancel?.(); // Go back to view mode
     }
+  };
+
+  const handleDelete = async () => {
+    const { confirmed } = await confirm({
+      title: 'Delete Dance',
+      description: `Are you sure you want to delete "${dance!.title}"?`,
+      confirmationText: 'Delete',
+      cancellationText: 'Cancel',
+    });
+    if (!confirmed) return;
+    await deleteDance({ id: dance!.id });
+    pushAction({
+      label: `Delete Dance: ${dance!.title}`,
+      ops: [
+        { type: 'delete', table: 'dances', id: dance!.id, record: dbRecord(dance!, newRecord) },
+        ...relationOps('dances_choreographers', [],
+          dance!.dances_choreographers.map(dc => ({ id: dc.id, dance_id: dance!.id, choreographer_id: dc.choreographer.id }))),
+        ...relationOps('dances_key_moves', [],
+          dance!.dances_key_moves.map(dkm => ({ id: dkm.id, dance_id: dance!.id, key_move_id: dkm.key_move.id }))),
+        ...relationOps('dances_vibes', [],
+          dance!.dances_vibes.map(dv => ({ id: dv.id, dance_id: dance!.id, vibe_id: dv.vibe.id }))),
+        ...relationOps('programs_dances', [],
+          dance!.programs_dances.map(pd => ({ id: pd.id, dance_id: dance!.id, program_id: pd.program.id, order: pd.order }))),
+      ],
+    });
+    toastSuccess('Dance deleted');
+    flushSync(() => setIsSaved(true));
+    navigate('/dances');
   };
 
 
@@ -470,86 +441,23 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
 
       </Box>
 
-      <Dialog
+      <WalkthroughEditDialog
         open={walkthroughOpen}
-        onClose={(_, reason) => { if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') setWalkthroughOpen(false); }}
-        fullWidth
-        maxWidth='md'
-        PaperProps={{ sx: { height: '90vh' } }}
-      >
-        <DialogTitle>{dance?.title} • Walkthrough</DialogTitle>
-        <DialogContent>
-          <Suspense fallback={<CircularProgress size={24} />}>
-            <MarkdownEditor
-              label=''
-              value={formData.walkthrough ?? ''}
-              onChange={v => update('walkthrough', v)}
-              height='calc(90vh - 140px)'
-              dragbar={false}
-            />
-          </Suspense>
-          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 1 }}>
-            Changes are saved when you save the dance.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setWalkthroughOpen(false)}>Done</Button>
-        </DialogActions>
-      </Dialog>
+        onClose={() => setWalkthroughOpen(false)}
+        title={dance?.title}
+        value={formData.walkthrough ?? ''}
+        onChange={v => update('walkthrough', v)}
+      />
 
-      <Dialog
+      <CuesEditDialog
         open={cuesOpen}
-        onClose={(_, reason) => { if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') setCuesOpen(false); }}
-        fullWidth
-        maxWidth='lg'
-        PaperProps={{ sx: { height: '90vh' } }}
-      >
-        <DialogTitle>{[dance?.title, figuresLabel].filter(Boolean).join(' • ') || 'Edit Cues'}</DialogTitle>
-        <DialogContent sx={{ display: 'flex', gap: 3, overflow: { xs: 'auto', md: 'hidden' }, p: 2 }}>
-
-          {/* Left: figures reference — hidden below ~1012px */}
-          <Box sx={{ width: 340, flexShrink: 0, overflowY: 'auto', pr: 2, '@media (max-width: 1011px)': { display: 'none' } }}>
-            {pendingFigures.figures.length === 0 ? (
-              <Typography color='text.disabled' variant='body2'>No figures added yet.</Typography>
-            ) : (
-              <Box sx={{ position: 'relative', height: GRID_NATURAL_HEIGHT + 18 }}>
-                {figureGroups.map(({ phrase, figures }, phraseIdx) => (
-                  <Box key={phrase} sx={{ position: 'absolute', top: 15 + CELL_HEIGHT + phraseIdx * (CELL_HEIGHT * 2 + 1), left: 0, right: 0 }}>
-                    {figures.map((figure, figIdx) => (
-                      <Box key={figure.id ?? figIdx} sx={{ display: 'flex', gap: 2, mt: figIdx > 0 ? 0.5 : 0 }}>
-                        <Typography sx={{ width: 28, flexShrink: 0, fontWeight: 700, fontSize: '0.8rem', color: 'text.secondary', pt: '3px', userSelect: 'none' }}>
-                          {figIdx === 0 ? phrase : ''}
-                        </Typography>
-                        <Typography sx={{ width: 30, flexShrink: 0, color: 'text.disabled', fontSize: '0.875rem' }}>
-                          {figure.beats != null ? `(${figure.beats})` : ''}
-                        </Typography>
-                        <Typography variant='body2'>{figure.description}</Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </Box>
-
-          {/* Right: cue grid editor */}
-          <Box sx={{ flex: 1, overflowY: { xs: 'visible', md: 'auto' }, overflowX: 'hidden', minWidth: 0 }}>
-            <Box sx={{ transform: `scale(${cuesEditorScale})`, transformOrigin: 'top left', width: GRID_NATURAL_WIDTH + 18 }}>
-              <CueGridEditor
-                value={formData.cues as CueGridData | null}
-                onChange={v => update('cues', v)}
-              />
-            </Box>
-          </Box>
-
-        </DialogContent>
-        <DialogActions>
-          <Typography variant='caption' color='text.secondary' sx={{ flex: 1, ml: 2 }}>
-            Changes are saved when you save the dance.
-          </Typography>
-          <Button onClick={() => setCuesOpen(false)}>Done</Button>
-        </DialogActions>
-      </Dialog>
+        onClose={() => setCuesOpen(false)}
+        title={dance?.title}
+        figuresLabel={figuresLabel}
+        figures={pendingFigures.figures}
+        value={formData.cues as CueGridData | null}
+        onChange={v => update('cues', v)}
+      />
 
       <Divider sx={{ mt: 4 }} />
       <Box sx={{ display: 'flex', mt: 2, justifyContent: 'space-between', alignItems: 'center' }}>
@@ -567,7 +475,6 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
           </Button>
         </Box>
       </Box>
-
 
     </Box>
   );
