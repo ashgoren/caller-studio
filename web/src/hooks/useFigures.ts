@@ -29,5 +29,12 @@ export const useFigures = (
     setPendingFigures(newFigures);
   };
 
-  return { figures, addFigure, updateFigure, deleteFigure, setFigures, hasPendingChanges: pendingFigures !== null };
+  return {
+    figures,
+    addFigure,
+    updateFigure,
+    deleteFigure,
+    setFigures,
+    hasPendingChanges: pendingFigures !== null && JSON.stringify(pendingFigures) !== JSON.stringify(dance?.figures ?? [])
+  };
 };

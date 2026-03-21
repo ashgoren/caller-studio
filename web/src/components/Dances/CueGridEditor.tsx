@@ -9,6 +9,15 @@ const CONTENT_HEIGHT = CELL_HEIGHT - CELL_PADDING * 2;
 
 const isEmptyHtml = (html: string) => !html.replace(/<[^>]*>/g, '').trim();
 
+// Remove <font size="3"> tags (browser default — semantically a no-op) so they
+// don't cause false dirty-state mismatches against unformatted original content.
+const stripDefaultFontSize = (html: string): string => {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  div.querySelectorAll('font[size="3"]').forEach(el => el.replaceWith(...el.childNodes));
+  return div.innerHTML;
+};
+
 const editableSx = {
   display: 'block',
   width: '100%',
@@ -57,7 +66,7 @@ const CueCell = ({ initialHtml, onCommit }: { initialHtml: string; onCommit: (ht
   const handleInput = useCallback(() => {
     const el = ref.current;
     if (!el) return;
-    const normalized = isEmptyHtml(el.innerHTML) ? '' : el.innerHTML;
+    const normalized = isEmptyHtml(el.innerHTML) ? '' : stripDefaultFontSize(el.innerHTML);
     lastHtml.current = normalized;
     if (normalized) el.removeAttribute('data-empty');
     else el.setAttribute('data-empty', '');

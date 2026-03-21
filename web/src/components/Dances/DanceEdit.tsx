@@ -116,9 +116,12 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
 
   // Has any form field changed?
   const isDirty = useMemo(() =>
-    Object.keys(formData).some(key =>
-      (formData as Record<string, unknown>)[key] !== (initialFormData as Record<string, unknown>)[key]
-    ),
+    Object.keys(formData).some(key => {
+      const a = (formData as Record<string, unknown>)[key];
+      const b = (initialFormData as Record<string, unknown>)[key];
+      if (a !== null && typeof a === 'object') return JSON.stringify(a) !== JSON.stringify(b);
+      return a !== b;
+    }),
     [formData, initialFormData]
   );
 
