@@ -361,7 +361,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
       <Box sx={{ display: 'flex', gap: 5, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' } }}>
 
         {/* Left: Figures + Notes */}
-        <Box sx={{ flex: '1 1 0', minWidth: 0 }}>
+        <Box sx={{ flex: '1 1 0', minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
           <FiguresEditor
             figures={pendingFigures.figures}
             onAdd={pendingFigures.addFigure}
