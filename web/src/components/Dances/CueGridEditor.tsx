@@ -64,6 +64,19 @@ const CueCell = ({ initialHtml, onCommit }: { initialHtml: string; onCommit: (ht
     onCommit(normalized);
   }, [onCommit]);
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!(e.metaKey || e.ctrlKey) || !e.shiftKey) return;
+    if (e.key === '.' || e.key === '>') {
+      e.preventDefault();
+      const current = parseInt(document.queryCommandValue('fontSize') || '3', 10);
+      document.execCommand('fontSize', false, String(Math.min(current + 1, 4)));
+    } else if (e.key === ',' || e.key === '<') {
+      e.preventDefault();
+      const current = parseInt(document.queryCommandValue('fontSize') || '3', 10);
+      document.execCommand('fontSize', false, String(Math.max(current - 1, 2)));
+    }
+  }, []);
+
   return (
     <Box
       ref={ref}
@@ -71,6 +84,7 @@ const CueCell = ({ initialHtml, onCommit }: { initialHtml: string; onCommit: (ht
       contentEditable
       suppressContentEditableWarning
       onInput={handleInput}
+      onKeyDown={handleKeyDown}
       data-empty=''
       sx={editableSx}
     />

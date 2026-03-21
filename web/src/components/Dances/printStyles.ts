@@ -12,6 +12,8 @@ const BASE_SANS = BASE + `
   * { color: black !important; box-shadow: none !important; background: transparent !important; }
   table { border-collapse: collapse; table-layout: fixed; }
   td { word-break: break-word; text-align: center; vertical-align: middle; }
+  font[size="2"] { font-size: 0.8em; }
+  font[size="4"] { font-size: 1.25em; }
 `;
 
 // Cue table cell dimensions for standalone 5×7 card print
