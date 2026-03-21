@@ -64,7 +64,7 @@ export const PrintCuesTable = ({
               {Array.from({ length: INTRO_COLS }, (_, i) => {
                 const col = COLS - INTRO_COLS + i;
                 const text = cues[cellKey(section.id, 0, col)];
-                return <td key={col} style={{ padding: cellPadding, height: cellHeight, color: text ? 'black' : '#bbb', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'break-word' }}>{text ?? '•'}</td>;
+                return <td key={col} style={{ padding: cellPadding, height: cellHeight, color: text ? 'black' : '#bbb', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'break-word' }} dangerouslySetInnerHTML={{ __html: text ?? '•' }} />;
               })}
             </tr>
           )];
@@ -74,7 +74,7 @@ export const PrintCuesTable = ({
             {rowIdx === 0 && labelTd}
             {Array.from({ length: COLS }, (_, col) => {
               const text = cues[cellKey(section.id, row, col)];
-              return <td key={col} style={{ padding: cellPadding, height: cellHeight, color: text ? 'black' : '#bbb', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'break-word' }}>{text ?? '•'}</td>;
+              return <td key={col} style={{ padding: cellPadding, height: cellHeight, color: text ? 'black' : '#bbb', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'break-word' }} dangerouslySetInnerHTML={{ __html: text ?? '•' }} />;
             })}
           </tr>
         ));

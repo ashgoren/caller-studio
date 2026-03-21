@@ -1,37 +1,81 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { Box } from '@mui/material';
 import { SECTIONS, COLS, INTRO_COLS, CELL_HEIGHT, CELL_FONT_SIZE, cellKey } from './cueGridConstants';
 import { CueColGroup } from './CueGrid';
 import type { CueGridData } from '@/lib/types/database';
 
 const CELL_PADDING = 2; // px around each <td>
+const CONTENT_HEIGHT = CELL_HEIGHT - CELL_PADDING * 2;
 
-// textarea height fills the fixed cell height minus cell padding on top and bottom
-const TEXTAREA_HEIGHT = CELL_HEIGHT - CELL_PADDING * 2;
+const isEmptyHtml = (html: string) => !html.replace(/<[^>]*>/g, '').trim();
 
-const textareaSx = {
+const editableSx = {
   display: 'block',
   width: '100%',
-  height: TEXTAREA_HEIGHT,
+  height: CONTENT_HEIGHT,
   textAlign: 'center',
-  fontSize: CELL_FONT_SIZE, // matches view cellSx exactly
-  lineHeight: 1.4,       // matches view cellSx exactly
+  fontSize: CELL_FONT_SIZE,
+  lineHeight: 1.4,
   fontFamily: 'inherit',
-  wordBreak: 'break-word', // matches view cellSx exactly — same wrap points
+  wordBreak: 'break-word',
   color: 'text.primary',
   background: 'transparent',
   border: '1px solid transparent',
   borderRadius: '3px',
   outline: 'none',
-  resize: 'none',
   overflow: 'hidden',
   py: '3px',
-  px: '1px',  // cell(2px) + textarea(1px) + border(1px) = 4px per side = view's px:'4px'
+  px: '1px',  // cell(2px) + editable(1px) + border(1px) = 4px per side = view's px:'4px'
   boxSizing: 'border-box',
-  '&::placeholder': { color: 'text.disabled', opacity: 1 },
+  cursor: 'text',
+  '&[data-empty]::before': {
+    content: '"•"',
+    color: 'text.disabled',
+    pointerEvents: 'none',
+  },
   '&:hover': { borderColor: 'divider' },
   '&:focus': { borderColor: 'primary.main', bgcolor: 'action.focus' },
 } as const;
+
+const CueCell = ({ initialHtml, onCommit }: { initialHtml: string; onCommit: (html: string) => void }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const lastHtml = useRef<string | null>(null);
+
+  // Seed innerHTML on mount and sync external changes (e.g. reset), but skip
+  // when the value echoes back from our own onCommit to avoid cursor jumps.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (initialHtml !== lastHtml.current) {
+      el.innerHTML = initialHtml;
+      lastHtml.current = initialHtml;
+      if (initialHtml) el.removeAttribute('data-empty');
+      else el.setAttribute('data-empty', '');
+    }
+  }, [initialHtml]);
+
+  const handleInput = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const normalized = isEmptyHtml(el.innerHTML) ? '' : el.innerHTML;
+    lastHtml.current = normalized;
+    if (normalized) el.removeAttribute('data-empty');
+    else el.setAttribute('data-empty', '');
+    onCommit(normalized);
+  }, [onCommit]);
+
+  return (
+    <Box
+      ref={ref}
+      component='div'
+      contentEditable
+      suppressContentEditableWarning
+      onInput={handleInput}
+      data-empty=''
+      sx={editableSx}
+    />
+  );
+};
 
 export const CueGridEditor = ({
   value,
@@ -43,11 +87,11 @@ export const CueGridEditor = ({
   const cues = useMemo(() => value ?? {}, [value]);
 
   const handleChange = useCallback(
-    (section: string, row: number, col: number, text: string) => {
+    (section: string, row: number, col: number, html: string) => {
       const key = cellKey(section, row, col);
       const next = { ...cues };
-      if (text) {
-        next[key] = text;
+      if (html) {
+        next[key] = html;
       } else {
         delete next[key];
       }
@@ -60,14 +104,9 @@ export const CueGridEditor = ({
     const key = cellKey(section, row, col);
     return (
       <Box component='td' key={col} sx={{ p: `${CELL_PADDING}px`, height: CELL_HEIGHT }}>
-        <Box
-          component='textarea'
-          value={cues[key] ?? ''}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-            handleChange(section, row, col, e.target.value)
-          }
-          placeholder='•'
-          sx={textareaSx}
+        <CueCell
+          initialHtml={cues[key] ?? ''}
+          onCommit={(html) => handleChange(section, row, col, html)}
         />
       </Box>
     );

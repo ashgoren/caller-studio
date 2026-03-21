@@ -53,9 +53,9 @@ const CueTableBody = ({ cues }: { cues: CueGridData }) => (
               const col = COLS - INTRO_COLS + i;
               const text = cues[cellKey(section.id, 0, col)];
               return (
-                <Box key={col} component='td' sx={{ ...cellSx, color: text ? 'text.primary' : 'text.disabled' }}>
-                  {text ?? '•'}
-                </Box>
+                <Box key={col} component='td' sx={{ ...cellSx, color: text ? 'text.primary' : 'text.disabled' }}
+                  dangerouslySetInnerHTML={{ __html: text ?? '•' }}
+                />
               );
             })}
           </Box>
@@ -72,9 +72,9 @@ const CueTableBody = ({ cues }: { cues: CueGridData }) => (
           {Array.from({ length: COLS }, (_, col) => {
             const text = cues[cellKey(section.id, row, col)];
             return (
-              <Box key={col} component='td' sx={{ ...cellSx, color: text ? 'text.primary' : 'text.disabled' }}>
-                {text ?? '•'}
-              </Box>
+              <Box key={col} component='td' sx={{ ...cellSx, color: text ? 'text.primary' : 'text.disabled' }}
+                dangerouslySetInnerHTML={{ __html: text ?? '•' }}
+              />
             );
           })}
         </Box>
