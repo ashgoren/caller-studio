@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
-import { Box, Button, TextField, Typography, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
+import { Box, Button, TextField, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -302,10 +302,6 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
 
   return (
     <Box sx={{ maxWidth: 1100, mx: 'auto' }}>
-      <Typography variant='h5' sx={{ mb: 2.5 }}>
-        {isCreate ? 'New Dance' : `Edit: ${dance!.title}`}
-      </Typography>
-
       {/* Prominent header fields — full width */}
       <Stack spacing={2} sx={{ mb: 2.5 }}>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1.1fr' }, gap: 2 }}>
@@ -459,8 +455,7 @@ export const DanceEditMode = ({ dance, onCancel }: { dance?: Dance; onCancel?: (
         onChange={v => update('cues', v)}
       />
 
-      <Divider sx={{ mt: 4 }} />
-      <Box sx={{ display: 'flex', mt: 2, justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box sx={{ position: 'sticky', bottom: 0, mt: 4, py: 2, borderTop: 1, borderColor: 'divider', backgroundColor: 'background.default', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           {!isCreate && (
             <Button color='error' startIcon={<DeleteIcon />} onClick={handleDelete} disabled={isSaving}>
