@@ -14,6 +14,7 @@ import remarkGfm from 'remark-gfm';
 import { ExternalLink } from '@/components/shared';
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
+import { FiguresList } from './FiguresList';
 import { makeFiguresLabel } from './danceUtils';
 import { PAGE_STYLE_COMBINED, PAGE_STYLE_CHOREOGRAPHY } from './printStyles';
 import { DancePrintPortals } from './DancePrintPortals';
@@ -136,28 +137,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
           {figures.length === 0 ? (
             <Typography color='text.disabled' sx={{ mt: 0.5 }}>—</Typography>
           ) : (
-            <Box>
-              {figures.map((figure, i) => {
-                const isNewPhrase = i === 0 || figure.phrase !== figures[i - 1].phrase;
-                return (
-                  <Box key={figure.id} sx={{ display: 'flex', gap: 2, mt: isNewPhrase && i > 0 ? 2 : 0.5 }}>
-                    <Typography sx={{
-                      width: 28, flexShrink: 0,
-                      fontWeight: 700, fontSize: '0.8rem',
-                      color: isNewPhrase ? 'text.secondary' : 'transparent',
-                      pt: '3px',
-                      userSelect: 'none',
-                    }}>
-                      {isNewPhrase ? figure.phrase : ''}
-                    </Typography>
-                    <Typography sx={{ width: 30, flexShrink: 0, color: 'text.disabled', fontSize: '0.875rem' }}>
-                      {figure.beats != null ? `(${figure.beats})` : ''}
-                    </Typography>
-                    <Typography dangerouslySetInnerHTML={{ __html: figure.description }} />
-                  </Box>
-                );
-              })}
-            </Box>
+            <FiguresList figures={figures} />
           )}
 
           {dance.notes && (
