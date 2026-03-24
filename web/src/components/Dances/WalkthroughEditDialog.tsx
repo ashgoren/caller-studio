@@ -5,10 +5,11 @@ import type { FigureItem } from '@/lib/types/database';
 
 const MarkdownEditor = lazy(() => import('@/components/shared/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
 
-export const WalkthroughEditDialog = ({ open, onClose, title, value, onChange, callingFigures }: {
+export const WalkthroughEditDialog = ({ open, onClose, title, figuresLabel, value, onChange, callingFigures }: {
   open: boolean;
   onClose: () => void;
   title: string | undefined;
+  figuresLabel: string;
   value: string;
   onChange: (v: string) => void;
   callingFigures: FigureItem[] | null;
@@ -23,7 +24,12 @@ export const WalkthroughEditDialog = ({ open, onClose, title, value, onChange, c
       maxWidth={callingFigures ? 'xl' : 'md'}
       PaperProps={{ sx: { height: '90vh' } }}
     >
-      <DialogTitle>{title} • Walkthrough</DialogTitle>
+      <DialogTitle sx={{ pb: figuresLabel ? 0.5 : undefined }}>
+      {title} • Walkthrough
+      {figuresLabel && (
+        <Typography variant='body2' color='text.secondary' sx={{ mt: 0.25 }}>{figuresLabel}</Typography>
+      )}
+    </DialogTitle>
       <DialogContent sx={{ display: 'flex', gap: 0, p: 0, overflow: 'hidden' }}>
         {callingFigures && (
           <Box sx={{

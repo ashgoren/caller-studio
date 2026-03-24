@@ -74,8 +74,11 @@ export const CuesViewDialog = ({ open, onClose, dance }: {
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: callingFigures ? { xs: 'column', md: 'row' } : 'row' }}>
               {callingFigures && (
                 <Box sx={{ flex: 1, overflowY: 'auto', p: 2, minWidth: 0 }}>
-                  <Box sx={{ height: CELL_HEIGHT, display: 'flex', alignItems: 'flex-start', pt: 0.5 }}>
+                  <Box sx={{ height: CELL_HEIGHT, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', pt: 0.5 }}>
                     <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
+                    {figuresLabel && (
+                      <Typography variant='body2' color='text.secondary' sx={{ mt: 0.25 }}>{figuresLabel}</Typography>
+                    )}
                   </Box>
                   <FiguresList figures={callingFigures} />
                 </Box>

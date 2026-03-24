@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import { useReactToPrint } from 'react-to-print';
 import { PAGE_STYLE_WALKTHROUGH } from './printStyles';
 import { FiguresList } from './FiguresList';
+import { makeFiguresLabel } from './danceUtils';
 import type { Dance } from '@/lib/types/database';
 
 export const WalkthroughViewDialog = ({ open, onClose, dance }: {
@@ -19,6 +20,7 @@ export const WalkthroughViewDialog = ({ open, onClose, dance }: {
   const walkthroughPrintRef = useRef<HTMLDivElement>(null);
   const printWalkthrough = useReactToPrint({ contentRef: walkthroughPrintRef, documentTitle: `${dance.title} - Walkthrough`, pageStyle: PAGE_STYLE_WALKTHROUGH });
 
+  const figuresLabel = makeFiguresLabel(dance);
   const callingFigures = (dance.calling_figures && dance.calling_figures.length > 0)
     ? dance.calling_figures
     : (dance.figures && dance.figures.length > 0 ? dance.figures : null);
@@ -43,9 +45,13 @@ export const WalkthroughViewDialog = ({ open, onClose, dance }: {
             </Box>
           )}
           <Box ref={walkthroughPrintRef} sx={{ flex: 2, overflowY: 'auto', p: 3, pr: callingFigures ? 3 : 8, minWidth: 0 }}>
-            <Typography variant='h4' className='print-dance-title' sx={{ fontWeight: 600, mb: 2, pr: callingFigures ? 6 : 0 }}>
+            <Typography variant='h4' className='print-dance-title' sx={{ fontWeight: 600, lineHeight: 1.2, pr: callingFigures ? 6 : 0 }}>
               {dance.title}
             </Typography>
+            {figuresLabel && (
+              <Typography variant='body2' color='text.secondary' sx={{ mt: 0.25, mb: 2 }}>{figuresLabel}</Typography>
+            )}
+            {!figuresLabel && <Box sx={{ mb: 2 }} />}
             <Box sx={{
               fontFamily: 'system-ui, -apple-system, sans-serif',
               fontSize: { xs: '0.9rem', sm: '1.05rem' },

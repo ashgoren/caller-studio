@@ -488,6 +488,7 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
         open={walkthroughOpen}
         onClose={() => setWalkthroughOpen(false)}
         title={dance?.title}
+        figuresLabel={figuresLabel}
         value={formData.walkthrough ?? ''}
         onChange={v => update('walkthrough', v)}
         callingFigures={
