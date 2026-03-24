@@ -45,13 +45,14 @@ export const WalkthroughViewDialog = ({ open, onClose, dance }: {
             </Box>
           )}
           <Box ref={walkthroughPrintRef} sx={{ flex: 2, overflowY: 'auto', p: 3, pr: callingFigures ? 3 : 8, minWidth: 0 }}>
-            <Typography variant='h4' className='print-dance-title' sx={{ fontWeight: 600, lineHeight: 1.2, pr: callingFigures ? 6 : 0 }}>
-              {dance.title}
-            </Typography>
-            {figuresLabel && (
-              <Typography variant='body2' color='text.secondary' sx={{ mt: 0.25, mb: 2 }}>{figuresLabel}</Typography>
-            )}
-            {!figuresLabel && <Box sx={{ mb: 2 }} />}
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 2, pr: callingFigures ? 6 : 0 }}>
+              <Typography variant='h5' className='print-dance-title' sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                {dance.title}
+              </Typography>
+              {figuresLabel && (
+                <Typography variant='body2' color='text.secondary'>{figuresLabel}</Typography>
+              )}
+            </Box>
             <Box sx={{
               fontFamily: 'system-ui, -apple-system, sans-serif',
               fontSize: { xs: '0.9rem', sm: '1.05rem' },
