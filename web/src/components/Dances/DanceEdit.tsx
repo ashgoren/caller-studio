@@ -490,6 +490,11 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
         title={dance?.title}
         value={formData.walkthrough ?? ''}
         onChange={v => update('walkthrough', v)}
+        callingFigures={
+          pendingCallingFigures.figures.length > 0 ? pendingCallingFigures.figures
+          : pendingFigures.figures.length > 0 ? pendingFigures.figures
+          : null
+        }
       />
 
       <CuesEditDialog
