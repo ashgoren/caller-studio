@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { Box, Dialog, DialogContent, IconButton, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import CloseIcon from '@mui/icons-material/Close';
@@ -11,6 +11,10 @@ import { FiguresList } from './FiguresList';
 import { makeFiguresLabel } from './danceUtils';
 import type { Dance } from '@/lib/types/database';
 
+// Page content area: 8.5in - 2×0.4in margin = 7.7in × 10.2in, at 96px/in
+const PRINT_W = 7.7 * 96;
+const PRINT_H = 10.2 * 96;
+
 export const WalkthroughViewDialog = ({ open, onClose, dance }: {
   open: boolean;
   onClose: () => void;
@@ -18,7 +22,24 @@ export const WalkthroughViewDialog = ({ open, onClose, dance }: {
 }) => {
   const isNarrow = useMediaQuery('(max-width: 900px)');
   const walkthroughPrintRef = useRef<HTMLDivElement>(null);
-  const printWalkthrough = useReactToPrint({ contentRef: walkthroughPrintRef, documentTitle: `${dance.title} - Walkthrough`, pageStyle: PAGE_STYLE_WALKTHROUGH });
+
+  const onBeforePrint = useCallback((): Promise<void> => new Promise(resolve => {
+    const el = walkthroughPrintRef.current;
+    if (!el) { resolve(); return; }
+    const clone = el.cloneNode(true) as HTMLElement;
+    clone.style.cssText = `position:fixed;top:-9999px;left:0;width:${PRINT_W}px;visibility:hidden;`;
+    document.body.appendChild(clone);
+    const h = clone.scrollHeight;
+    document.body.removeChild(clone);
+    if (h > PRINT_H) el.style.zoom = String(PRINT_H / h);
+    resolve();
+  }), []);
+
+  const onAfterPrint = useCallback(() => {
+    if (walkthroughPrintRef.current) walkthroughPrintRef.current.style.zoom = '';
+  }, []);
+
+  const printWalkthrough = useReactToPrint({ contentRef: walkthroughPrintRef, documentTitle: `${dance.title} - Walkthrough`, pageStyle: PAGE_STYLE_WALKTHROUGH, onBeforePrint, onAfterPrint });
 
   const figuresLabel = makeFiguresLabel(dance);
   const callingFigures = (dance.calling_figures && dance.calling_figures.length > 0)
