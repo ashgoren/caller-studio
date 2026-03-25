@@ -108,7 +108,7 @@ export const DancePrintPortals = ({
     <>
       {/* Combined print — 8.5×11, choreography top half / cues bottom half */}
       {printFigures.length > 0 && hasCues && createPortal(
-        <div style={{ position: 'fixed', top: '-100vh', left: 0, width: 456 }}>
+        <div style={{ position: 'fixed', top: '-9999px', left: 0, width: 456 }}>
           <div ref={combinedPrintRef} style={{ background: 'white', color: 'black' }}>
             <div style={{ height: 504, overflow: 'hidden', boxSizing: 'border-box', borderBottom: '2px dashed #999' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -131,7 +131,7 @@ export const DancePrintPortals = ({
 
       {/* Choreography-only print — 8.5×11 */}
       {printFigures.length > 0 && createPortal(
-        <div style={{ position: 'fixed', top: '-100vh', left: 0, width: '680px' }}>
+        <div style={{ position: 'fixed', top: '-9999px', left: 0, width: '680px' }}>
           <div ref={choreographyPrintRef} style={{ background: 'white', color: 'black', fontFamily: 'Georgia, serif' }}>
             <div style={{ fontSize: '26pt', fontWeight: 'bold', lineHeight: 1.2, marginBottom: '0.15em' }}>{title}</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.6em' }}>

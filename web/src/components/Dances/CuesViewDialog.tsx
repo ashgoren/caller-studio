@@ -93,7 +93,7 @@ export const CuesViewDialog = ({ open, onClose, dance }: {
 
       {/* Standalone cues print — 5×7 */}
       {hasCues && createPortal(
-        <div style={{ position: 'fixed', top: '-100vh', left: 0, width: 448 }}>
+        <div style={{ position: 'fixed', top: '-9999px', left: 0, width: 448 }}>
           <div ref={cuesPrintRef} style={{ background: 'white', color: 'black', fontFamily: '"Roboto","Helvetica","Arial",sans-serif', fontSize: '14px', lineHeight: 1.4 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <div style={{ fontSize: '17px', fontWeight: 'bold' }}>{title}</div>
