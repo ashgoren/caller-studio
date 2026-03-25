@@ -49,11 +49,6 @@ export const CuesViewDialog = ({ open, onClose, dance }: {
                 <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
               </Tooltip>
             </Box>
-            {callingFigures && (
-              <Box sx={{ overflowY: 'auto', px: 2, pb: 1.5 }}>
-                <FiguresList figures={callingFigures} />
-              </Box>
-            )}
             <Box sx={{ overflow: 'hidden', height: GRID_NATURAL_HEIGHT * cuesScale, flexShrink: 0 }}>
               <Box sx={{ transform: `scale(${cuesScale})`, transformOrigin: 'top left', ml: '8px', width: GRID_NATURAL_WIDTH }}>
                 <CueGridView cues={cues} />

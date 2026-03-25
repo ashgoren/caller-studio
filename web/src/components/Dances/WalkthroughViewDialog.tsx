@@ -47,7 +47,7 @@ export const WalkthroughViewDialog = ({ open, onClose, dance }: {
     : (dance.figures && dance.figures.length > 0 ? dance.figures : null);
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth={callingFigures ? 'xl' : 'md'} fullScreen={isNarrow}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth={(callingFigures && !isNarrow) ? 'xl' : 'md'} fullScreen={isNarrow}>
       <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: isNarrow ? '100%' : undefined }}>
         <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5, zIndex: 1 }}>
           {!isNarrow && (
@@ -59,14 +59,14 @@ export const WalkthroughViewDialog = ({ open, onClose, dance }: {
             <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
           </Tooltip>
         </Box>
-        <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: callingFigures ? { xs: 'column', md: 'row' } : 'row' }}>
-          {callingFigures && (
+        <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: (callingFigures && !isNarrow) ? { xs: 'column', md: 'row' } : 'row' }}>
+          {callingFigures && !isNarrow && (
             <Box sx={{ flex: 1, overflowY: 'auto', p: 2, borderRight: { md: 1 }, borderBottom: { xs: 1, md: 0 }, borderColor: 'divider', minWidth: 0 }}>
               <FiguresList figures={callingFigures} />
             </Box>
           )}
-          <Box ref={walkthroughPrintRef} sx={{ flex: 2, overflowY: 'auto', p: 3, pr: callingFigures ? 3 : 8, minWidth: 0 }}>
-            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 2, pr: callingFigures ? 6 : 0 }}>
+          <Box ref={walkthroughPrintRef} sx={{ flex: 2, overflowY: 'auto', p: 3, pr: (callingFigures && !isNarrow) ? 3 : 8, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 2, pr: (callingFigures && !isNarrow) ? 6 : 0 }}>
               <Typography variant='h5' className='print-dance-title' sx={{ fontWeight: 600, lineHeight: 1.2 }}>
                 {dance.title}
               </Typography>
