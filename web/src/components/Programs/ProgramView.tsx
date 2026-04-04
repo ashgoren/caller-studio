@@ -1,15 +1,14 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Box, Button, Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import Markdown from 'react-markdown';
-import remarkBreaks from 'remark-breaks';
-import remarkGfm from 'remark-gfm';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
 import { formatLocalDate } from '@/lib/utils';
 import type { Program } from '@/lib/types/database';
+
+const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: Program; onEdit: () => void; onChoreography: () => void }) => {
   const navigate = useNavigate();
@@ -72,9 +71,6 @@ export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: 
           px: 2,
           pt: 1,
           pb: 2,
-          '& p': { margin: '0 0 0.75em 0' },
-          '& p:last-child': { marginBottom: 0 },
-          '& hr': { margin: '1em 0', borderColor: 'divider' },
         }}>
           <Typography
             component='legend'
@@ -84,7 +80,9 @@ export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: 
           >
             Notes
           </Typography>
-          <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{program.notes}</Markdown>
+          <Suspense fallback={null}>
+            <RichTextEditor value={program.notes} editable={false} />
+          </Suspense>
         </Box>
       )}
 

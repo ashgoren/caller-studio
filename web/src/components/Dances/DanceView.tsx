@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 import { Box, Button, Divider, IconButton, Stack, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
@@ -8,9 +8,6 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ArticleIcon from '@mui/icons-material/Article';
 import GridOnIcon from '@mui/icons-material/GridOn';
-import Markdown from 'react-markdown';
-import remarkBreaks from 'remark-breaks';
-import remarkGfm from 'remark-gfm';
 import { ExternalLink } from '@/components/shared';
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
@@ -21,6 +18,8 @@ import { DancePrintPortals } from './DancePrintPortals';
 import { WalkthroughViewDialog } from './WalkthroughViewDialog';
 import { CuesViewDialog } from './CuesViewDialog';
 import type { Dance } from '@/lib/types/database';
+
+const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }: { dance: Dance; onEdit: () => void; figureMode: 'choreography' | 'calling'; onFigureModeChange: (mode: 'choreography' | 'calling') => void }) => {
   const navigate = useNavigate();
@@ -149,9 +148,6 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
               px: 2,
               pt: 1,
               pb: 2,
-              '& p': { margin: '0 0 0.75em 0' },
-              '& p:last-child': { marginBottom: 0 },
-              '& hr': { margin: '1em 0', borderColor: 'divider' },
             }}>
               <Typography
                 component='legend'
@@ -161,7 +157,9 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
               >
                 Notes
               </Typography>
-              <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.notes}</Markdown>
+              <Suspense fallback={null}>
+                <RichTextEditor value={dance.notes} editable={false} />
+              </Suspense>
             </Box>
           )}
         </Box>

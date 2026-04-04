@@ -3,7 +3,7 @@ import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, Di
 import { FiguresList } from './FiguresList';
 import type { FigureItem } from '@/lib/types/database';
 
-const MarkdownEditor = lazy(() => import('@/components/shared/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
+const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 export const WalkthroughEditDialog = ({ open, onClose, title, figuresLabel, value, onChange, callingFigures }: {
   open: boolean;
@@ -46,15 +46,11 @@ export const WalkthroughEditDialog = ({ open, onClose, title, figuresLabel, valu
           </Box>
         )}
         <Box sx={{ flex: 2, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 2, minWidth: 0 }}>
-          <Suspense fallback={<CircularProgress size={24} />}>
-            <MarkdownEditor
-              label=''
-              value={value}
-              onChange={onChange}
-              height='calc(90vh - 160px)'
-              dragbar={false}
-            />
-          </Suspense>
+          <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+            <Suspense fallback={<CircularProgress size={24} />}>
+              <RichTextEditor value={value} onChange={onChange} underline={false} autoFocus />
+            </Suspense>
+          </Box>
           <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 1 }}>
             Changes are saved when you save the dance.
           </Typography>

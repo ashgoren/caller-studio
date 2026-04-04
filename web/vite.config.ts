@@ -20,7 +20,7 @@ export default defineConfig({
           'vendor-query':    ['@tanstack/react-query'],
           'vendor-supabase': ['@supabase/supabase-js'],
           'vendor-dnd':      ['@dnd-kit/react', '@dnd-kit/helpers'],
-          'vendor-md-editor':  ['@uiw/react-md-editor'],
+          'vendor-tiptap':     ['@tiptap/react', '@tiptap/core', '@tiptap/starter-kit', '@tiptap/markdown'],
         }
       }
     }

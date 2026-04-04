@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
 import { Box, Button, CircularProgress, Stack, TextField } from '@mui/material';
 
-const MarkdownEditor = lazy(() => import('@/components/shared/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
+const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useConfirm } from 'material-ui-confirm';
@@ -216,7 +216,7 @@ export const ProgramEditMode = ({ program, onCancel }: { program?: Program; onCa
           onReorder={pendingDances.reorder}
         />
         <Suspense fallback={<CircularProgress size={24} />}>
-          <MarkdownEditor
+          <RichTextEditor
             label='Notes'
             value={formData.notes ?? ''}
             onChange={v => update('notes', v)}

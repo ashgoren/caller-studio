@@ -1,15 +1,14 @@
-import { useCallback, useRef } from 'react';
+import { lazy, Suspense, useCallback, useRef } from 'react';
 import { Box, Dialog, DialogContent, IconButton, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import CloseIcon from '@mui/icons-material/Close';
-import Markdown from 'react-markdown';
-import remarkBreaks from 'remark-breaks';
-import remarkGfm from 'remark-gfm';
 import { useReactToPrint } from 'react-to-print';
 import { PAGE_STYLE_WALKTHROUGH } from './printStyles';
 import { FiguresList } from './FiguresList';
 import { makeFiguresLabel } from './danceUtils';
 import type { Dance } from '@/lib/types/database';
+
+const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 // Page content area: 8.5in - 2×0.4in margin = 7.7in × 10.2in, at 96px/in
 const PRINT_W = 7.7 * 96;
@@ -78,15 +77,10 @@ export const WalkthroughViewDialog = ({ open, onClose, dance }: {
               fontFamily: 'system-ui, -apple-system, sans-serif',
               fontSize: { xs: '0.9rem', sm: '1.05rem' },
               lineHeight: 1.7,
-              '& p': { margin: '0 0 1em 0' },
-              '& p:last-child': { marginBottom: 0 },
-              '& h1': { fontSize: { xs: '1.3rem', sm: '1.6rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
-              '& h2': { fontSize: { xs: '1.15rem', sm: '1.35rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
-              '& h3': { fontSize: { xs: '1rem', sm: '1.15rem' }, fontWeight: 700, mt: 0, mb: '0.4em' },
-              '& ul, & ol': { pl: '1.4em', mb: '1em' },
-              '& hr': { margin: '1.4em 0', borderColor: 'divider' },
             }}>
-              <Markdown remarkPlugins={[remarkBreaks, remarkGfm]}>{dance.walkthrough ?? ''}</Markdown>
+              <Suspense fallback={null}>
+                <RichTextEditor value={dance.walkthrough ?? ''} editable={false} />
+              </Suspense>
             </Box>
           </Box>
         </Box>

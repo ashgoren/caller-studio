@@ -32,7 +32,7 @@ import { useNotify } from '@/hooks/useNotify';
 import { useTitle } from '@/contexts/TitleContext';
 import { useUndoActions, dbRecord, beforeValues, relationOps } from '@/contexts/UndoContext';
 import type { Dance, DanceInsert, DanceUpdate, CueGridData } from '@/lib/types/database';
-const MarkdownEditor = lazy(() => import('@/components/shared/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
+const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode = 'choreography', onFigureModeChange }: { dance?: Dance; onCancel?: () => void; figureMode?: 'choreography' | 'calling'; onFigureModeChange?: (mode: 'choreography' | 'calling') => void }) => {
   const navigate = useNavigate();
@@ -415,7 +415,7 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
           )}
           <Box sx={{ mt: 4 }}>
             <Suspense fallback={<CircularProgress size={24} />}>
-              <MarkdownEditor
+              <RichTextEditor
                 label='Notes'
                 value={formData.notes ?? ''}
                 onChange={v => update('notes', v)}
