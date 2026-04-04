@@ -3,6 +3,7 @@ import type { RefObject } from 'react';
 import { SECTIONS, COLS, INTRO_COLS, cellKey } from './cueGridConstants';
 import { PRINT_CUES_COMBINED } from './printStyles';
 import type { Dance, FigureItem, CueGridData } from '@/lib/types/database';
+import { getCells } from '@/lib/types/database';
 
 // --- Shared print helpers ---
 
@@ -43,45 +44,51 @@ export const PrintCuesTable = ({
   cellHeight: number;
   labelPaddingTop: number;
   cellPadding: string;
-}) => (
-  <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', fontFamily: '"Roboto","Helvetica","Arial",sans-serif', fontSize: '14px', lineHeight: 1.4 }}>
-    <colgroup>
-      <col style={{ width: 32 }} />
-      {Array.from({ length: COLS }, (_, i) => <col key={i} style={{ width: 52 }} />)}
-    </colgroup>
-    <tbody>
-      {SECTIONS.flatMap((section) => {
-        const labelTd = (
-          <td rowSpan={section.rows} style={{ fontWeight: 'bold', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', paddingTop: labelPaddingTop, paddingRight: 10 }}>
-            {section.label}
-          </td>
-        );
-        if (section.rows === 1) {
-          return [(
-            <tr key={`${section.id}:0`}>
-              {labelTd}
-              <td colSpan={COLS - INTRO_COLS} />
-              {Array.from({ length: INTRO_COLS }, (_, i) => {
-                const col = COLS - INTRO_COLS + i;
-                const text = cues[cellKey(section.id, 0, col)];
-                return <td key={col} style={{ padding: cellPadding, height: cellHeight, color: text ? 'black' : '#bbb', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'break-word' }} dangerouslySetInnerHTML={{ __html: text ?? '•' }} />;
+}) => {
+  const cells = getCells(cues);
+  const separators = new Set(cues.separators ?? []);
+  return (
+    <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', fontFamily: '"Roboto","Helvetica","Arial",sans-serif', fontSize: '14px', lineHeight: 1.4 }}>
+      <colgroup>
+        <col style={{ width: 32 }} />
+        {Array.from({ length: COLS }, (_, i) => <col key={i} style={{ width: 52 }} />)}
+      </colgroup>
+      <tbody>
+        {SECTIONS.flatMap((section) => {
+          const labelTd = (
+            <td rowSpan={section.rows} style={{ fontWeight: 'bold', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', paddingTop: labelPaddingTop, paddingRight: 10 }}>
+              {section.label}
+            </td>
+          );
+          if (section.rows === 1) {
+            return [(
+              <tr key={`${section.id}:0`}>
+                {labelTd}
+                <td colSpan={COLS - INTRO_COLS} />
+                {Array.from({ length: INTRO_COLS }, (_, i) => {
+                  const col = COLS - INTRO_COLS + i;
+                  const key = cellKey(section.id, 0, col);
+                  const text = cells[key];
+                  return <td key={col} style={{ padding: cellPadding, height: cellHeight, color: text ? 'black' : '#bbb', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'break-word', ...(separators.has(key) && { borderRight: '3px solid #ccc' }) }} dangerouslySetInnerHTML={{ __html: text ?? '•' }} />;
+                })}
+              </tr>
+            )];
+          }
+          return [0, 1].map((row, rowIdx) => (
+            <tr key={`${section.id}:${row}`} style={rowIdx === 0 ? { borderTop: '1px solid #ccc' } : undefined}>
+              {rowIdx === 0 && labelTd}
+              {Array.from({ length: COLS }, (_, col) => {
+                const key = cellKey(section.id, row, col);
+                const text = cells[key];
+                return <td key={col} style={{ padding: cellPadding, height: cellHeight, color: text ? 'black' : '#bbb', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'break-word', ...(separators.has(key) && { borderRight: '3px solid #ccc' }) }} dangerouslySetInnerHTML={{ __html: text ?? '•' }} />;
               })}
             </tr>
-          )];
-        }
-        return [0, 1].map((row, rowIdx) => (
-          <tr key={`${section.id}:${row}`} style={rowIdx === 0 ? { borderTop: '1px solid #ccc' } : undefined}>
-            {rowIdx === 0 && labelTd}
-            {Array.from({ length: COLS }, (_, col) => {
-              const text = cues[cellKey(section.id, row, col)];
-              return <td key={col} style={{ padding: cellPadding, height: cellHeight, color: text ? 'black' : '#bbb', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'break-word' }} dangerouslySetInnerHTML={{ __html: text ?? '•' }} />;
-            })}
-          </tr>
-        ));
-      })}
-    </tbody>
-  </table>
-);
+          ));
+        })}
+      </tbody>
+    </table>
+  );
+};
 
 // --- Exported component ---
 
@@ -102,7 +109,7 @@ export const DancePrintPortals = ({
 }) => {
   const { figures, cues, title } = dance;
   const printFigures = choreographyFigures ?? figures;
-  const hasCues = !!cues && Object.keys(cues).length > 0;
+  const hasCues = !!cues && Object.keys(getCells(cues)).length > 0;
 
   return (
     <>

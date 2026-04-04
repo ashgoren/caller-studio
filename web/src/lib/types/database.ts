@@ -19,7 +19,14 @@ export type FigureItem = {
   description: string;
 };
 
-export type CueGridData = Record<string, string>;
+export type CueGridData = {
+  cells: Record<string, string>;
+  separators?: string[];
+};
+
+// Temporary backwards-compatability shim to load old flat data
+export const getCells = (cues: CueGridData): Record<string, string> =>
+  cues.cells ?? (cues as unknown as Record<string, string>);
 
 export type DanceRow = Tables['dances']['Row'];
 export type Dance = Omit<DanceRow, 'figures' | 'cues' | 'calling_figures'> & {

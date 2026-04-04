@@ -1,8 +1,9 @@
-import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
-import { Box } from '@mui/material';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Box, Menu, MenuItem } from '@mui/material';
 import { SECTIONS, COLS, INTRO_COLS, CELL_HEIGHT, CELL_FONT_SIZE, cellKey } from './cueGridConstants';
 import { CueColGroup } from './CueGrid';
 import type { CueGridData } from '@/lib/types/database';
+import { getCells } from '@/lib/types/database';
 
 const CELL_PADDING = 2; // px around each <td>
 const CONTENT_HEIGHT = CELL_HEIGHT - CELL_PADDING * 2;
@@ -107,28 +108,61 @@ export const CueGridEditor = ({
   value: CueGridData | null;
   onChange: (v: CueGridData | null) => void;
 }) => {
-  const cues = useMemo(() => value ?? {}, [value]);
+  const cells = useMemo(() => getCells(value ?? { cells: {} }), [value]);
+  const separators = useMemo(() => new Set(value?.separators ?? []), [value]);
+
+  const [menuState, setMenuState] = useState<{ x: number; y: number; key: string } | null>(null);
+
+  const writeBack = useCallback(
+    (nextCells: Record<string, string>, nextSeps: Set<string>) => {
+      const sepArray = [...nextSeps];
+      const empty = Object.keys(nextCells).length === 0 && sepArray.length === 0;
+      onChange(empty ? null : { cells: nextCells, ...(sepArray.length > 0 && { separators: sepArray }) });
+    },
+    [onChange],
+  );
 
   const handleChange = useCallback(
     (section: string, row: number, col: number, html: string) => {
       const key = cellKey(section, row, col);
-      const next = { ...cues };
-      if (html) {
-        next[key] = html;
-      } else {
-        delete next[key];
-      }
-      onChange(Object.keys(next).length > 0 ? next : null);
+      const nextCells = { ...cells };
+      if (html) nextCells[key] = html;
+      else delete nextCells[key];
+      writeBack(nextCells, separators);
     },
-    [cues, onChange],
+    [cells, separators, writeBack],
+  );
+
+  const handleToggleSeparator = useCallback(
+    (key: string) => {
+      const next = new Set(separators);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      writeBack(cells, next);
+    },
+    [cells, separators, writeBack],
   );
 
   const renderCell = (section: string, row: number, col: number) => {
     const key = cellKey(section, row, col);
+    const hasSep = separators.has(key);
+    const isLastCol = col === COLS - 1;
     return (
-      <Box component='td' key={col} sx={{ p: `${CELL_PADDING}px`, height: CELL_HEIGHT }}>
+      <Box
+        component='td'
+        key={col}
+        sx={{
+          p: `${CELL_PADDING}px`,
+          height: CELL_HEIGHT,
+          ...(hasSep && { borderRight: '3px solid', borderRightColor: 'divider' }),
+        }}
+        onContextMenu={!isLastCol ? (e) => {
+          e.preventDefault();
+          setMenuState({ x: e.clientX, y: e.clientY, key });
+        } : undefined}
+      >
         <CueCell
-          initialHtml={cues[key] ?? ''}
+          initialHtml={cells[key] ?? ''}
           onCommit={(html) => handleChange(section, row, col, html)}
         />
       </Box>
@@ -190,6 +224,16 @@ export const CueGridEditor = ({
           </Box>
         </Box>
       </Box>
+      <Menu
+        open={!!menuState}
+        onClose={() => setMenuState(null)}
+        anchorReference='anchorPosition'
+        anchorPosition={menuState ? { top: menuState.y, left: menuState.x } : undefined}
+      >
+        <MenuItem onClick={() => { handleToggleSeparator(menuState!.key); setMenuState(null); }}>
+          {menuState && separators.has(menuState.key) ? 'Remove separator' : 'Add separator after cell'}
+        </MenuItem>
+      </Menu>
     </Box>
   );
 };
