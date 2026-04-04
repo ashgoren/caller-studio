@@ -2,6 +2,7 @@ import { useNotify } from '@/hooks/useNotify';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Dance, DanceInsert, DanceUpdate } from '@/lib/types/database';
+import { normalizeFigureItem } from '@/lib/types/database';
 
 const DANCE_SELECT = '*, programs_dances(id, order, program:programs(*)), dances_choreographers(id, choreographer:choreographers(*)), dances_key_moves(id, key_move:key_moves(*)), dances_vibes(id, vibe:vibes(*)), dance_type:dance_types(id, name, sort_order), formation:formations(id, name, sort_order), progression:progressions(id, name, sort_order)';
 
@@ -104,6 +105,9 @@ export const useDeleteDance = () => {
 // Helpers
 
 const buildRelationsColumns = (dance: Dance) => {
+  const figures = (dance.figures ?? []).map(normalizeFigureItem);
+  const calling_figures = dance.calling_figures ? dance.calling_figures.map(normalizeFigureItem) : null;
+
   const sortedPrograms = (dance.programs_dances ?? []).sort((a, b) => {
     const dateA = a.program?.date || '';
     const dateB = b.program?.date || '';
@@ -130,6 +134,8 @@ const buildRelationsColumns = (dance: Dance) => {
 
   return {
     ...dance,
+    figures,
+    calling_figures,
     programs_dances: sortedPrograms,
     programNames: sortedPrograms.map(pd => `${pd.program.date} ${pd.program.location}`).join(' '),
     dances_choreographers: sortedChoreographers,

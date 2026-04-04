@@ -400,7 +400,9 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
             <FiguresEditor
               figures={pendingFigures.figures}
               onAdd={pendingFigures.addFigure}
+              onAddNote={pendingFigures.addNote}
               onUpdate={pendingFigures.updateFigure}
+              onUpdateNote={pendingFigures.updateNote}
               onDelete={pendingFigures.deleteFigure}
               onReorder={pendingFigures.setFigures}
             />
@@ -408,7 +410,9 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
             <FiguresEditor
               figures={pendingCallingFigures.figures}
               onAdd={pendingCallingFigures.addFigure}
+              onAddNote={pendingCallingFigures.addNote}
               onUpdate={pendingCallingFigures.updateFigure}
+              onUpdateNote={pendingCallingFigures.updateNote}
               onDelete={pendingCallingFigures.deleteFigure}
               onReorder={pendingCallingFigures.setFigures}
             />

@@ -22,7 +22,24 @@ const PrintFigureList = ({
 }) => (
   <>
     {figures.map((figure, i) => {
-      const isNewPhrase = i === 0 || figure.phrase !== figures[i - 1].phrase;
+      if (figure.kind === 'note') {
+        return (
+          <div key={figure.id} style={{ display: 'flex', marginTop: contGap }}>
+            <span style={{ width: '2.2em', flexShrink: 0, fontSize }} />
+            <span style={{ width: beatsWidth, flexShrink: 0, fontSize }} />
+            <span style={{ fontSize }} dangerouslySetInnerHTML={{ __html: figure.text }} />
+          </div>
+        );
+      }
+
+      // Find the phrase of the previous figure-kind item (skip over notes)
+      let prevFigurePhrase: string | null = null;
+      for (let j = i - 1; j >= 0; j--) {
+        const prev = figures[j];
+        if (prev.kind === 'figure') { prevFigurePhrase = prev.phrase; break; }
+      }
+      const isNewPhrase = prevFigurePhrase === null || figure.phrase !== prevFigurePhrase;
+
       return (
         <div key={figure.id} style={{ display: 'flex', marginTop: isNewPhrase && i > 0 ? phraseGap : contGap }}>
           <span style={{ width: '2.2em', flexShrink: 0, fontWeight: 'bold', fontSize }}>{isNewPhrase ? figure.phrase : ''}</span>

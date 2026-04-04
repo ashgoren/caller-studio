@@ -55,9 +55,12 @@ export const parsePhrases = (phrases: { name: string; figures: string[] }[]): Fi
   for (const { name: phrase, figures } of phrases) {
     for (const figure of figures) {
       const match = figure.match(/^\((\d+)\) (.+)$/);
-      if (!match) throw new Error(`Unrecognized figure format: ${figure}`);
-      const [, beats, description] = match;
-      result.push({ id: crypto.randomUUID(), phrase, beats: Number(beats), description: normalizeRoles(description) });
+      if (match) {
+        const [, beats, description] = match;
+        result.push({ id: crypto.randomUUID(), kind: 'figure', phrase, beats: Number(beats), description: normalizeRoles(description) });
+      } else if (figure.trim()) {
+        result.push({ id: crypto.randomUUID(), kind: 'note', text: figure });
+      }
     }
   }
   return result;

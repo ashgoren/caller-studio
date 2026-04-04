@@ -12,11 +12,17 @@ export type DanceTypeRow = Tables['dance_types']['Row'];
 export type FormationRow = Tables['formations']['Row'];
 export type ProgressionRow = Tables['progressions']['Row'];
 
-export type FigureItem = {
-  id: string;
-  phrase: string;
-  beats: number | null;
-  description: string;
+export type FigureItem =
+  | { id: string; kind: 'figure'; phrase: string; beats: number | null; description: string }
+  | { id: string; kind: 'note'; text: string };
+
+export const isFigure = (item: FigureItem): item is Extract<FigureItem, { kind: 'figure' }> => item.kind === 'figure';
+
+// Temporary backwards-compatability shim: existing JSONB rows lack `kind`
+export const normalizeFigureItem = (raw: unknown): FigureItem => {
+  const item = raw as Record<string, unknown>;
+  if (item.kind === 'figure' || item.kind === 'note') return item as FigureItem;
+  return { id: item.id as string, kind: 'figure', phrase: item.phrase as string, beats: item.beats as number | null, description: item.description as string };
 };
 
 export type CueGridData = {

@@ -35,7 +35,7 @@ export const columns: MRT_ColumnDef<Dance>[] = [
     accessorKey: 'title',
     header: 'Title',
     Cell: ({ row }) => {
-      const noFigures = !row.original.figures?.length;
+      const noFigures = !row.original.figures?.some(f => f.kind === 'figure');
       return (
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           {row.original.title}
@@ -79,13 +79,23 @@ export const columns: MRT_ColumnDef<Dance>[] = [
       if (!figures.length) return null;
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {figures.map((figure, index) => (
-            <div key={index} style={{ display: 'flex', gap: 8 }}>
-              <span style={{ width: 28, flexShrink: 0 }}>{figure.phrase}</span>
-              <span style={{ width: 24, flexShrink: 0 }}>{figure.beats ?? ''}</span>
-              <span dangerouslySetInnerHTML={{ __html: figure.description }} />
-            </div>
-          ))}
+          {figures.map((figure, index) => {
+            if (figure.kind === 'note') {
+              return (
+                <div key={index} style={{ display: 'flex', gap: 8, fontStyle: 'italic', color: '#888' }}>
+                  <span style={{ width: 52, flexShrink: 0 }} />
+                  <span>{figure.text}</span>
+                </div>
+              );
+            }
+            return (
+              <div key={index} style={{ display: 'flex', gap: 8 }}>
+                <span style={{ width: 28, flexShrink: 0 }}>{figure.phrase}</span>
+                <span style={{ width: 24, flexShrink: 0 }}>{figure.beats ?? ''}</span>
+                <span dangerouslySetInnerHTML={{ __html: figure.description }} />
+              </div>
+            );
+          })}
         </div>
       );
     },

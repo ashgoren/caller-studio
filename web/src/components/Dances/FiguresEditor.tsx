@@ -83,19 +83,39 @@ const DescriptionEditor = ({ value, onCommit }: { value: string; onCommit: (html
 type Props = {
   figures: FigureItem[];
   onAdd: () => void;
+  onAddNote: () => void;
   onUpdate: (id: string, key: 'phrase' | 'beats' | 'description', value: string | number | null) => void;
+  onUpdateNote: (id: string, text: string) => void;
   onDelete: (id: string) => void;
   onReorder: (figures: FigureItem[]) => void;
 };
 
-const Sortable = ({figure, index, onUpdate, onDelete}: {
+const Sortable = ({ figure, index, onUpdate, onUpdateNote, onDelete }: {
   figure: FigureItem,
   index: number,
   onUpdate: Props['onUpdate'],
+  onUpdateNote: Props['onUpdateNote'],
   onDelete: Props['onDelete']
 }) => {
   const handleRef = useRef(null);
-  const {ref} = useSortable({id: figure.id, index, handle: handleRef});
+  const { ref } = useSortable({ id: figure.id, index, handle: handleRef });
+
+  if (figure.kind === 'note') {
+    return (
+      <Box ref={ref} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+        <DragIndicatorIcon ref={handleRef} sx={{ cursor: 'pointer' }} />
+        <Box sx={{ width: 168, flexShrink: 0 }} />
+        <DescriptionEditor
+          value={figure.text}
+          onCommit={(html) => onUpdateNote(figure.id, html)}
+        />
+        <IconButton size='small' onClick={() => onDelete(figure.id)}>
+          <RemoveCircleOutlineIcon fontSize='small' />
+        </IconButton>
+      </Box>
+    );
+  }
+
   return (
     <Box ref={ref} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
       <DragIndicatorIcon ref={handleRef} sx={{ cursor: 'pointer' }} />
@@ -129,29 +149,39 @@ const Sortable = ({figure, index, onUpdate, onDelete}: {
   );
 };
 
-export const FiguresEditor = ({ figures, onAdd, onUpdate, onDelete, onReorder }: Props) => {
+export const FiguresEditor = ({ figures, onAdd, onAddNote, onUpdate, onUpdateNote, onDelete, onReorder }: Props) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
       <DragDropProvider
         onDragEnd={(event) => {
           if (event.canceled) return;
-          onReorder(move(figures, event))}
-        }
+          onReorder(move(figures, event));
+        }}
       >
         {figures.map((figure, index) => (
-          <Sortable key={figure.id} figure={figure} index={index} onUpdate={onUpdate} onDelete={onDelete} />
+          <Sortable key={figure.id} figure={figure} index={index} onUpdate={onUpdate} onUpdateNote={onUpdateNote} onDelete={onDelete} />
         ))}
       </DragDropProvider>
-      <Button
-        startIcon={<AddIcon />}
-        onClick={onAdd}
-        size='small'
-        variant='text'
-        color='secondary'
-        sx={{ alignSelf: 'flex-start' }}
-      >
-        Add Figure
-      </Button>
+      <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+        <Button
+          startIcon={<AddIcon />}
+          onClick={onAdd}
+          size='small'
+          variant='text'
+          color='secondary'
+        >
+          Add Figure
+        </Button>
+        <Button
+          startIcon={<AddIcon />}
+          onClick={onAddNote}
+          size='small'
+          variant='text'
+          color='secondary'
+        >
+          Add Note
+        </Button>
+      </Box>
     </Box>
   );
 };

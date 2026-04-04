@@ -8,6 +8,7 @@ import { useReactToPrint } from 'react-to-print';
 import { formatLocalDate } from '@/lib/utils';
 import { makeFiguresLabel } from '@/components/Dances/danceUtils';
 import type { Program } from '@/lib/types/database';
+import { isFigure } from '@/lib/types/database';
 
 const PHRASE_COL_WIDTH = 28;
 const DANCE_COL_MIN_WIDTH = 200;
@@ -17,7 +18,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
 
   // For contras this is usually just ['A1', 'A2', 'B1', 'B2']
   const allPhrases = [...new Set(
-    programDances.flatMap(pd => (pd.dance.figures ?? []).map(f => f.phrase))
+    programDances.flatMap(pd => (pd.dance.figures ?? []).filter(isFigure).map(f => f.phrase))
   )];
 
   const printRef = useRef<HTMLDivElement>(null);
@@ -130,7 +131,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
 
               {/* Dance columns */}
               {programDances.map(pd => {
-                const figures = (pd.dance.figures ?? []).filter(f => f.phrase === phrase);
+                const figures = (pd.dance.figures ?? []).filter(isFigure).filter(f => f.phrase === phrase);
                 return (
                   <Box
                     key={pd.id}
@@ -192,7 +193,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
                   <tr key={phrase}>
                     <td className='phrase-cell' style={{ border: '1px solid #aaa', padding: '4pt 2pt', verticalAlign: 'top' }}>{phrase}</td>
                     {programDances.map(pd => {
-                      const figures = (pd.dance.figures ?? []).filter(f => f.phrase === phrase);
+                      const figures = (pd.dance.figures ?? []).filter(isFigure).filter(f => f.phrase === phrase);
                       return (
                         <td key={pd.id} style={{ border: '1px solid #aaa', padding: '4pt 5pt', verticalAlign: 'top' }}>
                           {figures.length === 0 ? '—' : figures.map(fig => (

@@ -15,6 +15,7 @@ const resolveFieldValue = (row: any, field: string): any => {
 const evaluateFigureRule = (row: any, rule: FigureRule): boolean => {
   const figures = row.figures ?? [];
   const match = figures.some((f: any) => {
+    if (f.kind !== 'figure') return false;
     if (rule.phrase && f.phrase !== rule.phrase) return false;
     if (rule.beats !== null && f.beats !== rule.beats) return false;
     if (rule.description && !(f.description?.replace(/<[^>]*>/g, '') ?? '').toLowerCase().includes(rule.description.toLowerCase())) return false;

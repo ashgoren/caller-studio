@@ -22,11 +22,15 @@ export const CuesEditDialog = ({ open, onClose, title, figuresLabel, figures, va
   const cuesEditorScale = Math.min(1, (windowWidth - 96) / (GRID_NATURAL_WIDTH + 18));
 
   const figureGroups = useMemo(() => {
-    const groups: { phrase: string; figures: FigureItem[] }[] = [];
-    for (const figure of figures) {
-      const last = groups[groups.length - 1];
-      if (last && last.phrase === figure.phrase) last.figures.push(figure);
-      else groups.push({ phrase: figure.phrase, figures: [figure] });
+    const groups: { phrase: string; items: FigureItem[] }[] = [];
+    for (const item of figures) {
+      if (item.kind === 'figure') {
+        const last = groups[groups.length - 1];
+        if (last && last.phrase === item.phrase) last.items.push(item);
+        else groups.push({ phrase: item.phrase, items: [item] });
+      } else {
+        groups[groups.length - 1]?.items.push(item);
+      }
     }
     return groups;
   }, [figures]);
@@ -55,21 +59,30 @@ export const CuesEditDialog = ({ open, onClose, title, figuresLabel, figures, va
             <Typography color='text.disabled' variant='body2'>No figures added yet.</Typography>
           ) : (
             <Box sx={{ position: 'relative', height: GRID_NATURAL_HEIGHT + 18 }}>
-              {figureGroups.map(({ phrase, figures: groupFigures }, phraseIdx) => (
-                <Box key={phrase} sx={{ position: 'absolute', top: 15 + CELL_HEIGHT + phraseIdx * (CELL_HEIGHT * 2 + 1), left: 0, right: 0 }}>
-                  {groupFigures.map((figure, figIdx) => (
-                    <Box key={figure.id ?? figIdx} sx={{ display: 'flex', gap: 2, mt: figIdx > 0 ? 0.5 : 0 }}>
-                      <Typography sx={{ width: 28, flexShrink: 0, fontWeight: 700, fontSize: '0.8rem', color: 'text.secondary', pt: '3px', userSelect: 'none' }}>
-                        {figIdx === 0 ? phrase : ''}
-                      </Typography>
-                      <Typography sx={{ width: 30, flexShrink: 0, color: 'text.disabled', fontSize: '0.875rem' }}>
-                        {figure.beats != null ? `(${figure.beats})` : ''}
-                      </Typography>
-                      <Typography variant='body2' dangerouslySetInnerHTML={{ __html: figure.description }} />
-                    </Box>
-                  ))}
-                </Box>
-              ))}
+              {figureGroups.map(({ phrase, items }, phraseIdx) => {
+                const firstFigureIdx = items.findIndex(i => i.kind === 'figure');
+                return (
+                  <Box key={phrase} sx={{ position: 'absolute', top: 15 + CELL_HEIGHT + phraseIdx * (CELL_HEIGHT * 2 + 1), left: 0, right: 0 }}>
+                    {items.map((item, idx) => item.kind === 'note' ? (
+                      <Box key={item.id} sx={{ display: 'flex', gap: 2, mt: idx > 0 ? 0.5 : 0 }}>
+                        <Box sx={{ width: 28, flexShrink: 0 }} />
+                        <Box sx={{ width: 30, flexShrink: 0 }} />
+                        <Typography variant='body2' dangerouslySetInnerHTML={{ __html: item.text }} />
+                      </Box>
+                    ) : (
+                      <Box key={item.id} sx={{ display: 'flex', gap: 2, mt: idx > 0 ? 0.5 : 0 }}>
+                        <Typography sx={{ width: 28, flexShrink: 0, fontWeight: 700, fontSize: '0.8rem', color: 'text.secondary', pt: '3px', userSelect: 'none' }}>
+                          {idx === firstFigureIdx ? phrase : ''}
+                        </Typography>
+                        <Typography sx={{ width: 30, flexShrink: 0, color: 'text.disabled', fontSize: '0.875rem' }}>
+                          {item.beats != null ? `(${item.beats})` : ''}
+                        </Typography>
+                        <Typography variant='body2' dangerouslySetInnerHTML={{ __html: item.description }} />
+                      </Box>
+                    ))}
+                  </Box>
+                );
+              })}
             </Box>
           )}
         </Box>
