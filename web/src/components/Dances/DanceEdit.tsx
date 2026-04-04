@@ -32,6 +32,7 @@ import { useNotify } from '@/hooks/useNotify';
 import { useTitle } from '@/contexts/TitleContext';
 import { useUndoActions, dbRecord, beforeValues, relationOps } from '@/contexts/UndoContext';
 import type { Dance, DanceInsert, DanceUpdate, CueGridData } from '@/lib/types/database';
+import { getCells } from '@/lib/types/database';
 const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode = 'choreography', onFigureModeChange }: { dance?: Dance; onCancel?: () => void; figureMode?: 'choreography' | 'calling'; onFigureModeChange?: (mode: 'choreography' | 'calling') => void }) => {
@@ -89,7 +90,7 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
     notes: dance?.notes ?? newRecord.notes,
     walkthrough: dance?.walkthrough ?? newRecord.walkthrough,
     place_in_program: dance?.place_in_program ?? newRecord.place_in_program,
-    cues: dance?.cues ?? null,
+    cues: dance?.cues ? { cells: getCells(dance.cues), separators: dance.cues.separators } : null,
   }));
   const [formData, setFormData] = useState<DanceUpdate>({ ...initialFormData });
 
