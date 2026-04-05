@@ -3,7 +3,6 @@ import { Box, Menu, MenuItem } from '@mui/material';
 import { SECTIONS, COLS, INTRO_COLS, CELL_HEIGHT, CELL_FONT_SIZE, cellKey } from './cueGridConstants';
 import { CueColGroup } from './CueGrid';
 import type { CueGridData } from '@/lib/types/database';
-import { getCells } from '@/lib/types/database';
 
 const CELL_PADDING = 2; // px around each <td>
 const CONTENT_HEIGHT = CELL_HEIGHT - CELL_PADDING * 2;
@@ -108,7 +107,7 @@ export const CueGridEditor = ({
   value: CueGridData | null;
   onChange: (v: CueGridData | null) => void;
 }) => {
-  const cells = useMemo(() => getCells(value ?? { cells: {} }), [value]);
+  const cells = useMemo(() => value?.cells ?? {}, [value]);
   const separators = useMemo(() => new Set(value?.separators ?? []), [value]);
 
   const [menuState, setMenuState] = useState<{ x: number; y: number; key: string } | null>(null);

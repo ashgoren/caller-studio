@@ -11,7 +11,7 @@ import { makeFiguresLabel } from './danceUtils';
 import { PrintCuesTable } from './DancePrintPortals';
 import { PAGE_STYLE_CUES, PRINT_CUES_CARD } from './printStyles';
 import type { Dance } from '@/lib/types/database';
-import { getCells } from '@/lib/types/database';
+
 
 export const CuesViewDialog = ({ open, onClose, dance }: {
   open: boolean;
@@ -32,7 +32,7 @@ export const CuesViewDialog = ({ open, onClose, dance }: {
   const printCues = useReactToPrint({ contentRef: cuesPrintRef, documentTitle: `${dance.title} - Cues`, pageStyle: PAGE_STYLE_CUES });
 
   const { cues, title } = dance;
-  const hasCues = !!cues && Object.keys(getCells(cues)).length > 0;
+  const hasCues = !!cues && Object.keys(cues.cells).length > 0;
   const figuresLabel = makeFiguresLabel(dance);
   const choreographerNames = dance.dances_choreographers.map(dc => dc.choreographer.name).join(', ');
   const callingFigures = (dance.calling_figures && dance.calling_figures.length > 0)

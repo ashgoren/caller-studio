@@ -3,7 +3,6 @@ import type { RefObject } from 'react';
 import { SECTIONS, COLS, INTRO_COLS, cellKey } from './cueGridConstants';
 import { PRINT_CUES_COMBINED } from './printStyles';
 import type { Dance, FigureItem, CueGridData } from '@/lib/types/database';
-import { getCells } from '@/lib/types/database';
 
 // --- Shared print helpers ---
 
@@ -62,7 +61,7 @@ export const PrintCuesTable = ({
   labelPaddingTop: number;
   cellPadding: string;
 }) => {
-  const cells = getCells(cues);
+  const cells = cues.cells;
   const separators = new Set(cues.separators ?? []);
   return (
     <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: '100%', fontFamily: '"Roboto","Helvetica","Arial",sans-serif', fontSize: '14px', lineHeight: 1.4 }}>
@@ -126,7 +125,7 @@ export const DancePrintPortals = ({
 }) => {
   const { figures, cues, title } = dance;
   const printFigures = choreographyFigures ?? figures;
-  const hasCues = !!cues && Object.keys(getCells(cues)).length > 0;
+  const hasCues = !!cues && Object.keys(cues.cells).length > 0;
 
   return (
     <>

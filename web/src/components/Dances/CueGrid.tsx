@@ -1,6 +1,5 @@
 import { Box } from '@mui/material';
 import type { CueGridData } from '@/lib/types/database';
-import { getCells } from '@/lib/types/database';
 import { SECTIONS, COLS, INTRO_COLS, CELL_HEIGHT, CELL_FONT_SIZE, LABEL_WIDTH, COL_WIDTH, cellKey } from './cueGridConstants';
 
 // Shared column group — guarantees identical column widths in view and edit
@@ -24,7 +23,7 @@ const cellSx = {
 } as const;
 
 const CueTableBody = ({ cues }: { cues: CueGridData }) => {
-  const cells = getCells(cues);
+  const cells = cues.cells;
   const separators = new Set(cues.separators ?? []);
   return (
     <Box component='tbody'>
@@ -91,7 +90,7 @@ const CueTableBody = ({ cues }: { cues: CueGridData }) => {
 };
 
 export const CueGridView = ({ cues }: { cues: CueGridData | null }) => {
-  if (!cues || Object.keys(getCells(cues)).length === 0) return null;
+  if (!cues || Object.keys(cues.cells).length === 0) return null;
 
   return (
     <Box sx={{ overflowX: 'auto' }}>
