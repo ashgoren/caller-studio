@@ -82,9 +82,14 @@ export const NavBar = () => {
                   textTransform: 'none',
                   fontSize: '1.25rem',
                   fontWeight: 500,
+                  maxWidth: { xs: 'calc(100vw - 200px)', sm: 'none' },
+                  overflow: 'hidden',
+                  '& .MuiButton-endIcon': { flexShrink: 0 },
                 }}
               >
-                {title}
+                <Box component='span' sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                  {title}
+                </Box>
               </Button>
               <Menu anchorEl={navMenuAnchorEl} open={navMenuOpen} onClose={() => setNavMenuAnchorEl(null)}>
                 {NAV_ITEMS.map(item => (
