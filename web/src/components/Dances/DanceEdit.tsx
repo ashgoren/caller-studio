@@ -5,16 +5,11 @@ import { Box, Button, TextField, Autocomplete, Divider, Stack, InputAdornment, I
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
-import ArticleIcon from '@mui/icons-material/Article';
-import GridOnIcon from '@mui/icons-material/GridOn';
 import { useConfirm } from 'material-ui-confirm';
 import { closeSnackbar } from 'notistack';
 import { RelationEditor } from '@/components/RelationEditor';
 import { FiguresEditor } from './FiguresEditor';
 import { isValidUrl, fetchAndResolveImport } from './danceImport';
-import { makeFiguresLabel } from './danceUtils';
-import { WalkthroughEditDialog } from './WalkthroughEditDialog';
-import { CuesEditDialog } from './CuesEditDialog';
 import { newRecord } from './config';
 import { useCreateDance, useUpdateDance, useDeleteDance } from '@/hooks/useDances';
 import { useAddChoreographerToDance, useRemoveChoreographerFromDance } from '@/hooks/useDancesChoreographers';
@@ -31,7 +26,7 @@ import { useFigures } from '@/hooks/useFigures';
 import { useNotify } from '@/hooks/useNotify';
 import { useTitle } from '@/contexts/TitleContext';
 import { useUndoActions, dbRecord, beforeValues, relationOps } from '@/contexts/UndoContext';
-import type { Dance, DanceInsert, DanceUpdate, CueGridData } from '@/lib/types/database';
+import type { Dance, DanceInsert, DanceUpdate } from '@/lib/types/database';
 const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode = 'choreography', onFigureModeChange }: { dance?: Dance; onCancel?: () => void; figureMode?: 'choreography' | 'calling'; onFigureModeChange?: (mode: 'choreography' | 'calling') => void }) => {
@@ -39,9 +34,6 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
   const confirm = useConfirm();
   const { toastSuccess, toastError } = useNotify();
   const { pushAction, setFormActive } = useUndoActions();
-
-  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
-  const [cuesOpen, setCuesOpen] = useState(false);
 
   const { setTitle } = useTitle();
   useEffect(() => setTitle(dance?.title ? `Edit: ${dance.title}` : 'New Dance'), [setTitle, dance?.title]);
@@ -87,9 +79,7 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
     progression_id: dance?.progression_id ?? newRecord.progression_id,
     difficulty: dance?.difficulty ?? newRecord.difficulty,
     notes: dance?.notes ?? newRecord.notes,
-    walkthrough: dance?.walkthrough ?? newRecord.walkthrough,
     place_in_program: dance?.place_in_program ?? newRecord.place_in_program,
-    cues: dance?.cues ?? null,
   }));
   const [formData, setFormData] = useState<DanceUpdate>({ ...initialFormData });
 
@@ -107,13 +97,6 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
       setFormData(prev => ({ ...prev, dance_type_id: defaultId }));
     }
   }, [danceTypes, formData.dance_type_id, initialFormData]);
-
-  const figuresLabel = useMemo(() => makeFiguresLabel({
-    dance_type: (danceTypes ?? []).find(dt => dt.id === formData.dance_type_id),
-    formation: (formations ?? []).find(f => f.id === formData.formation_id),
-    progression: (progressions ?? []).find(p => p.id === formData.progression_id),
-  }), [danceTypes, formations, progressions, formData.dance_type_id, formData.formation_id, formData.progression_id]);
-
 
   // ---------- Unsaved changes handling ----------
 
@@ -465,52 +448,10 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
             />
             <TextField label='Place in Program' value={formData.place_in_program ?? ''} onChange={e => update('place_in_program', e.target.value)} fullWidth multiline variant='standard' />
             <TextField label='Video' value={formData.video ?? ''} onChange={e => update('video', e.target.value)} fullWidth variant='standard' />
-            <Button
-              variant='outlined'
-              color='secondary'
-              startIcon={<ArticleIcon />}
-              onClick={() => setWalkthroughOpen(true)}
-              sx={{ alignSelf: 'flex-start', mt: 1 }}
-            >
-              {formData.walkthrough ? 'Edit Walkthrough' : 'Add Walkthrough'}
-            </Button>
-            <Button
-              variant='outlined'
-              color='secondary'
-              startIcon={<GridOnIcon />}
-              onClick={() => setCuesOpen(true)}
-              sx={{ alignSelf: 'flex-start' }}
-            >
-              {formData.cues ? 'Edit Cues' : 'Add Cues'}
-            </Button>
           </Stack>
         </Box>
 
       </Box>
-
-      <WalkthroughEditDialog
-        open={walkthroughOpen}
-        onClose={() => setWalkthroughOpen(false)}
-        title={dance?.title}
-        figuresLabel={figuresLabel}
-        value={formData.walkthrough ?? ''}
-        onChange={v => update('walkthrough', v)}
-        callingFigures={
-          pendingCallingFigures.figures.length > 0 ? pendingCallingFigures.figures
-          : pendingFigures.figures.length > 0 ? pendingFigures.figures
-          : null
-        }
-      />
-
-      <CuesEditDialog
-        open={cuesOpen}
-        onClose={() => setCuesOpen(false)}
-        title={dance?.title}
-        figuresLabel={figuresLabel}
-        figures={pendingFigures.figures}
-        value={formData.cues as CueGridData | null}
-        onChange={v => update('cues', v)}
-      />
 
       <Box sx={{ position: 'sticky', bottom: 0, mt: 4, py: 2, borderTop: 1, borderColor: 'divider', backgroundColor: 'background.default', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>

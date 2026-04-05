@@ -11,24 +11,48 @@ import GridOnIcon from '@mui/icons-material/GridOn';
 import { ExternalLink } from '@/components/shared';
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
+import { useUpdateDance } from '@/hooks/useDances';
+import { useUndoActions } from '@/contexts/UndoContext';
+import { useNotify } from '@/hooks/useNotify';
 import { FiguresList } from './FiguresList';
 import { makeFiguresLabel } from './danceUtils';
 import { PAGE_STYLE_COMBINED, PAGE_STYLE_CHOREOGRAPHY } from './printStyles';
 import { DancePrintPortals } from './DancePrintPortals';
-import { WalkthroughViewDialog } from './WalkthroughViewDialog';
-import { CuesViewDialog } from './CuesViewDialog';
-import type { Dance } from '@/lib/types/database';
+import { WalkthroughDialog } from './WalkthroughDialog';
+import { CuesDialog } from './CuesDialog';
+import type { CueGridData, Dance } from '@/lib/types/database';
 
 const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }: { dance: Dance; onEdit: () => void; figureMode: 'choreography' | 'calling'; onFigureModeChange: (mode: 'choreography' | 'calling') => void }) => {
   const navigate = useNavigate();
+  const { mutateAsync: updateDance } = useUpdateDance();
+  const { pushAction } = useUndoActions();
+  const { toastSuccess } = useNotify();
 
   const { setTitle } = useTitle();
   useEffect(() => setTitle(`Dance: ${dance.title}`), [setTitle, dance.title]);
 
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [cuesOpen, setCuesOpen] = useState(false);
+
+  const handleSaveWalkthrough = async (value: string) => {
+    await updateDance({ id: dance.id, updates: { walkthrough: value } });
+    pushAction({
+      label: `Edit Walkthrough: ${dance.title}`,
+      ops: [{ type: 'update', table: 'dances', id: dance.id, before: { walkthrough: dance.walkthrough }, after: { walkthrough: value } }],
+    });
+    toastSuccess('Walkthrough saved');
+  };
+
+  const handleSaveCues = async (value: CueGridData | null) => {
+    await updateDance({ id: dance.id, updates: { cues: value } });
+    pushAction({
+      label: `Edit Cues: ${dance.title}`,
+      ops: [{ type: 'update', table: 'dances', id: dance.id, before: { cues: dance.cues }, after: { cues: value } }],
+    });
+    toastSuccess('Cues saved');
+  };
 
   const choreographyPrintRef = useRef<HTMLDivElement>(null);
   const combinedPrintRef = useRef<HTMLDivElement>(null);
@@ -114,20 +138,16 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
                   </IconButton>
                 </Tooltip>
               )}
-              {dance.walkthrough && (
-                <Tooltip title='Walkthrough'>
-                  <IconButton size='small' onClick={() => setWalkthroughOpen(true)}>
-                    <ArticleIcon fontSize='small' />
-                  </IconButton>
-                </Tooltip>
-              )}
-              {dance.cues && Object.keys(dance.cues).length > 0 && (
-                <Tooltip title='Cues'>
-                  <IconButton size='small' onClick={() => setCuesOpen(true)}>
-                    <GridOnIcon fontSize='small' />
-                  </IconButton>
-                </Tooltip>
-              )}
+              <Tooltip title='Walkthrough'>
+                <IconButton size='small' onClick={() => setWalkthroughOpen(true)}>
+                  <ArticleIcon fontSize='small' />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title='Cues'>
+                <IconButton size='small' onClick={() => setCuesOpen(true)}>
+                  <GridOnIcon fontSize='small' />
+                </IconButton>
+              </Tooltip>
             </Box>
           </Box>
           {figuresLabel && (
@@ -216,9 +236,9 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
 
       </Box>
 
-      <WalkthroughViewDialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} dance={dance} />
+      <WalkthroughDialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} dance={dance} onSave={handleSaveWalkthrough} />
 
-      <CuesViewDialog open={cuesOpen} onClose={() => setCuesOpen(false)} dance={dance} />
+      <CuesDialog open={cuesOpen} onClose={() => setCuesOpen(false)} dance={dance} onSave={handleSaveCues} />
 
       <DancePrintPortals
         dance={dance}
