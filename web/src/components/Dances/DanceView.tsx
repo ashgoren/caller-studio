@@ -62,6 +62,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
   const choreographerNames = dance.dances_choreographers.map(dc => dc.choreographer.name).join(', ');
   const figuresLabel = makeFiguresLabel(dance);
   const figures = figureMode === 'calling' ? (dance.calling_figures ?? []) : dance.figures;
+  const hasCues = !!dance.cues && Object.keys(dance.cues.cells).length > 0;
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto' }}>
@@ -138,14 +139,14 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
                   </IconButton>
                 </Tooltip>
               )}
-              <Tooltip title='Walkthrough'>
+              <Tooltip title={dance.walkthrough ? 'Walkthrough' : 'Add walkthrough'}>
                 <IconButton size='small' onClick={() => setWalkthroughOpen(true)}>
-                  <ArticleIcon fontSize='small' />
+                  <ArticleIcon fontSize='small' sx={{ color: dance.walkthrough ? 'text.primary' : 'text.disabled' }} />
                 </IconButton>
               </Tooltip>
-              <Tooltip title='Cues'>
+              <Tooltip title={hasCues ? 'Cues' : 'Add cues'}>
                 <IconButton size='small' onClick={() => setCuesOpen(true)}>
-                  <GridOnIcon fontSize='small' />
+                  <GridOnIcon fontSize='small' sx={{ color: hasCues ? 'text.primary' : 'text.disabled' }} />
                 </IconButton>
               </Tooltip>
             </Box>
