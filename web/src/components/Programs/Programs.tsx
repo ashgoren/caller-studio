@@ -27,7 +27,10 @@ export const Programs = () => {
     columns,
     defaultQuery,
     tableInitialState,
-    onRowClick: (row) => navigate(`/programs/${row.id}`)
+    onRowClick: (row, e) => {
+      if (e.metaKey || e.ctrlKey) window.open(`/programs/${row.id}`, '_blank');
+      else navigate(`/programs/${row.id}`);
+    }
   });
 
   const [filterOpen, setFilterOpen] = useState(countActiveRules(query.rules) > 0);

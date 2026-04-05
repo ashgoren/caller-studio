@@ -5,6 +5,7 @@ import { evaluateQuery } from '@/components/QueryBuilder/queryEvaluator';
 import type { FilterGroup } from '@/lib/types/fieldFilter';
 import type { MRT_RowData, MRT_ColumnDef, MRT_TableOptions } from 'material-react-table';
 import type { Model } from '@/lib/types/database';
+import type React from 'react';
 
 export const useTable = <TData extends MRT_RowData>({ model, data, columns, defaultQuery, tableInitialState, onRowClick }: {
   model: Model,
@@ -12,7 +13,7 @@ export const useTable = <TData extends MRT_RowData>({ model, data, columns, defa
   columns: MRT_ColumnDef<TData>[],
   defaultQuery : FilterGroup,
   tableInitialState: Partial<MRT_TableOptions<TData>>['initialState'],
-  onRowClick?: (row: TData) => void,
+  onRowClick?: (row: TData, event: React.MouseEvent) => void,
 }) => {
   const [initialState] = useState(() =>
     loadPersistence(`mrt_${model}`, {
@@ -65,7 +66,7 @@ export const useTable = <TData extends MRT_RowData>({ model, data, columns, defa
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     muiTableBodyRowProps: ({ row }) => ({
-      onClick: () => onRowClick?.(row.original),
+      onClick: (event) => onRowClick?.(row.original, event),
       sx: { cursor: onRowClick ? 'pointer' : 'default' }
     }),
     initialState: tableInitialState

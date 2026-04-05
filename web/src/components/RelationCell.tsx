@@ -18,7 +18,9 @@ export const RelationCell = <TRelation,>({ items, model, getId, getLabel }: {
           key={getId(item)}
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`${MODEL_PATHS[model]}/${getId(item)}`);
+            const url = `${MODEL_PATHS[model]}/${getId(item)}`;
+            if (e.metaKey || e.ctrlKey) window.open(url, '_blank');
+            else navigate(url);
           }}
           sx={{ cursor: 'pointer', textDecoration: 'underline', color: 'secondary.main', '&:hover': { color: 'secondary.dark' } }}
         >

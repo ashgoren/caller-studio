@@ -28,7 +28,10 @@ export const Dances = () => {
     columns,
     defaultQuery,
     tableInitialState,
-    onRowClick: (row) => navigate(`/dances/${row.id}`)
+    onRowClick: (row, e) => {
+      if (e.metaKey || e.ctrlKey) window.open(`/dances/${row.id}`, '_blank');
+      else navigate(`/dances/${row.id}`);
+    }
   });
 
   const [filterOpen, setFilterOpen] = useState(countActiveRules(query.rules) > 0);
