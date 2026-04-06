@@ -7,10 +7,16 @@ import { theme } from './themeConfig';
 import { NavBar } from './NavBar';
 import type { ReactNode } from 'react';
 
+export const ThemedShell = ({ children }: { children: ReactNode }) => (
+  <ThemeProvider theme={theme} defaultMode='system'>
+    <CssBaseline />
+    {children}
+  </ThemeProvider>
+);
+
 export const Layout = ({ children }: { children: ReactNode }) => {
   return (
-    <ThemeProvider theme={theme} defaultMode='system'>
-      <CssBaseline />
+    <ThemedShell>
       <SnackbarProvider
         maxSnack={3}
         autoHideDuration={4000}
@@ -30,6 +36,6 @@ export const Layout = ({ children }: { children: ReactNode }) => {
           </Box>
         </Box>
       </SnackbarProvider>
-    </ThemeProvider>
+    </ThemedShell>
   );
 };

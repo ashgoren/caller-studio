@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router';
 import { Box, Button, Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LinkIcon from '@mui/icons-material/Link';
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
+import { useNotify } from '@/hooks/useNotify';
 import { formatLocalDate } from '@/lib/utils';
 import type { Program } from '@/lib/types/database';
 
@@ -13,6 +15,7 @@ const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').t
 export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: Program; onEdit: () => void; onChoreography: () => void }) => {
   const navigate = useNavigate();
   const { setTitle } = useTitle();
+  const { toastSuccess } = useNotify();
 
   useEffect(() => setTitle(`Program: ${program.date ? formatLocalDate(program.date) : 'unknown'}`), [setTitle, program.date]);
 
@@ -28,6 +31,14 @@ export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: 
           <Button size='small' variant='outlined' color='secondary' onClick={onChoreography}>
             Choreography
           </Button>
+          <Tooltip title='Copy share link'>
+            <IconButton size='small' onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/share/p/${program.share_token}`);
+              toastSuccess('Share link copied', { undo: false });
+            }}>
+              <LinkIcon fontSize='small' />
+            </IconButton>
+          </Tooltip>
           <Tooltip title='Edit'>
             <IconButton onClick={onEdit} size='small'><EditIcon fontSize='small' /></IconButton>
           </Tooltip>

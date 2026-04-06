@@ -23,7 +23,7 @@ BEGIN
   -- Get the guest user ID. The account must already exist.
   SELECT id INTO guest_uid FROM auth.users WHERE email = guest_email;
   IF guest_uid IS NULL THEN
-    RAISE EXCEPTION 'Guest user not found. Create the account before running this migration.';
+    RETURN; -- Guest account not present (e.g. shadow DB during db pull); skip seeding.
   END IF;
 
   -- Choreographers

@@ -8,6 +8,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ArticleIcon from '@mui/icons-material/Article';
 import GridOnIcon from '@mui/icons-material/GridOn';
+import LinkIcon from '@mui/icons-material/Link';
 import { ExternalLink } from '@/components/shared';
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
@@ -78,6 +79,14 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
               <IconButton size='small' onClick={() => printCombined()}><PrintIcon fontSize='small' /></IconButton>
             </Tooltip>
           )}
+          <Tooltip title='Copy share link'>
+            <IconButton size='small' onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/share/d/${dance.share_token}`);
+              toastSuccess('Share link copied', { undo: false });
+            }}>
+              <LinkIcon fontSize='small' />
+            </IconButton>
+          </Tooltip>
           <Tooltip title='Edit'>
             <IconButton onClick={onEdit} size='small'><EditIcon fontSize='small' /></IconButton>
           </Tooltip>

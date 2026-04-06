@@ -53,6 +53,31 @@ export type Program = ProgramRow & { programs_dances: { id: number; order: numbe
 export type ProgramInsert = Tables['programs']['Insert'];
 export type ProgramUpdate = Tables['programs']['Update'];
 
+export type SharedDance = {
+  title: string;
+  choreographers: string[] | null;
+  dance_type: string | null;
+  formation: string | null;
+  progression: string | null;
+  figures: FigureItem[];
+};
+
+export type SharedProgramDance = {
+  order: number;
+  title: string;
+  choreographers: string[] | null;
+  dance_type: string | null;
+  formation: string | null;
+  progression: string | null;
+  figures: FigureItem[];
+};
+
+export type SharedProgram = {
+  location: string | null;
+  date: string | null;
+  dances: SharedProgramDance[];
+};
+
 export type ChoreographerRow = Tables['choreographers']['Row'];
 export type Choreographer = ChoreographerRow & { dances_choreographers: { id: number }[] };
 export type ChoreographerInsert = Tables['choreographers']['Insert'];

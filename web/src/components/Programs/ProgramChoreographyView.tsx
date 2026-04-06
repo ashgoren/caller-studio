@@ -109,7 +109,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
 
         {/* Phrase rows */}
         {allPhrases.length === 0 ? (
-          <Typography color='text.disabled' sx={{ mt: 2 }}>No figures recorded for these dances.</Typography>
+          <Typography color='text.disabled' sx={{ mt: 2 }}>No figures listed for these dances.</Typography>
         ) : (
           allPhrases.map(phrase => (
             <Box

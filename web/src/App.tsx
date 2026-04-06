@@ -6,13 +6,15 @@ import { TitleProvider } from './contexts/TitleContext';
 import { UndoProvider, useUndoState } from '@/contexts/UndoContext';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router';
 import { lazy, Suspense } from 'react';
-import { Layout } from '@/components/layouts/Layout';
+import { Layout, ThemedShell } from '@/components/layouts/Layout';
 import { Spinner } from '@/components/shared';
 import { SignInPage } from '@/components/auth/SignInPage';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { logEnvironment } from './lib/utils';
+import { SharedDanceView } from './components/Share/SharedDanceView';
+import { SharedProgramView } from './components/Share/SharedProgramView';
 
 const Dances             = lazy(() => import('./components/Dances').then(m => ({ default: m.Dances })));
 const DancePage          = lazy(() => import('./components/Dances').then(m => ({ default: m.DancePage })));
@@ -61,7 +63,27 @@ const AppShell = () => (
   </LocalizationProvider>
 );
 
+const ShareShell = () => (
+  <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <QueryClientProvider client={queryClient}>
+      <ThemedShell>
+        <Suspense fallback={<Spinner />}>
+          <Outlet />
+        </Suspense>
+      </ThemedShell>
+    </QueryClientProvider>
+  </LocalizationProvider>
+);
+
 const router = createBrowserRouter([
+  {
+    path: '/share',
+    element: <ShareShell />,
+    children: [
+      { path: 'd/:token', element: <SharedDanceView /> },
+      { path: 'p/:token', element: <SharedProgramView /> },
+    ],
+  },
   {
     element: <AppShell />,
     children: [

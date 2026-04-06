@@ -121,6 +121,7 @@ export type Database = {
           notes: string | null
           place_in_program: string | null
           progression_id: number | null
+          share_token: string
           title: string
           url: string | null
           user_id: string
@@ -138,6 +139,7 @@ export type Database = {
           notes?: string | null
           place_in_program?: string | null
           progression_id?: number | null
+          share_token?: string
           title: string
           url?: string | null
           user_id?: string
@@ -155,6 +157,7 @@ export type Database = {
           notes?: string | null
           place_in_program?: string | null
           progression_id?: number | null
+          share_token?: string
           title?: string
           url?: string | null
           user_id?: string
@@ -338,6 +341,7 @@ export type Database = {
           id: number
           location: string | null
           notes: string | null
+          share_token: string
           user_id: string
         }
         Insert: {
@@ -346,6 +350,7 @@ export type Database = {
           id?: number
           location?: string | null
           notes?: string | null
+          share_token?: string
           user_id?: string
         }
         Update: {
@@ -354,6 +359,7 @@ export type Database = {
           id?: number
           location?: string | null
           notes?: string | null
+          share_token?: string
           user_id?: string
         }
         Relationships: []
@@ -441,7 +447,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_shared_dance: { Args: { token: string }; Returns: Json }
+      get_shared_program: { Args: { token: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
