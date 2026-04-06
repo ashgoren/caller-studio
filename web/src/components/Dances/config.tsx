@@ -21,7 +21,6 @@ export const newRecord: DanceInsert = {
   walkthrough: '',
   place_in_program: '',
   url: '',
-  video: '',
   figures: [],
   cues: null,
   calling_figures: null,
@@ -194,9 +193,9 @@ export const columns: MRT_ColumnDef<Dance>[] = [
     meta: { inputType: 'text' }
   },
   {
-    accessorKey: 'video',
+    id: 'videos',
     header: 'Video',
-    Cell: ({ row }) => linkVideo(row.original.video),
+    Cell: ({ row }) => row.original.dance_videos?.map(v => <span key={v.id}>{linkVideo(v.url, v.description)}</span>),
     enableColumnFilter: false,
     enableSorting: false,
     size: 120,
@@ -254,5 +253,5 @@ export const defaultQuery: FilterGroup = {
 // const linkTitle = (title: string, url?: string | null) =>
 //   url ? <ExternalLink url={url} title={title} /> : title;
 
-const linkVideo = (video?: string | null) =>
-  video ? <ExternalLink url={video} title='Video' /> : null;
+const linkVideo = (url: string, description: string | null) =>
+  <ExternalLink url={url} title={description || 'Video'} />;

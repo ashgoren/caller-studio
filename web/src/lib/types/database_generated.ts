@@ -73,6 +73,41 @@ export type Database = {
         }
         Relationships: []
       }
+      dance_videos: {
+        Row: {
+          created_at: string
+          dance_id: number
+          description: string | null
+          id: number
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dance_id: number
+          description?: string | null
+          id?: number
+          url: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          dance_id?: number
+          description?: string | null
+          id?: number
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dance_videos_dance_id_fkey"
+            columns: ["dance_id"]
+            isOneToOne: false
+            referencedRelation: "dances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dances: {
         Row: {
           calling_figures: Json | null
@@ -89,7 +124,6 @@ export type Database = {
           title: string
           url: string | null
           user_id: string
-          video: string | null
           walkthrough: string | null
         }
         Insert: {
@@ -107,7 +141,6 @@ export type Database = {
           title: string
           url?: string | null
           user_id?: string
-          video?: string | null
           walkthrough?: string | null
         }
         Update: {
@@ -125,7 +158,6 @@ export type Database = {
           title?: string
           url?: string | null
           user_id?: string
-          video?: string | null
           walkthrough?: string | null
         }
         Relationships: [

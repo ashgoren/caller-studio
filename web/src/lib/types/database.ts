@@ -24,6 +24,7 @@ export type CueGridData = {
 };
 
 export type DanceRow = Tables['dances']['Row'];
+export type DanceVideoRow = Tables['dance_videos']['Row'];
 export type Dance = Omit<DanceRow, 'figures' | 'cues' | 'calling_figures'> & {
   figures: FigureItem[];
   calling_figures: FigureItem[] | null;
@@ -32,6 +33,7 @@ export type Dance = Omit<DanceRow, 'figures' | 'cues' | 'calling_figures'> & {
   dances_choreographers: { id: number; choreographer: ChoreographerRow }[];
   dances_key_moves: { id: number; key_move: KeyMoveRow }[];
   dances_vibes: { id: number; vibe: VibeRow }[];
+  dance_videos: DanceVideoRow[];
   dance_type: DanceTypeRow | null;
   formation: FormationRow | null;
   progression: ProgressionRow | null;

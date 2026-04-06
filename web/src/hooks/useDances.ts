@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Dance, DanceInsert, DanceUpdate } from '@/lib/types/database';
 
-const DANCE_SELECT = '*, programs_dances(id, order, program:programs(*)), dances_choreographers(id, choreographer:choreographers(*)), dances_key_moves(id, key_move:key_moves(*)), dances_vibes(id, vibe:vibes(*)), dance_type:dance_types(id, name, sort_order), formation:formations(id, name, sort_order), progression:progressions(id, name, sort_order)';
+const DANCE_SELECT = '*, programs_dances(id, order, program:programs(*)), dances_choreographers(id, choreographer:choreographers(*)), dances_key_moves(id, key_move:key_moves(*)), dances_vibes(id, vibe:vibes(*)), dance_videos(*), dance_type:dance_types(id, name, sort_order), formation:formations(id, name, sort_order), progression:progressions(id, name, sort_order)';
 
 const getDances = async () => {
   const { data, error } = await supabase.from('dances').select(DANCE_SELECT);

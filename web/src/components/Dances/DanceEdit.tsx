@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate, useBlocker } from 'react-router';
-import { Box, Button, TextField, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, Button, TextField, Autocomplete, Divider, Stack, InputAdornment, IconButton, CircularProgress, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -9,12 +9,14 @@ import { useConfirm } from 'material-ui-confirm';
 import { closeSnackbar } from 'notistack';
 import { RelationEditor } from '@/components/RelationEditor';
 import { FiguresEditor } from './FiguresEditor';
+import { VideosEditor } from './VideosEditor';
 import { isValidUrl, fetchAndResolveImport } from './danceImport';
 import { newRecord } from './config';
 import { useCreateDance, useUpdateDance, useDeleteDance } from '@/hooks/useDances';
 import { useAddChoreographerToDance, useRemoveChoreographerFromDance } from '@/hooks/useDancesChoreographers';
 import { useAddKeyMoveToDance, useRemoveKeyMoveFromDance } from '@/hooks/useDancesKeyMoves';
 import { useAddVibeToDance, useRemoveVibeFromDance } from '@/hooks/useDancesVibes';
+import { useAddDanceVideo, useRemoveDanceVideo, useUpdateDanceVideo, usePendingVideos } from '@/hooks/useDanceVideos';
 import { useChoreographers, useCreateChoreographer } from '@/hooks/useChoreographers';
 import { useKeyMoves } from '@/hooks/useKeyMoves';
 import { useVibes } from '@/hooks/useVibes';
@@ -53,6 +55,9 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
   const { mutateAsync: removeVibe } = useRemoveVibeFromDance();
   const { mutateAsync: addChoreographer } = useAddChoreographerToDance();
   const { mutateAsync: removeChoreographer } = useRemoveChoreographerFromDance();
+  const { mutateAsync: addVideo } = useAddDanceVideo();
+  const { mutateAsync: removeVideo } = useRemoveDanceVideo();
+  const { mutateAsync: updateVideo } = useUpdateDanceVideo();
   const { mutateAsync: createChoreographer } = useCreateChoreographer();
   const { data: choreographers } = useChoreographers();
   const { data: keyMoves } = useKeyMoves();
@@ -65,6 +70,7 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
   const pendingChoreographers = usePendingRelations();
   const pendingKeyMoves = usePendingRelations();
   const pendingVibes = usePendingRelations();
+  const pendingVideoState = usePendingVideos(dance);
   const pendingFigures = useFigures(dance);
   const pendingCallingFigures = useFigures(dance ? { figures: dance.calling_figures ?? [] } : undefined);
   const [figureMode, setFigureMode] = useState<'choreography' | 'calling'>(initialFigureMode);
@@ -73,7 +79,6 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
   const [initialFormData] = useState<DanceUpdate>(() => ({
     title: dance?.title ?? newRecord.title,
     url: dance?.url ?? newRecord.url,
-    video: dance?.video ?? newRecord.video,
     dance_type_id: dance?.dance_type_id ?? newRecord.dance_type_id,
     formation_id: dance?.formation_id ?? newRecord.formation_id,
     progression_id: dance?.progression_id ?? newRecord.progression_id,
@@ -116,6 +121,7 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
     pendingChoreographers.hasPendingChanges ||
     pendingKeyMoves.hasPendingChanges ||
     pendingVibes.hasPendingChanges ||
+    pendingVideoState.hasPendingChanges ||
     pendingFigures.hasPendingChanges ||
     (callingEnabled && (dance?.calling_figures == null || pendingCallingFigures.hasPendingChanges));
 
@@ -190,6 +196,9 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
       (vibeId) => addVibe({ danceId, vibeId }),
       (vibeId) => removeVibe({ danceId, vibeId }),
     );
+    const { addedVideoRows, removedVideos, updatedVideos } = await pendingVideoState.commitChanges(
+      danceId, { addVideo, removeVideo, updateVideo }
+    );
 
     if (isCreate) {
       pushAction({
@@ -199,6 +208,7 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
           ...relationOps('dances_choreographers', addedChoreographers, []),
           ...relationOps('dances_key_moves', addedKeyMoves, []),
           ...relationOps('dances_vibes', addedVibes, []),
+          ...addedVideoRows.map(r => ({ type: 'insert' as const, table: 'dance_videos', record: r })),
         ],
       });
       toastSuccess('Dance created');
@@ -216,6 +226,9 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
           ...relationOps('dances_choreographers', addedChoreographers, removedChoreographers),
           ...relationOps('dances_key_moves', addedKeyMoves, removedKeyMoves),
           ...relationOps('dances_vibes', addedVibes, removedVibes),
+          ...addedVideoRows.map(r => ({ type: 'insert' as const, table: 'dance_videos', record: r })),
+          ...removedVideos.map(v => ({ type: 'delete' as const, table: 'dance_videos', id: v.id!, record: { id: v.id, dance_id: danceId, url: v.url, description: v.description } })),
+          ...updatedVideos.map(({ current: v, orig }) => ({ type: 'update' as const, table: 'dance_videos', id: v.id!, before: { url: orig.url, description: orig.description }, after: { url: v.url, description: v.description } })),
         ],
       });
       toastSuccess('Dance updated');
@@ -400,14 +413,19 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
               onReorder={pendingCallingFigures.setFigures}
             />
           )}
-          <Box sx={{ mt: 4 }}>
+          <Box component='fieldset' sx={{ mt: 4, border: 1, borderColor: 'divider', borderRadius: 1, px: 2, pt: 1, pb: 2 }}>
+            <Typography component='legend' variant='caption' color='text.secondary' sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5, px: 0.5 }}>Notes</Typography>
             <Suspense fallback={<CircularProgress size={24} />}>
               <RichTextEditor
-                label='Notes'
                 value={formData.notes ?? ''}
                 onChange={v => update('notes', v)}
+                underline={false}
               />
             </Suspense>
+          </Box>
+          <Box component='fieldset' sx={{ mt: 3, border: 1, borderColor: 'divider', borderRadius: 1, px: 2, pt: 1, pb: 2 }}>
+            <Typography component='legend' variant='caption' color='text.secondary' sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5, px: 0.5 }}>Videos</Typography>
+            <VideosEditor videos={pendingVideoState.pendingVideos} onChange={pendingVideoState.setPendingVideos} />
           </Box>
         </Box>
 
@@ -447,7 +465,6 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
               sx={{ width: 100 }}
             />
             <TextField label='Place in Program' value={formData.place_in_program ?? ''} onChange={e => update('place_in_program', e.target.value)} fullWidth multiline variant='standard' />
-            <TextField label='Video' value={formData.video ?? ''} onChange={e => update('video', e.target.value)} fullWidth variant='standard' />
           </Stack>
         </Box>
 

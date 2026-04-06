@@ -207,8 +207,10 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
               {dance.difficulty != null ? String(dance.difficulty) : undefined}
             </SidebarField>
             <SidebarField label='Place in Program'>{dance.place_in_program || undefined}</SidebarField>
-            <SidebarField label='Video'>
-              {dance.video ? <ExternalLink url={dance.video} title='Video' /> : undefined}
+            <SidebarField label='Videos'>
+              {dance.dance_videos.length > 0
+                ? <Stack spacing={0.25}>{dance.dance_videos.map(v => <ExternalLink key={v.id} url={v.url} title={v.description || 'Video'} />)}</Stack>
+                : undefined}
             </SidebarField>
           </Stack>
 
