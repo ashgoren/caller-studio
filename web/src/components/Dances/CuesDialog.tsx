@@ -123,15 +123,15 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
           <DialogContent sx={{ display: 'flex', gap: 3, overflow: 'hidden', p: 0, flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', gap: 3, flex: 1, overflow: 'hidden', px: 2, pt: 2, pb: 2 }}>
               {/* Figures reference */}
-              <Box sx={{ width: 340, flexShrink: 0, overflowY: 'auto', pr: 2, '@media (max-width: 1011px)': { display: 'none' } }}>
+              <Box sx={{ flexShrink: 0, overflowY: 'auto', pr: 2, '@media (max-width: 1011px)': { display: 'none' } }}>
                 {dance.figures.length === 0 ? (
                   <Typography color='text.disabled' variant='body2'>No figures added yet.</Typography>
                 ) : (
-                  <Box sx={{ position: 'relative', height: GRID_NATURAL_HEIGHT + 18 }}>
-                    {figureGroups.map(({ phrase, items }, phraseIdx) => {
+                  <Box sx={{ display: 'flex', flexDirection: 'column', pt: `${15 + CELL_HEIGHT}px` }}>
+                    {figureGroups.map(({ phrase, items }) => {
                       const firstFigureIdx = items.findIndex(i => i.kind === 'figure');
                       return (
-                        <Box key={phrase} sx={{ position: 'absolute', top: 15 + CELL_HEIGHT + phraseIdx * (CELL_HEIGHT * 2 + 1), left: 0, right: 0 }}>
+                        <Box key={phrase} sx={{ minHeight: CELL_HEIGHT * 2 + 1 }}>
                           {items.map((item, idx) => item.kind === 'note' ? (
                             <Box key={item.id} sx={{ display: 'flex', gap: 2, mt: idx > 0 ? 0.5 : 0 }}>
                               <Box sx={{ width: 28, flexShrink: 0 }} />
@@ -156,7 +156,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
                 )}
               </Box>
               {/* Cue grid editor */}
-              <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minWidth: 0 }}>
+              <Box sx={{ flexShrink: 0, width: (GRID_NATURAL_WIDTH + 18) * cuesEditorScale, overflowY: 'auto', overflowX: 'hidden' }}>
                 <Box sx={{ transform: `scale(${cuesEditorScale})`, transformOrigin: 'top left', width: GRID_NATURAL_WIDTH + 18 }}>
                   <CueGridEditor value={draft} onChange={setDraft} />
                 </Box>
