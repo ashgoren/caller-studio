@@ -23,6 +23,7 @@
     "@tiptap/markdown": "^3.22.1",
     "@tiptap/react": "^3.22.1",
     "@tiptap/starter-kit": "^3.22.1",
+    "@vercel/functions": "^3.4.3",
     "date-fns": "^4.1.0",
     "material-react-table": "^3.2.1",
     "material-ui-confirm": "^4.0.0",
