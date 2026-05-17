@@ -15,6 +15,26 @@
     <title>Caller Studio</title>
   </head>
   <body>
+    <script>
+      (function() {
+        try {
+          var mode = localStorage.getItem('mui-mode') || 'system';
+          var dark = localStorage.getItem('mui-color-scheme-dark') || 'dark';
+          var light = localStorage.getItem('mui-color-scheme-light') || 'light';
+          var colorScheme = '';
+          if (mode === 'system') {
+            colorScheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? dark : light;
+          } else if (mode === 'light') {
+            colorScheme = light;
+          } else if (mode === 'dark') {
+            colorScheme = dark;
+          }
+          if (colorScheme) {
+            document.documentElement.setAttribute('data-mui-color-scheme', colorScheme);
+          }
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -7,8 +7,12 @@ import { theme } from './themeConfig';
 import { NavBar } from './NavBar';
 import type { ReactNode } from 'react';
 
+// Prevent cross-tab mui-mode ping-pong: MUI subscribes to 'storage' events to sync
+// color mode across tabs, but this causes an infinite loop when multiple tabs are open
+// (each tab's write triggers the other's handler). Passing storageWindow=null disables
+// the subscription entirely — localStorage persistence is unaffected.
 export const ThemedShell = ({ children }: { children: ReactNode }) => (
-  <ThemeProvider theme={theme} defaultMode='system'>
+  <ThemeProvider theme={theme} defaultMode='system' storageWindow={null}>
     <CssBaseline />
     {children}
   </ThemeProvider>
