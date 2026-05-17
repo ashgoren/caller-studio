@@ -10,6 +10,8 @@ import { Layout, ThemedShell } from '@/components/layouts/Layout';
 import { Spinner } from '@/components/shared';
 import { SignInPage } from '@/components/auth/SignInPage';
 import { SignUpPage } from '@/components/auth/SignUpPage';
+import { ForgotPasswordPage } from '@/components/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/components/auth/ResetPasswordPage';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
@@ -90,6 +92,8 @@ const router = createBrowserRouter([
     children: [
       { path: '/signin', element: <SignInPage /> },
       { path: '/signup', element: <SignUpPage /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/reset-password', element: <ResetPasswordPage /> },
       {
         element: <ProtectedRoute />,
         children: [

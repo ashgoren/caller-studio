@@ -2,29 +2,34 @@ import { useState } from 'react';
 import { Alert, Button, Box, TextField, Typography, Avatar, Container, Link } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import LoopIcon from '@mui/icons-material/Loop';
-import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { useNavigate, Link as RouterLink } from 'react-router';
 
-export const SignInPage = () => {
-  const [email, setEmail] = useState('');
+export const ResetPasswordPage = () => {
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');  
-  const { signIn } = useAuth();
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
     setError('');
     setLoading(true);
 
     try {
-      await signIn(email, password);
-      navigate('/');
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      navigate('/signin');
     } catch {
-      setError('Invalid email or password');
+      setError('Could not update password. Your reset link may have expired.');
     } finally {
       setPassword('');
+      setConfirmPassword('');
       setLoading(false);
     }
   };
@@ -37,57 +42,48 @@ export const SignInPage = () => {
           {loading ? <LoopIcon /> : <LockOutlinedIcon />}
         </Avatar>
         <Typography component='h1' variant='h5'>
-          {loading ? 'Signing in...' : 'Sign in'}
+          {loading ? 'Updating...' : 'Set new password'}
         </Typography>
       </Box>
 
-      <Box component='form' onSubmit={handleSignIn} sx={{ mt: 1 }}>
-        <TextField
-          margin='normal'
-          required
-          fullWidth
-          id='email'
-          label='Email Address'
-          type='email'
-          name='email'
-          autoComplete='email'
-          autoFocus
-          disabled={loading}
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setError('');
-          }}
-        />
+      <Box component='form' onSubmit={handleSubmit} sx={{ mt: 1 }}>
         <TextField
           margin='normal'
           required
           fullWidth
           name='password'
-          label='Password'
+          label='New Password'
           type='password'
           id='password'
-          autoComplete='current-password'
+          autoComplete='new-password'
+          autoFocus
           disabled={loading}
           value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            setError('');
-          }}
+          onChange={(e) => { setPassword(e.target.value); setError(''); }}
+        />
+        <TextField
+          margin='normal'
+          required
+          fullWidth
+          name='confirmPassword'
+          label='Confirm New Password'
+          type='password'
+          id='confirmPassword'
+          autoComplete='new-password'
+          disabled={loading}
+          value={confirmPassword}
+          onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
         />
 
         <Button type='submit' fullWidth variant='contained' sx={{ mt: 3, mb: 2 }} disabled={loading}>
-          Sign In
+          Update Password
         </Button>
 
         {error && <Alert severity='error' sx={{ mt: 2 }}>{error}</Alert>}
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-          <Link component={RouterLink} to='/forgot-password' variant='body2'>
-            Forgot password?
-          </Link>
-          <Link component={RouterLink} to='/signup' variant='body2'>
-            Create an account
+        <Box sx={{ textAlign: 'center', mt: 1 }}>
+          <Link component={RouterLink} to='/signin' variant='body2'>
+            Back to sign in
           </Link>
         </Box>
 
