@@ -17,7 +17,7 @@ export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: 
   const { setTitle } = useTitle();
   const { toastSuccess } = useNotify();
 
-  useEffect(() => setTitle(`Program: ${program.date ? formatLocalDate(program.date) : 'unknown'}`), [setTitle, program.date]);
+  useEffect(() => setTitle(`${program.date ? formatLocalDate(program.date) : 'unknown'}`), [setTitle, program.date]);
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto' }}>

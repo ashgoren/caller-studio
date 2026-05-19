@@ -32,7 +32,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
   const { toastSuccess } = useNotify();
 
   const { setTitle } = useTitle();
-  useEffect(() => setTitle(`Dance: ${dance.title}`), [setTitle, dance.title]);
+  useEffect(() => setTitle(dance.title), [setTitle, dance.title]);
 
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [cuesOpen, setCuesOpen] = useState(false);

@@ -15,7 +15,8 @@ export const TitleProvider = ({ children }: { children: React.ReactNode }) => {
   const [title, setTitle] = useState("Caller Studio");
 
   useEffect(() => {
-    document.title = title && title !== "Caller Studio" ? `${title} | Caller Studio` : "Caller Studio";
+    // document.title = title && title !== "Caller Studio" ? `${title} | Caller Studio` : "Caller Studio";
+    document.title = title || "Caller Studio";
   }, [title]);
 
   return (
