@@ -158,7 +158,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
       </Box>
 
       {createPortal(
-        <div style={{ position: 'fixed', top: '-100vh', left: 0, width: '1000px' }}>
+        <div style={{ position: 'fixed', top: '-9999px', left: 0, width: '1000px' }}>
           <div ref={printRef} style={{ background: 'white', color: 'black', fontFamily: 'Georgia, serif' }}>
             <div style={{ fontSize: '16pt', fontWeight: 'bold', marginBottom: '0.1em' }}>
               {program.date ? formatLocalDate(program.date) : 'No date'}
