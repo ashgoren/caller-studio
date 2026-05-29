@@ -5,9 +5,10 @@ import { useConfirm } from 'material-ui-confirm';
 import { clearPersistence } from '@/hooks/usePersistence';
 import type { Model } from '@/lib/types/database';
 
-export const TableOverflowMenu = ({ model, onClearFilters }: {
+export const TableOverflowMenu = ({ model, onClearFilters, onExport }: {
   model: Model;
   onClearFilters: () => void;
+  onExport?: () => void;
 }) => {
   const confirm = useConfirm();
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
@@ -44,6 +45,7 @@ export const TableOverflowMenu = ({ model, onClearFilters }: {
         <MoreVertIcon />
       </IconButton>
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
+        {onExport && <MenuItem onClick={() => { setMenuAnchor(null); onExport(); }}>Export as JSON</MenuItem>}
         <MenuItem onClick={handleClearFilters}>Clear filters</MenuItem>
         <MenuItem onClick={handleClearState}>Clear all state</MenuItem>
       </Menu>
