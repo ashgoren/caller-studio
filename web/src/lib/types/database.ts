@@ -46,6 +46,7 @@ export type ProgramDance = Omit<DanceRow, 'figures'> & {
   dance_type: DanceTypeRow | null;
   formation: FormationRow | null;
   progression: ProgressionRow | null;
+  dances_key_moves: { id: number; key_move: KeyMoveRow }[];
 };
 
 export type ProgramRow = Tables['programs']['Row'];

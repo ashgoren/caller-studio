@@ -101,6 +101,11 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
                   {makeFiguresLabel(pd.dance)}
                 </Typography>
               )}
+              {pd.dance.dances_key_moves.length > 0 && (
+                <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+                  <strong>Key moves:</strong> {pd.dance.dances_key_moves.map(dkm => dkm.key_move.name).join(', ')}
+                </Typography>
+              )}
             </Box>
           ))}
         </Box>
@@ -181,6 +186,11 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
                       {makeFiguresLabel(pd.dance) && (
                         <div style={{ fontWeight: 'normal', fontSize: '7.5pt', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           {makeFiguresLabel(pd.dance)}
+                        </div>
+                      )}
+                      {pd.dance.dances_key_moves.length > 0 && (
+                        <div style={{ fontWeight: 'normal', fontSize: '7.5pt' }}>
+                          <strong>Key moves:</strong> {pd.dance.dances_key_moves.map(dkm => dkm.key_move.name).join(', ')}
                         </div>
                       )}
                     </th>
