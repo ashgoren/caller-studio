@@ -10,7 +10,7 @@ import { closeSnackbar } from 'notistack';
 import { RelationEditor } from '@/components/RelationEditor';
 import { FiguresEditor } from './FiguresEditor';
 import { VideosEditor } from './VideosEditor';
-import { isValidUrl, fetchAndResolveImport } from './danceImport';
+import { isValidUrl, fetchAndResolveImport } from '@/lib/danceImport';
 import { newRecord } from './config';
 import { useCreateDance, useUpdateDance, useDeleteDance } from '@/hooks/useDances';
 import { useAddChoreographerToDance, useRemoveChoreographerFromDance } from '@/hooks/useDancesChoreographers';
