@@ -4,7 +4,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import { useReactToPrint } from 'react-to-print';
-import { PAGE_STYLE_WALKTHROUGH } from './printStyles';
+import { PAGE_STYLE_WALKTHROUGH, applyPrintZoom, clearPrintZoom } from './printStyles';
 import { FiguresList } from './FiguresList';
 import { makeFiguresLabel } from './danceUtils';
 import { useUndoActions } from '@/contexts/UndoContext';
@@ -40,19 +40,12 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave }: {
   }, [isEditing, setFormActive]);
 
   const onBeforePrint = useCallback((): Promise<void> => new Promise(resolve => {
-    const el = walkthroughPrintRef.current;
-    if (!el) { resolve(); return; }
-    const clone = el.cloneNode(true) as HTMLElement;
-    clone.style.cssText = `position:fixed;top:-9999px;left:0;width:${PRINT_W}px;visibility:hidden;`;
-    document.body.appendChild(clone);
-    const h = clone.scrollHeight;
-    document.body.removeChild(clone);
-    if (h > PRINT_H) el.style.zoom = String(PRINT_H / h);
+    if (walkthroughPrintRef.current) applyPrintZoom(walkthroughPrintRef.current, PRINT_W, PRINT_H);
     resolve();
   }), []);
 
   const onAfterPrint = useCallback(() => {
-    if (walkthroughPrintRef.current) walkthroughPrintRef.current.style.zoom = '';
+    if (walkthroughPrintRef.current) clearPrintZoom(walkthroughPrintRef.current);
   }, []);
 
   const printWalkthrough = useReactToPrint({ contentRef: walkthroughPrintRef, documentTitle: `${dance.title} - Walkthrough`, pageStyle: PAGE_STYLE_WALKTHROUGH, onBeforePrint, onAfterPrint });
@@ -128,7 +121,7 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave }: {
               </Box>
             </Box>
           ) : (
-            <Box ref={walkthroughPrintRef} sx={{ flex: 2, overflowY: 'auto', p: 3, minWidth: 0 }}>
+            <Box ref={walkthroughPrintRef} data-walkthrough-print sx={{ flex: 2, overflowY: 'auto', p: 3, minWidth: 0 }}>
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 2 }}>
                 <Typography variant='h5' className='print-dance-title' sx={{ fontWeight: 600, lineHeight: 1.2 }}>
                   {dance.title}

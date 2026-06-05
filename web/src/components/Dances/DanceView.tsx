@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 import { Box, Button, Divider, IconButton, Stack, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
@@ -17,13 +17,17 @@ import { useUndoActions } from '@/contexts/UndoContext';
 import { useNotify } from '@/hooks/useNotify';
 import { FiguresList } from './FiguresList';
 import { makeFiguresLabel } from './danceUtils';
-import { PAGE_STYLE_COMBINED, PAGE_STYLE_CHOREOGRAPHY } from './printStyles';
+import { PAGE_STYLE_COMBINED, PAGE_STYLE_CHOREOGRAPHY, applyPrintZoom, clearPrintZoom } from './printStyles';
 import { DancePrintPortals } from './DancePrintPortals';
 import { WalkthroughDialog } from './WalkthroughDialog';
 import { CuesDialog } from './CuesDialog';
 import type { CueGridData, Dance } from '@/lib/types/database';
 
 const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
+
+// Combined page margins: 0.25in top/bottom, 0.25in left, 3.5in right → 4.75 × 10.5 in content area at 96dpi
+const COMBINED_W = 4.75 * 96;
+const COMBINED_H = 10.5 * 96;
 
 export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }: { dance: Dance; onEdit: () => void; figureMode: 'choreography' | 'calling'; onFigureModeChange: (mode: 'choreography' | 'calling') => void }) => {
   const navigate = useNavigate();
@@ -58,7 +62,19 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
   const choreographyPrintRef = useRef<HTMLDivElement>(null);
   const combinedPrintRef = useRef<HTMLDivElement>(null);
   const printChoreography = useReactToPrint({ contentRef: choreographyPrintRef, documentTitle: dance.title, pageStyle: PAGE_STYLE_CHOREOGRAPHY });
-  const printCombined = useReactToPrint({ contentRef: combinedPrintRef, documentTitle: `${dance.title} - Combined`, pageStyle: PAGE_STYLE_COMBINED });
+
+  const onBeforePrintCombined = useCallback((): Promise<void> => new Promise(resolve => {
+    const el = combinedPrintRef.current?.querySelector<HTMLElement>('[data-walkthrough-print]');
+    if (el) applyPrintZoom(el, COMBINED_W, COMBINED_H);
+    resolve();
+  }), []);
+
+  const onAfterPrintCombined = useCallback(() => {
+    const el = combinedPrintRef.current?.querySelector<HTMLElement>('[data-walkthrough-print]');
+    if (el) clearPrintZoom(el);
+  }, []);
+
+  const printCombined = useReactToPrint({ contentRef: combinedPrintRef, documentTitle: `${dance.title} - Combined`, pageStyle: PAGE_STYLE_COMBINED, onBeforePrint: onBeforePrintCombined, onAfterPrint: onAfterPrintCombined });
 
   const choreographerNames = dance.dances_choreographers.map(dc => dc.choreographer.name).join(', ');
   const figuresLabel = makeFiguresLabel(dance);

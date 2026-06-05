@@ -1,5 +1,8 @@
+import { lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import type { RefObject } from 'react';
+
+const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 import { SECTIONS, COLS, INTRO_COLS, cellKey } from './cueGridConstants';
 import { PRINT_CUES_COMBINED } from './printStyles';
 import type { Dance, FigureItem, CueGridData } from '@/lib/types/database';
@@ -147,6 +150,18 @@ export const DancePrintPortals = ({
             <div style={{ height: 504, overflow: 'hidden', boxSizing: 'border-box' }}>
               <PrintCuesTable cues={cues} {...PRINT_CUES_COMBINED} />
             </div>
+            {dance.walkthrough && (
+              <div data-walkthrough-print style={{ pageBreakBefore: 'always', fontFamily: 'Georgia, serif', lineHeight: 1.4, color: 'black', fontSize: '11pt' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5em', marginBottom: '0.4em' }}>
+                  <div style={{ fontSize: '16pt', fontWeight: 'bold' }}>{title}</div>
+                  {figuresLabel && <div style={{ fontSize: '9pt', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{figuresLabel}</div>}
+                </div>
+                <hr style={{ border: 'none', borderTop: '1px solid black', margin: '0 0 0.6em 0' }} />
+                <Suspense fallback={null}>
+                  <RichTextEditor value={dance.walkthrough} editable={false} />
+                </Suspense>
+              </div>
+            )}
           </div>
         </div>,
         document.body
