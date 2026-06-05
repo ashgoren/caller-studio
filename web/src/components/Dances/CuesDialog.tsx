@@ -106,7 +106,13 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
         {isNarrow ? (
           /* Compact fullscreen: just close button + scaled cue grid (no edit on mobile) */
           <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0, p: 0.5 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, px: 1.5, pt: 0.5, pb: 0 }}>
+              <Box>
+                <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
+                {figuresLabel && (
+                  <Typography variant='body2' color='text.secondary'>{figuresLabel}</Typography>
+                )}
+              </Box>
               <Tooltip title='Close'>
                 <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
               </Tooltip>
