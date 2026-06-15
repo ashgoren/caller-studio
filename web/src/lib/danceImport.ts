@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
-import type { FigureItem } from '@/lib/types/database';
+import { parseDance } from '@/lib/callersBox';
 import type { CallersBoxData } from '@/lib/types/callers-box';
+import type { FigureItem } from '@/lib/types/database';
 
 type LookupItem = { id: number; name: string };
 
@@ -25,65 +26,24 @@ export const fetchAndResolveImport = async (
     throw new Error(body?.msg ?? error.message);
   }
 
-  const { Name, Authors, FormationBase, Direction, Progression, phrases } = data as CallersBoxData;
-
-  // Special case for Becket CCW, which is listed separately in our formations
-  const formation = FormationBase === 'Duple Minor - Becket' && Direction === 'CCW' ? 'Duple Minor - Becket CCW' : FormationBase;
+  const parsed = parseDance(data as CallersBoxData);
 
   const choreographerIds: number[] = [];
-  for (const author of Authors) {
-    const existing = lookups.choreographers.find(c => c.name.toLowerCase() === author.toLowerCase());
+  for (const name of parsed.choreographers) {
+    const existing = lookups.choreographers.find(c => c.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       choreographerIds.push(existing.id);
     } else {
-      const created = await createChoreographer(author);
+      const created = await createChoreographer(name);
       choreographerIds.push(created.id);
     }
   }
 
   return {
-    title: Name,
-    formation_id: lookups.formations.find(f => f.name.toLowerCase() === formation.toLowerCase())?.id ?? null,
-    progression_id: lookups.progressions.find(p => p.name.toLowerCase() === Progression?.toLowerCase())?.id ?? null,
+    title: parsed.title,
+    formation_id: lookups.formations.find(f => f.name.toLowerCase() === parsed.formation.toLowerCase())?.id ?? null,
+    progression_id: lookups.progressions.find(p => p.name.toLowerCase() === parsed.progression?.toLowerCase())?.id ?? null,
     choreographerIds,
-    figures: parsePhrases(phrases),
+    figures: parsed.figures,
   };
-};
-
-export const parsePhrases = (phrases: { name: string; figures: string[] }[]): FigureItem[] => {
-  const result: FigureItem[] = [];
-  for (const { name: phrase, figures } of phrases) {
-    for (const figure of figures) {
-      const match = figure.match(/^\((\d+)\) (.+)$/);
-      if (match) {
-        const [, beats, description] = match;
-        result.push({ id: crypto.randomUUID(), kind: 'figure', phrase, beats: Number(beats), description: normalizeRoles(description) });
-      } else if (figure.trim()) {
-        result.push({ id: crypto.randomUUID(), kind: 'note', text: figure });
-      }
-    }
-  }
-  return result;
-};
-
-const normalizeRoles = (description: string): string => {
-  // Replace full words first
-  let result = description
-    .replace(/\b(Men|men|Gents|gents)\b/g, match => match[0] === match[0].toUpperCase() ? 'Larks' : 'larks')
-    .replace(/\b(Ladies|ladies|Women|women)\b/g, match => match[0] === match[0].toUpperCase() ? 'Robins' : 'robins');
-
-  // Replace role-pair abbreviations inside semicolon-delimited parenthetical groups
-  // e.g. (PR;WL;NR;ML) → (PR;RL;NR;LL)
-  // Only matches 2-letter codes where first letter is W or M followed by a second uppercase letter
-  result = result.replace(/\(([^)]*;[^)]*)\)/g, segment =>
-    segment.replace(/\b([WM])([A-Z])\b/g, (_, role, pos) =>
-      (role === 'W' ? 'R' : 'L') + pos
-    )
-  );
-
-  return result;
-};
-
-export const isValidUrl = (url: string): boolean => {
-  return /ibiblio\.org\/contradance\/thecallersbox\/dance\.php\?id=\d+$/.test(url);
 };

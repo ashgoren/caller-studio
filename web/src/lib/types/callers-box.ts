@@ -1,3 +1,4 @@
+// If change this, update also in callersBox.ts
 export type CallersBoxData = {
   // request: string; // e.g. "http://www.ibiblio.org/contradance/thecallersbox/dance.php?id=17&format=JSON"
   // download_date: string; // ISO format

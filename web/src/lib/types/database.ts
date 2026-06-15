@@ -12,6 +12,7 @@ export type DanceTypeRow = Tables['dance_types']['Row'];
 export type FormationRow = Tables['formations']['Row'];
 export type ProgressionRow = Tables['progressions']['Row'];
 
+// If change this, update also in callersBox.ts
 export type FigureItem =
   | { id: string; kind: 'figure'; phrase: string; beats: number | null; description: string }
   | { id: string; kind: 'note'; text: string };
