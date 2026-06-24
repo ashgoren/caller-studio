@@ -161,7 +161,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
             </Box>
           </Box>
           {figuresLabel && (
-            <Typography variant='overline' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>{figuresLabel}</Typography>
+            <Typography variant='overline' sx={{ display: 'block', mb: 0.5, color: figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary', fontWeight: figuresLabel !== 'Improper' ? 700 : undefined }}>{figuresLabel}</Typography>
           )}
           {figures.length === 0 ? (
             <Typography color='text.disabled' sx={{ mt: 0.5 }}>—</Typography>

@@ -134,7 +134,7 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave }: {
                   {dance.title}
                 </Typography>
                 {figuresLabel && (
-                  <Typography variant='body2' color='text.secondary'>{figuresLabel}</Typography>
+                  <Typography variant='body2' sx={{ color: figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary', fontWeight: figuresLabel !== 'Improper' ? 700 : undefined }}>{figuresLabel}</Typography>
                 )}
               </Box>
               <Box sx={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: { xs: '0.9rem', sm: '1.05rem' }, lineHeight: 1.7 }}>
