@@ -120,23 +120,21 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
         PaperProps={isEditing || (callingFigures && !isNarrow) ? { sx: { height: '90vh' } } : undefined}
       >
         {isNarrow ? (
-          /* Compact fullscreen: just close button + scaled cue grid (no edit on mobile) */
-          <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, px: 1.5, pt: 0.5, pb: 0 }}>
-              <Box>
+          /* Compact fullscreen: centered content + absolute close button (no edit on mobile) */
+          <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+            <Tooltip title='Close'>
+              <IconButton size='small' onClick={onClose} sx={{ position: 'absolute', top: 8, right: 8 }}><CloseIcon fontSize='small' /></IconButton>
+            </Tooltip>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ textAlign: 'center' }}>
                 <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
                 {choreographerNames && (
                   <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
                 )}
                 {figuresLabel && (
-                  <Typography variant='body2' color='text.secondary'>{figuresLabel}</Typography>
+                  <Typography variant='body2' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined}>{figuresLabel}</Typography>
                 )}
               </Box>
-              <Tooltip title='Close'>
-                <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
-              </Tooltip>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 1.5, pt: 1, pb: 0.75 }}>
               <Box sx={{ border: 2, borderColor: 'primary.main', borderRadius: 2, px: 2.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1, letterSpacing: '0.02em', minWidth: 72 }}>
                   {formatTime(timerSeconds)}
@@ -152,10 +150,10 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
                   </IconButton>
                 </Tooltip>
               </Box>
-            </Box>
-            <Box sx={{ overflow: 'hidden', height: GRID_NATURAL_HEIGHT * cuesViewScale, flexShrink: 0 }}>
-              <Box sx={{ transform: `scale(${cuesViewScale})`, transformOrigin: 'top left', ml: '8px', width: GRID_NATURAL_WIDTH }}>
-                <CueGridView cues={cues} />
+              <Box sx={{ overflow: 'hidden', width: GRID_NATURAL_WIDTH * cuesViewScale, height: GRID_NATURAL_HEIGHT * cuesViewScale, flexShrink: 0 }}>
+                <Box sx={{ transform: `scale(${cuesViewScale})`, transformOrigin: 'top left', width: GRID_NATURAL_WIDTH }}>
+                  <CueGridView cues={cues} />
+                </Box>
               </Box>
             </Box>
           </DialogContent>
@@ -254,7 +252,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
                       <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic', mt: 0.25 }}>by {choreographerNames}</Typography>
                     )}
                     {figuresLabel && (
-                      <Typography variant='body2' color='text.secondary' sx={{ mt: 0.25 }}>{figuresLabel}</Typography>
+                      <Typography variant='body2' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined} sx={{ mt: 0.25 }}>{figuresLabel}</Typography>
                     )}
                   </Box>
                   <FiguresList figures={callingFigures} />
