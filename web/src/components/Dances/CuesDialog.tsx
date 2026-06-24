@@ -125,6 +125,9 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, px: 1.5, pt: 0.5, pb: 0 }}>
               <Box>
                 <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
+                {choreographerNames && (
+                  <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
+                )}
                 {figuresLabel && (
                   <Typography variant='body2' color='text.secondary'>{figuresLabel}</Typography>
                 )}
@@ -247,6 +250,9 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
                 <Box sx={{ flex: 1, overflowY: 'auto', p: 2, minWidth: 0 }}>
                   <Box sx={{ height: CELL_HEIGHT, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', pt: 0.5 }}>
                     <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
+                    {choreographerNames && (
+                      <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic', mt: 0.25 }}>by {choreographerNames}</Typography>
+                    )}
                     {figuresLabel && (
                       <Typography variant='body2' color='text.secondary' sx={{ mt: 0.25 }}>{figuresLabel}</Typography>
                     )}
