@@ -18,11 +18,12 @@ import { PAGE_STYLE_CUES, PRINT_CUES_CARD } from './printStyles';
 import { useUndoActions } from '@/contexts/UndoContext';
 import type { CueGridData, Dance } from '@/lib/types/database';
 
-export const CuesDialog = ({ open, onClose, dance, onSave }: {
+export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
   open: boolean;
   onClose: () => void;
   dance: Dance;
   onSave: (v: CueGridData | null) => Promise<void>;
+  autoStartTimer?: boolean;
 }) => {
   const isNarrow = useMediaQuery('(max-width: 900px)');
   const [windowWidth, setWindowWidth] = useState(() => window.innerWidth);
@@ -43,6 +44,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
   useEffect(() => {
     if (!open) { setIsEditing(false); setTimerRunning(false); setTimerSeconds(0); return; }
     if (!dance.cues || Object.keys(dance.cues.cells).length === 0) { setDraft(dance.cues ?? null); setIsEditing(true); }
+    if (autoStartTimer) setTimerRunning(true);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (timerRunning) {

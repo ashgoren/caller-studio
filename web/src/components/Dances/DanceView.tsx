@@ -36,6 +36,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
 
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [cuesOpen, setCuesOpen] = useState(false);
+  const [cuesAutoStart, setCuesAutoStart] = useState(false);
 
   const handleSaveWalkthrough = async (value: string) => {
     await updateDance({ id: dance.id, updates: { walkthrough: value } });
@@ -248,9 +249,9 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
 
       </Box>
 
-      <WalkthroughDialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} dance={dance} onSave={handleSaveWalkthrough} />
+      <WalkthroughDialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} dance={dance} onSave={handleSaveWalkthrough} onOpenCues={() => { setWalkthroughOpen(false); setCuesAutoStart(true); setCuesOpen(true); }} />
 
-      <CuesDialog open={cuesOpen} onClose={() => setCuesOpen(false)} dance={dance} onSave={handleSaveCues} />
+      <CuesDialog open={cuesOpen} onClose={() => { setCuesOpen(false); setCuesAutoStart(false); }} dance={dance} onSave={handleSaveCues} autoStartTimer={cuesAutoStart} />
 
       <DancePrintPortals
         dance={dance}

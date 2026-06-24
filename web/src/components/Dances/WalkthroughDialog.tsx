@@ -3,6 +3,7 @@ import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, Ic
 import PrintIcon from '@mui/icons-material/Print';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
+import GridOnIcon from '@mui/icons-material/GridOn';
 import { useReactToPrint } from 'react-to-print';
 import { PAGE_STYLE_WALKTHROUGH } from './printStyles';
 import { FiguresList } from './FiguresList';
@@ -16,11 +17,12 @@ const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').t
 const PRINT_W = 7.7 * 96;
 const PRINT_H = 10.2 * 96;
 
-export const WalkthroughDialog = ({ open, onClose, dance, onSave }: {
+export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: {
   open: boolean;
   onClose: () => void;
   dance: Dance;
   onSave: (v: string) => Promise<void>;
+  onOpenCues?: () => void;
 }) => {
   const isNarrow = useMediaQuery('(max-width: 900px)');
   const [isEditing, setIsEditing] = useState(false);
@@ -147,14 +149,18 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave }: {
         </Box>
 
       </DialogContent>
-      {isEditing && (
+      {isEditing ? (
         <DialogActions>
           <Button onClick={handleCancel} disabled={isSaving}>Cancel</Button>
           <Button variant='contained' onClick={handleSave} disabled={isSaving || !isDirty} color='secondary'>
             {isSaving ? <CircularProgress size={16} /> : 'Save'}
           </Button>
         </DialogActions>
-      )}
+      ) : onOpenCues ? (
+        <DialogActions>
+          <Button startIcon={<GridOnIcon />} onClick={onOpenCues} size='small'>Cue Sheet</Button>
+        </DialogActions>
+      ) : null}
     </Dialog>
   );
 };
