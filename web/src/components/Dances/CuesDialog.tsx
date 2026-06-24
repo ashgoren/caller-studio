@@ -4,6 +4,9 @@ import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, Ic
 import PrintIcon from '@mui/icons-material/Print';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
+import ReplayIcon from '@mui/icons-material/Replay';
 import { useReactToPrint } from 'react-to-print';
 import { GRID_NATURAL_WIDTH, GRID_NATURAL_HEIGHT, CELL_HEIGHT } from './cueGridConstants';
 import { CueGridView } from './CueGrid';
@@ -26,6 +29,9 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<CueGridData | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { setFormActive } = useUndoActions();
 
   useEffect(() => {
@@ -35,9 +41,17 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
   }, []);
 
   useEffect(() => {
-    if (!open) { setIsEditing(false); return; }
+    if (!open) { setIsEditing(false); setTimerRunning(false); setTimerSeconds(0); return; }
     if (!dance.cues || Object.keys(dance.cues.cells).length === 0) { setDraft(dance.cues ?? null); setIsEditing(true); }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (timerRunning) {
+      timerRef.current = setInterval(() => setTimerSeconds(s => s + 1), 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [timerRunning]);
   useEffect(() => {
     setFormActive(isEditing);
     return () => setFormActive(false);
@@ -68,6 +82,8 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
     }
     return groups;
   }, [figures]);
+
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
   const cuesPrintRef = useRef<HTMLDivElement>(null);
   const printCues = useReactToPrint({ contentRef: cuesPrintRef, documentTitle: `${dance.title} - Cues`, pageStyle: PAGE_STYLE_CUES });
@@ -116,6 +132,23 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
               <Tooltip title='Close'>
                 <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
               </Tooltip>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 1.5, pt: 1, pb: 0.75 }}>
+              <Box sx={{ border: 2, borderColor: 'primary.main', borderRadius: 2, px: 2.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1, letterSpacing: '0.02em', minWidth: 72 }}>
+                  {formatTime(timerSeconds)}
+                </Typography>
+                <Tooltip title={timerRunning ? 'Pause timer' : 'Start timer'}>
+                  <IconButton onClick={() => setTimerRunning(r => !r)}>
+                    {timerRunning ? <PauseIcon /> : <PlayArrowIcon />}
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Reset timer'>
+                  <IconButton onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>
+                    <ReplayIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </Box>
             <Box sx={{ overflow: 'hidden', height: GRID_NATURAL_HEIGHT * cuesViewScale, flexShrink: 0 }}>
               <Box sx={{ transform: `scale(${cuesViewScale})`, transformOrigin: 'top left', ml: '8px', width: GRID_NATURAL_WIDTH }}>
@@ -179,16 +212,35 @@ export const CuesDialog = ({ open, onClose, dance, onSave }: {
         ) : (
           /* View mode */
           <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, px: 1, py: 0.5, flexShrink: 0 }}>
-              <Tooltip title='Print cues'>
-                <IconButton size='small' onClick={() => printCues()}><PrintIcon fontSize='small' /></IconButton>
-              </Tooltip>
-              <Tooltip title='Edit cues'>
-                <IconButton size='small' onClick={handleStartEdit}><EditIcon fontSize='small' /></IconButton>
-              </Tooltip>
-              <Tooltip title='Close'>
-                <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
-              </Tooltip>
+            <Box sx={{ flexShrink: 0 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, px: 1, pt: 0.5 }}>
+                <Tooltip title='Print cues'>
+                  <IconButton size='small' onClick={() => printCues()}><PrintIcon fontSize='small' /></IconButton>
+                </Tooltip>
+                <Tooltip title='Edit cues'>
+                  <IconButton size='small' onClick={handleStartEdit}><EditIcon fontSize='small' /></IconButton>
+                </Tooltip>
+                <Tooltip title='Close'>
+                  <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
+                </Tooltip>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 1.5, pb: 1 }}>
+                <Box sx={{ border: 2, borderColor: 'primary.main', borderRadius: 2, px: 2.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1, letterSpacing: '0.02em', minWidth: 72 }}>
+                    {formatTime(timerSeconds)}
+                  </Typography>
+                  <Tooltip title={timerRunning ? 'Pause timer' : 'Start timer'}>
+                    <IconButton onClick={() => setTimerRunning(r => !r)}>
+                      {timerRunning ? <PauseIcon /> : <PlayArrowIcon />}
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title='Reset timer'>
+                    <IconButton onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>
+                      <ReplayIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
             </Box>
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: callingFigures ? { xs: 'column', md: 'row' } : 'row' }}>
               {callingFigures && (
