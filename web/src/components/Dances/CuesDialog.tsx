@@ -59,6 +59,15 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
     return () => setFormActive(false);
   }, [isEditing, setFormActive]);
 
+  useEffect(() => {
+    if (!open || !isNarrow) return;
+    const handler = (e: TouchEvent) => {
+      if (!(e.target as HTMLElement).closest('button')) e.preventDefault();
+    };
+    document.addEventListener('touchstart', handler, { passive: false });
+    return () => document.removeEventListener('touchstart', handler);
+  }, [open, isNarrow]);
+
   const cuesViewScale = isNarrow ? Math.min(1, (windowWidth - 16) / GRID_NATURAL_WIDTH) : 1;
   const cuesEditorScale = Math.min(1, (windowWidth - 96) / (GRID_NATURAL_WIDTH + 18));
 
@@ -119,11 +128,15 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
         maxWidth={isEditing || callingFigures ? 'lg' : 'sm'}
         fullWidth={isEditing || !!callingFigures}
         fullScreen={isNarrow}
-        PaperProps={isEditing || (callingFigures && !isNarrow) ? { sx: { height: '90vh' } } : undefined}
+        PaperProps={
+          isNarrow ? { sx: { userSelect: 'none', WebkitTouchCallout: 'none', WebkitTapHighlightColor: 'transparent' } } :
+          (isEditing || (callingFigures && !isNarrow)) ? { sx: { height: '90vh' } } :
+          undefined
+        }
       >
         {isNarrow ? (
           /* Compact fullscreen: centered content + absolute close button (no edit on mobile) */
-          <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+          <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', userSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'none' }}>
             <Tooltip title='Close'>
               <IconButton size='small' onClick={onClose} sx={{ position: 'absolute', top: 8, right: 8 }}><CloseIcon fontSize='small' /></IconButton>
             </Tooltip>
