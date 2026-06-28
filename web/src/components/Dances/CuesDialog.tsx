@@ -60,13 +60,13 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
   }, [isEditing, setFormActive]);
 
   useEffect(() => {
-    if (!open || !isNarrow) return;
+    if (!open || !isNarrow || isEditing) return;
     const handler = (e: TouchEvent) => {
       if (!(e.target as HTMLElement).closest('button')) e.preventDefault();
     };
     document.addEventListener('touchstart', handler, { passive: false });
     return () => document.removeEventListener('touchstart', handler);
-  }, [open, isNarrow]);
+  }, [open, isNarrow, isEditing]);
 
   const cuesViewScale = isNarrow ? Math.min(1, (windowWidth - 16) / GRID_NATURAL_WIDTH) : 1;
   const cuesEditorScale = Math.min(1, (windowWidth - 96) / (GRID_NATURAL_WIDTH + 18));

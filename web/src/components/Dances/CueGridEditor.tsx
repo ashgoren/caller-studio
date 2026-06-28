@@ -1,5 +1,6 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Box, Menu, MenuItem } from '@mui/material';
+import { createPortal } from 'react-dom';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Box, Menu, MenuItem, useMediaQuery } from '@mui/material';
 import { SECTIONS, COLS, INTRO_COLS, CELL_HEIGHT, CELL_FONT_SIZE, cellKey } from './cueGridConstants';
 import { CueColGroup } from './CueGrid';
 import type { CueGridData } from '@/lib/types/database';
@@ -100,6 +101,31 @@ const CueCell = ({ initialHtml, onCommit }: { initialHtml: string; onCommit: (ht
   );
 };
 
+// Floating toolbar button — prevents focus loss on both mouse and touch.
+const FmtBtn = ({ label, title, onAction, style }: {
+  label: string; title: string; onAction: () => void; style?: React.CSSProperties;
+}) => (
+  <Box
+    component='button'
+    title={title}
+    sx={{
+      border: 'none', background: 'none', cursor: 'pointer',
+      px: '9px', py: '7px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      lineHeight: 1, color: 'text.primary',
+      '&:hover': { bgcolor: 'action.hover' },
+      '&:active': { bgcolor: 'action.selected' },
+    }}
+    style={style}
+    onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
+    onTouchStart={(e: React.TouchEvent) => e.preventDefault()}
+    onTouchEnd={(e: React.TouchEvent) => { e.preventDefault(); onAction(); }}
+    onClick={onAction}
+  >
+    {label}
+  </Box>
+);
+
 export const CueGridEditor = ({
   value,
   onChange,
@@ -107,10 +133,66 @@ export const CueGridEditor = ({
   value: CueGridData | null;
   onChange: (v: CueGridData | null) => void;
 }) => {
+  const isNarrow = useMediaQuery('(max-width: 900px)');
   const cells = useMemo(() => value?.cells ?? {}, [value]);
   const separators = useMemo(() => new Set(value?.separators ?? []), [value]);
 
   const [menuState, setMenuState] = useState<{ x: number; y: number; key: string } | null>(null);
+
+  // Long-press separator toggle
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelLongPress = useCallback(() => {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+  }, []);
+
+  // Selection formatting popup
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [selPopup, setSelPopup] = useState<{ x: number; y: number } | null>(null);
+  const savedRange = useRef<Range | null>(null);
+
+  useEffect(() => {
+    const onSel = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.rangeCount || !editorRef.current) {
+        setSelPopup(null);
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      if (!editorRef.current.contains(range.commonAncestorContainer)) {
+        setSelPopup(null);
+        return;
+      }
+      savedRange.current = range.cloneRange();
+      if (!isNarrow) return;
+      const rect = range.getBoundingClientRect();
+      setSelPopup({ x: rect.left + rect.width / 2, y: rect.top });
+    };
+    document.addEventListener('selectionchange', onSel);
+    return () => document.removeEventListener('selectionchange', onSel);
+  }, []);
+
+  // Restore saved selection, run a formatting command, then re-save the range.
+  const applyCmd = useCallback((cmd: () => void) => {
+    const r = savedRange.current;
+    if (r) {
+      const sel = window.getSelection();
+      if (sel) { sel.removeAllRanges(); sel.addRange(r); }
+    }
+    cmd();
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed && sel.rangeCount) {
+      savedRange.current = sel.getRangeAt(0).cloneRange();
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      setSelPopup({ x: rect.left + rect.width / 2, y: rect.top });
+    }
+  }, []);
+
+  const applyFontSize = useCallback((delta: 1 | -1) => {
+    applyCmd(() => {
+      const current = parseInt(document.queryCommandValue('fontSize') || '3', 10);
+      document.execCommand('fontSize', false, String(Math.min(Math.max(current + delta, 2), 4)));
+    });
+  }, [applyCmd]);
 
   const writeBack = useCallback(
     (nextCells: Record<string, string>, nextSeps: Set<string>) => {
@@ -159,6 +241,17 @@ export const CueGridEditor = ({
           e.preventDefault();
           setMenuState({ x: e.clientX, y: e.clientY, key });
         } : undefined}
+        onTouchStart={!isLastCol ? () => {
+          longPressTimer.current = setTimeout(() => {
+            longPressTimer.current = null;
+            // Don't steal a text-selection gesture
+            const sel = window.getSelection();
+            if (sel && !sel.isCollapsed) return;
+            handleToggleSeparator(key);
+          }, 600);
+        } : undefined}
+        onTouchEnd={cancelLongPress}
+        onTouchMove={cancelLongPress}
       >
         <CueCell
           initialHtml={cells[key] ?? ''}
@@ -169,7 +262,7 @@ export const CueGridEditor = ({
   };
 
   return (
-    <Box>
+    <Box ref={editorRef}>
       <Box sx={{ overflowX: 'auto', border: 1, borderColor: 'divider', borderRadius: 1, p: 1, width: 'fit-content', maxWidth: '100%' }}>
         <Box component='table' sx={{
           borderCollapse: 'collapse',
@@ -223,6 +316,7 @@ export const CueGridEditor = ({
           </Box>
         </Box>
       </Box>
+
       <Menu
         open={!!menuState}
         onClose={() => setMenuState(null)}
@@ -233,6 +327,35 @@ export const CueGridEditor = ({
           {menuState && separators.has(menuState.key) ? 'Remove separator' : 'Add separator after cell'}
         </MenuItem>
       </Menu>
+
+      {selPopup && createPortal(
+        <Box sx={{
+          position: 'fixed',
+          top: selPopup.y - 6,
+          left: selPopup.x,
+          transform: 'translate(-50%, -100%)',
+          zIndex: 1500,
+          bgcolor: 'background.paper',
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 1,
+          boxShadow: 4,
+          display: 'flex',
+          alignItems: 'center',
+          overflow: 'hidden',
+        }}>
+          <FmtBtn label='B' title='Bold' onAction={() => applyCmd(() => document.execCommand('bold'))}
+            style={{ fontWeight: 700, fontSize: '0.875rem' }} />
+          <FmtBtn label='I' title='Italic' onAction={() => applyCmd(() => document.execCommand('italic'))}
+            style={{ fontStyle: 'italic', fontSize: '0.875rem' }} />
+          <Box sx={{ width: '1px', alignSelf: 'stretch', bgcolor: 'divider', my: '4px' }} />
+          <FmtBtn label='A' title='Smaller text' onAction={() => applyFontSize(-1)}
+            style={{ fontWeight: 700, fontSize: '0.625rem' }} />
+          <FmtBtn label='A' title='Larger text' onAction={() => applyFontSize(1)}
+            style={{ fontWeight: 700, fontSize: '1rem' }} />
+        </Box>,
+        document.body
+      )}
     </Box>
   );
 };
