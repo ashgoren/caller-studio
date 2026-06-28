@@ -28,7 +28,7 @@ const ValueInput = ({ rule, fields, onChange }: { rule: FieldRule; fields: Field
 
   if (inputType === 'boolean') {
     return (
-      <Select size='small' value={rule.value} onChange={e => onChange({ ...rule, value: e.target.value })} sx={{ width: 120 }}>
+      <Select size='small' value={rule.value} onChange={e => onChange({ ...rule, value: e.target.value })} sx={{ width: { xs: 100, sm: 120 } }}>
         <MenuItem value='true'>TRUE</MenuItem>
       </Select>
     );
@@ -67,7 +67,7 @@ const ValueInput = ({ rule, fields, onChange }: { rule: FieldRule; fields: Field
       type={inputType === 'number' ? 'number' : 'text'}
       value={rule.value}
       onChange={e => onChange({ ...rule, value: e.target.value })}
-      sx={{ width: 200 }}
+      sx={{ flex: '1 1 120px', maxWidth: { sm: 200 } }}
     />
   );
 };
@@ -90,7 +90,7 @@ export const RuleRow = ({ rule, fields, index, showFigures, onUpdate, onRemove }
 
   if (isFigureRule(rule)) {
     return (
-      <Box ref={ref as Ref<HTMLDivElement>} sx={{ display: 'flex', gap: { xs: 1, sm: 2 }, alignItems: 'center', py: 0.75, ...rowSx }}>
+      <Box ref={ref as Ref<HTMLDivElement>} sx={{ display: 'flex', gap: { xs: 1, sm: 2 }, alignItems: 'center', flexWrap: 'wrap', py: 0.75, ...rowSx }}>
         <Box ref={handleRef as Ref<HTMLDivElement>} sx={{ display: { xs: 'none', sm: 'flex' }, cursor: 'grab' }}>
           <DragIndicator sx={{ fontSize: 18, opacity: 0.5 }} />
         </Box>
@@ -105,16 +105,16 @@ export const RuleRow = ({ rule, fields, index, showFigures, onUpdate, onRemove }
               onUpdate({ ...nr, field: v, operator: getDefaultOperatorForType(fieldDef?.inputType ?? 'string') });
             }
           }}
-          sx={{ width: 150 }}
+          sx={{ width: { xs: 120, sm: 150 } }}
         >
           <MenuItem value='__figure__'>Figures</MenuItem>
           {fields.map(f => <MenuItem key={f.name} value={f.name}>{f.label}</MenuItem>)}
         </Select>
-        <Select size='small' value={rule.negate ? 'not' : 'has'} onChange={e => onUpdate({ ...rule, negate: e.target.value === 'not' })} sx={{ width: 110 }}>
+        <Select size='small' value={rule.negate ? 'not' : 'has'} onChange={e => onUpdate({ ...rule, negate: e.target.value === 'not' })} sx={{ width: { xs: 90, sm: 110 } }}>
           <MenuItem value='has'>has</MenuItem>
           <MenuItem value='not'>has no</MenuItem>
         </Select>
-        <Select size='small' value={rule.phrase} displayEmpty onChange={e => onUpdate({ ...rule, phrase: e.target.value })} sx={{ width: 130 }}>
+        <Select size='small' value={rule.phrase} displayEmpty onChange={e => onUpdate({ ...rule, phrase: e.target.value })} sx={{ width: { xs: 110, sm: 130 } }}>
           <MenuItem value=''>Any phrase</MenuItem>
           {PHRASES.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
         </Select>
@@ -125,7 +125,7 @@ export const RuleRow = ({ rule, fields, index, showFigures, onUpdate, onRemove }
           slotProps={{ input: { inputProps: { min: 0, max: 16 } } }}
           value={rule.beats ?? ''}
           onChange={e => onUpdate({ ...rule, beats: e.target.value === '' ? null : Number(e.target.value) })}
-          sx={{ width: 90 }}
+          sx={{ width: { xs: 75, sm: 90 } }}
         />
         <TextField
           size='small'
@@ -163,7 +163,7 @@ export const RuleRow = ({ rule, fields, index, showFigures, onUpdate, onRemove }
             onUpdate({ ...rule, field: v, operator: getDefaultOperatorForType(fd?.inputType ?? 'string'), value: '' });
           }
         }}
-        sx={{ width: 150 }}
+        sx={{ width: { xs: 140, sm: 150 } }}
       >
         <MenuItem value='' disabled><em>Select field</em></MenuItem>
         {showFigures && <MenuItem value='__figure__'>Figures</MenuItem>}
@@ -174,7 +174,7 @@ export const RuleRow = ({ rule, fields, index, showFigures, onUpdate, onRemove }
           size='small'
           value={rule.operator}
           onChange={e => onUpdate({ ...rule, operator: e.target.value, value: '' })}
-          sx={{ width: 180 }}
+          sx={{ width: { xs: 150, sm: 180 } }}
         >
           {fieldOperators.map(op => <MenuItem key={op.name} value={op.name}>{op.label}</MenuItem>)}
         </Select>
