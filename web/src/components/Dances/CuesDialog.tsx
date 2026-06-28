@@ -130,50 +130,12 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
         fullScreen={isNarrow}
         PaperProps={
           isNarrow ? { sx: { userSelect: 'none', WebkitTouchCallout: 'none', WebkitTapHighlightColor: 'transparent' } } :
-          (isEditing || (callingFigures && !isNarrow)) ? { sx: { height: '90vh' } } :
+          (isEditing || callingFigures) ? { sx: { height: '90vh' } } :
           undefined
         }
       >
-        {isNarrow ? (
-          /* Compact fullscreen: centered content + absolute close button (no edit on mobile) */
-          <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', userSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'none' }}>
-            <Tooltip title='Close'>
-              <IconButton size='small' onClick={onClose} sx={{ position: 'absolute', top: 8, right: 8 }}><CloseIcon fontSize='small' /></IconButton>
-            </Tooltip>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
-                {choreographerNames && (
-                  <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
-                )}
-                {figuresLabel && (
-                  <Typography variant='body2' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined}>{figuresLabel}</Typography>
-                )}
-              </Box>
-              <Box sx={{ border: 2, borderColor: 'primary.main', borderRadius: 2, px: 2.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1, letterSpacing: '0.02em', minWidth: 72 }}>
-                  {formatTime(timerSeconds)}
-                </Typography>
-                <Tooltip title={timerRunning ? 'Pause timer' : 'Start timer'}>
-                  <IconButton onClick={() => setTimerRunning(r => !r)}>
-                    {timerRunning ? <PauseIcon /> : <PlayArrowIcon />}
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title='Reset timer'>
-                  <IconButton onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>
-                    <ReplayIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-              <Box sx={{ overflow: 'hidden', width: GRID_NATURAL_WIDTH * cuesViewScale, height: GRID_NATURAL_HEIGHT * cuesViewScale, flexShrink: 0 }}>
-                <Box sx={{ transform: `scale(${cuesViewScale})`, transformOrigin: 'top left', width: GRID_NATURAL_WIDTH }}>
-                  <CueGridView cues={cues} />
-                </Box>
-              </Box>
-            </Box>
-          </DialogContent>
-        ) : isEditing ? (
-          /* Edit mode */
+        {isEditing ? (
+          /* Edit mode — available on all screen sizes */
           <>
           <DialogContent sx={{ display: 'flex', gap: 3, overflow: 'hidden', p: 0, flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', gap: 3, flex: 1, overflow: 'hidden', px: 2, pt: 2, pb: 2 }}>
@@ -225,8 +187,53 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
             </Button>
           </DialogActions>
           </>
+        ) : isNarrow ? (
+          /* Compact fullscreen view mode (mobile/tablet) */
+          <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'none' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, px: 1, py: 0.5, flexShrink: 0 }}>
+              <Tooltip title='Edit cues'>
+                <IconButton size='small' onClick={handleStartEdit}><EditIcon fontSize='small' /></IconButton>
+              </Tooltip>
+              <Tooltip title='Close'>
+                <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
+              </Tooltip>
+            </Box>
+            <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
+                {choreographerNames && (
+                  <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
+                )}
+                {figuresLabel && (
+                  <Typography variant='body2' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined}>{figuresLabel}</Typography>
+                )}
+              </Box>
+              <Box sx={{ border: 2, borderColor: 'primary.main', borderRadius: 2, px: 2.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1, letterSpacing: '0.02em', minWidth: 72 }}>
+                  {formatTime(timerSeconds)}
+                </Typography>
+                <Tooltip title={timerRunning ? 'Pause timer' : 'Start timer'}>
+                  <IconButton onClick={() => setTimerRunning(r => !r)}>
+                    {timerRunning ? <PauseIcon /> : <PlayArrowIcon />}
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Reset timer'>
+                  <IconButton onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>
+                    <ReplayIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Box sx={{ overflow: 'hidden', width: GRID_NATURAL_WIDTH * cuesViewScale, height: GRID_NATURAL_HEIGHT * cuesViewScale, flexShrink: 0 }}>
+                <Box sx={{ transform: `scale(${cuesViewScale})`, transformOrigin: 'top left', width: GRID_NATURAL_WIDTH }}>
+                  <CueGridView cues={cues} />
+                </Box>
+              </Box>
+            </Box>
+            </Box>
+          </DialogContent>
         ) : (
-          /* View mode */
+          /* Desktop view mode */
           <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <Box sx={{ flexShrink: 0 }}>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, px: 1, pt: 0.5 }}>
