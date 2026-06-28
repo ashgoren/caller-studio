@@ -69,7 +69,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
   }, [open, isNarrow, isEditing]);
 
   const cuesViewScale = isNarrow ? Math.min(1, (windowWidth - 16) / GRID_NATURAL_WIDTH) : 1;
-  const cuesEditorScale = Math.min(1, (windowWidth - 96) / (GRID_NATURAL_WIDTH + 18));
+  const cuesEditorScale = Math.min(1, (windowWidth - (isNarrow ? 32 : 96)) / (GRID_NATURAL_WIDTH + 18));
 
   const { cues, title } = dance;
   const hasCues = !!cues && Object.keys(cues.cells).length > 0;
