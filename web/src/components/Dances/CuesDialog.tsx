@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, IconButton, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -111,8 +111,15 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
     return groups;
   }, [figures]);
 
+  // react-to-print focuses its hidden print iframe before printing; browsers don't reliably
+  // hand focus back afterward, which breaks Escape-to-close. Force focus back into the dialog.
+  const dialogContentRef = useRef<HTMLDivElement>(null);
+  const restoreFocusAfterPrint = useCallback(() => {
+    dialogContentRef.current?.focus({ preventScroll: true });
+  }, []);
+
   const cuesPrintRef = useRef<HTMLDivElement>(null);
-  const printCues = useReactToPrint({ contentRef: cuesPrintRef, documentTitle: `${dance.title} - Cues`, pageStyle: PAGE_STYLE_CUES });
+  const printCues = useReactToPrint({ contentRef: cuesPrintRef, documentTitle: `${dance.title} - Cues`, pageStyle: PAGE_STYLE_CUES, onAfterPrint: restoreFocusAfterPrint });
 
   const isDirty = JSON.stringify(draft) !== JSON.stringify(dance.cues ?? null);
 
@@ -206,7 +213,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
           </>
         ) : isNarrow ? (
           /* Compact fullscreen view mode (mobile/tablet) */
-          <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'none' }}>
+          <DialogContent ref={dialogContentRef} tabIndex={-1} sx={{ p: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'none', '&:focus': { outline: 'none' } }}>
             {headerIcons}
             <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
@@ -222,7 +229,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
           </DialogContent>
         ) : (
           /* Desktop view mode */
-          <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <DialogContent ref={dialogContentRef} tabIndex={-1} sx={{ p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', '&:focus': { outline: 'none' } }}>
             <Box sx={{ flexShrink: 0 }}>
               {headerIcons}
               <Box sx={{ px: 1.5, pb: 0.5 }}>

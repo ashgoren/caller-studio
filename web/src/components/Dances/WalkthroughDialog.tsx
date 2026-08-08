@@ -54,8 +54,13 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
     resolve();
   }), []);
 
+  // react-to-print focuses its hidden print iframe before printing; browsers don't reliably
+  // hand focus back afterward, which breaks Escape-to-close. Force focus back into the dialog.
   const onAfterPrint = useCallback(() => {
-    if (walkthroughPrintRef.current) walkthroughPrintRef.current.style.zoom = '';
+    if (walkthroughPrintRef.current) {
+      walkthroughPrintRef.current.style.zoom = '';
+      walkthroughPrintRef.current.focus({ preventScroll: true });
+    }
   }, []);
 
   const printWalkthrough = useReactToPrint({ contentRef: walkthroughPrintRef, documentTitle: `${dance.title} - Walkthrough`, pageStyle: PAGE_STYLE_WALKTHROUGH, onBeforePrint, onAfterPrint });
@@ -127,7 +132,7 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
               </Box>
             </Box>
           ) : (
-            <Box ref={walkthroughPrintRef} sx={{ flex: 2, overflowY: 'auto', p: 3, minWidth: 0 }}>
+            <Box ref={walkthroughPrintRef} tabIndex={-1} sx={{ flex: 2, overflowY: 'auto', p: 3, minWidth: 0, '&:focus': { outline: 'none' } }}>
               <Box sx={{ mb: 2 }}>
                 <DanceHeaderLine dance={dance} variant='h5' titleClassName='print-dance-title' />
               </Box>
