@@ -5,6 +5,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import GridOnIcon from '@mui/icons-material/GridOn';
 import { useReactToPrint } from 'react-to-print';
+import type { Editor } from '@tiptap/react';
 import { PAGE_STYLE_WALKTHROUGH } from './printStyles';
 import { FiguresList } from './FiguresList';
 import { makeFiguresLabel } from './danceUtils';
@@ -12,6 +13,7 @@ import { useUndoActions } from '@/contexts/UndoContext';
 import type { Dance } from '@/lib/types/database';
 
 const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
+const RichTextToolbar = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextToolbar })));
 
 // Page content area: 8.5in - 2×0.4in margin = 7.7in × 10.2in, at 96px/in
 const PRINT_W = 7.7 * 96;
@@ -28,6 +30,7 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [editor, setEditor] = useState<Editor | null>(null);
   const { setFormActive } = useUndoActions();
 
   const walkthroughPrintRef = useRef<HTMLDivElement>(null);
@@ -60,10 +63,11 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
   const printWalkthrough = useReactToPrint({ contentRef: walkthroughPrintRef, documentTitle: `${dance.title} - Walkthrough`, pageStyle: PAGE_STYLE_WALKTHROUGH, onBeforePrint, onAfterPrint });
 
   const figuresLabel = makeFiguresLabel(dance);
+  const choreographerNames = dance.dances_choreographers.map(dc => dc.choreographer.name).join(', ');
   const callingFigures = (dance.calling_figures && dance.calling_figures.length > 0)
     ? dance.calling_figures
     : (dance.figures && dance.figures.length > 0 ? dance.figures : null);
-  const showColumns = !!(callingFigures && !isNarrow);
+  const showColumns = !!callingFigures && !isNarrow;
 
   const isDirty = draft !== (dance.walkthrough ?? '');
 
@@ -90,11 +94,9 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
     <Dialog
       open={open}
       onClose={() => { if (!isEditing) onClose(); }}
-      fullWidth
-      maxWidth={showColumns ? 'xl' : 'md'}
-      fullScreen={isNarrow}
+      fullScreen
     >
-      <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: isNarrow ? '100%' : undefined }}>
+      <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
 
         {/* Toolbar — view mode only */}
         {!isEditing && (
@@ -123,20 +125,37 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
 
           {isEditing ? (
             <Box sx={{ flex: 2, overflow: 'hidden', display: 'flex', flexDirection: 'column', p: 2, minWidth: 0 }}>
+              <Box sx={{ mb: 1, flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 0.75, minWidth: 0 }}>
+                  <Typography variant='h6' component='span' sx={{ fontWeight: 700, lineHeight: 1.2 }}>{dance.title}</Typography>
+                  {choreographerNames && (
+                    <Typography variant='body2' component='span' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
+                  )}
+                  {figuresLabel && (
+                    <Typography variant='body2' component='span' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined}>({figuresLabel})</Typography>
+                  )}
+                </Box>
+                <Suspense fallback={null}>
+                  <RichTextToolbar editor={editor} />
+                </Suspense>
+              </Box>
               <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
                 <Suspense fallback={<CircularProgress size={24} />}>
-                  <RichTextEditor value={draft} onChange={setDraft} underline={false} autoFocus />
+                  <RichTextEditor value={draft} onChange={setDraft} underline={false} autoFocus toolbar={false} onEditorReady={setEditor} />
                 </Suspense>
               </Box>
             </Box>
           ) : (
             <Box ref={walkthroughPrintRef} sx={{ flex: 2, overflowY: 'auto', p: 3, minWidth: 0 }}>
-              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 2 }}>
-                <Typography variant='h5' className='print-dance-title' sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+              <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 0.75 }}>
+                <Typography variant='h5' component='span' className='print-dance-title' sx={{ fontWeight: 700, lineHeight: 1.2 }}>
                   {dance.title}
                 </Typography>
+                {choreographerNames && (
+                  <Typography variant='body2' component='span' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
+                )}
                 {figuresLabel && (
-                  <Typography variant='body2' sx={{ color: figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary', fontWeight: figuresLabel !== 'Improper' ? 700 : undefined }}>{figuresLabel}</Typography>
+                  <Typography variant='body2' component='span' sx={{ color: figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary', fontWeight: figuresLabel !== 'Improper' ? 700 : undefined }}>({figuresLabel})</Typography>
                 )}
               </Box>
               <Box sx={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: { xs: '0.9rem', sm: '1.05rem' }, lineHeight: 1.7 }}>

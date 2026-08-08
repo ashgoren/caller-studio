@@ -125,20 +125,25 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
       <Dialog
         open={open}
         onClose={() => { if (!isEditing) onClose(); }}
-        maxWidth={isEditing || callingFigures ? 'lg' : 'sm'}
-        fullWidth={isEditing || !!callingFigures}
-        fullScreen={isNarrow}
+        fullScreen
         PaperProps={
-          isNarrow ? { sx: { userSelect: 'none', WebkitTouchCallout: 'none', WebkitTapHighlightColor: 'transparent' } } :
-          (isEditing || callingFigures) ? { sx: { height: '90vh' } } :
-          undefined
+          isNarrow ? { sx: { userSelect: 'none', WebkitTouchCallout: 'none', WebkitTapHighlightColor: 'transparent' } } : undefined
         }
       >
         {isEditing ? (
           /* Edit mode — available on all screen sizes */
           <>
           <DialogContent sx={{ display: 'flex', gap: 3, overflow: 'hidden', p: 0, flexDirection: 'column' }}>
-            <Box sx={{ display: 'flex', gap: 3, flex: 1, overflow: 'hidden', px: 2, pt: 2, pb: 2 }}>
+            <Box sx={{ px: 2, pt: 2 }}>
+              <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
+              {choreographerNames && (
+                <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
+              )}
+              {figuresLabel && (
+                <Typography variant='body2' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined}>{figuresLabel}</Typography>
+              )}
+            </Box>
+            <Box sx={{ display: 'flex', gap: 3, flex: 1, overflow: 'hidden', px: 2, pb: 2 }}>
               {/* Figures reference */}
               <Box sx={{ flexShrink: 0, overflowY: 'auto', pr: 2, '@media (max-width: 1011px)': { display: 'none' } }}>
                 {dance.figures.length === 0 ? (
@@ -247,6 +252,15 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
                   <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
                 </Tooltip>
               </Box>
+              <Box sx={{ px: 1.5, pb: 0.5 }}>
+                <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
+                {choreographerNames && (
+                  <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
+                )}
+                {figuresLabel && (
+                  <Typography variant='body2' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined}>{figuresLabel}</Typography>
+                )}
+              </Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 1.5, pb: 1 }}>
                 <Box sx={{ border: 2, borderColor: 'primary.main', borderRadius: 2, px: 2.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1, letterSpacing: '0.02em', minWidth: 72 }}>
@@ -268,15 +282,6 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: callingFigures ? { xs: 'column', md: 'row' } : 'row' }}>
               {callingFigures && (
                 <Box sx={{ flex: 1, overflowY: 'auto', p: 2, minWidth: 0 }}>
-                  <Box sx={{ height: CELL_HEIGHT, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', pt: 0.5 }}>
-                    <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
-                    {choreographerNames && (
-                      <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic', mt: 0.25 }}>by {choreographerNames}</Typography>
-                    )}
-                    {figuresLabel && (
-                      <Typography variant='body2' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined} sx={{ mt: 0.25 }}>{figuresLabel}</Typography>
-                    )}
-                  </Box>
                   <FiguresList figures={callingFigures} />
                 </Box>
               )}

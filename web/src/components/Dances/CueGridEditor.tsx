@@ -1,6 +1,6 @@
-import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Box, Menu, MenuItem, useMediaQuery } from '@mui/material';
+import { Box, Menu, MenuItem } from '@mui/material';
+import BorderRightIcon from '@mui/icons-material/BorderRight';
 import { SECTIONS, COLS, INTRO_COLS, CELL_HEIGHT, CELL_FONT_SIZE, cellKey } from './cueGridConstants';
 import { CueColGroup } from './CueGrid';
 import type { CueGridData } from '@/lib/types/database';
@@ -101,30 +101,36 @@ const CueCell = ({ initialHtml, onCommit }: { initialHtml: string; onCommit: (ht
   );
 };
 
-// Floating toolbar button — prevents focus loss on both mouse and touch.
-const FmtBtn = ({ label, title, onAction, style }: {
-  label: string; title: string; onAction: () => void; style?: React.CSSProperties;
-}) => (
-  <Box
-    component='button'
-    title={title}
-    sx={{
-      border: 'none', background: 'none', cursor: 'pointer',
-      px: '9px', py: '7px',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      lineHeight: 1, color: 'text.primary',
-      '&:hover': { bgcolor: 'action.hover' },
-      '&:active': { bgcolor: 'action.selected' },
-    }}
-    style={style}
-    onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-    onTouchStart={(e: React.TouchEvent) => e.preventDefault()}
-    onTouchEnd={(e: React.TouchEvent) => { e.preventDefault(); onAction(); }}
-    onClick={onAction}
-  >
-    {label}
-  </Box>
-);
+// Toolbar button — prevents focus loss on both mouse and touch.
+const FmtBtn = ({ label, title, onAction, style, active, disabled }: {
+  label: React.ReactNode; title: string; onAction: () => void; style?: React.CSSProperties; active?: boolean; disabled?: boolean;
+}) => {
+  const handleAction = () => { if (!disabled) onAction(); };
+  return (
+    <Box
+      component='button'
+      title={title}
+      disabled={disabled}
+      sx={{
+        border: 'none', background: 'none', cursor: 'pointer',
+        px: '9px', py: '7px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        lineHeight: 1, color: 'text.primary', borderRadius: 0.5,
+        '&:hover': { bgcolor: 'action.hover' },
+        '&:active': { bgcolor: 'action.selected' },
+        ...(active && { bgcolor: 'action.selected', color: 'primary.main' }),
+        '&:disabled': { color: 'text.disabled', cursor: 'default', bgcolor: 'transparent' },
+      }}
+      style={style}
+      onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
+      onTouchStart={(e: React.TouchEvent) => e.preventDefault()}
+      onTouchEnd={(e: React.TouchEvent) => { e.preventDefault(); handleAction(); }}
+      onClick={handleAction}
+    >
+      {label}
+    </Box>
+  );
+};
 
 export const CueGridEditor = ({
   value,
@@ -133,11 +139,11 @@ export const CueGridEditor = ({
   value: CueGridData | null;
   onChange: (v: CueGridData | null) => void;
 }) => {
-  const isNarrow = useMediaQuery('(max-width: 900px)');
   const cells = useMemo(() => value?.cells ?? {}, [value]);
   const separators = useMemo(() => new Set(value?.separators ?? []), [value]);
 
   const [menuState, setMenuState] = useState<{ x: number; y: number; key: string } | null>(null);
+  const [focusedKey, setFocusedKey] = useState<string | null>(null);
 
   // Long-press separator toggle
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -145,31 +151,31 @@ export const CueGridEditor = ({
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   }, []);
 
-  // Selection formatting popup
+  // Formatting commands apply to the most recent text selection within the grid.
   const editorRef = useRef<HTMLDivElement>(null);
-  const [selPopup, setSelPopup] = useState<{ x: number; y: number } | null>(null);
   const savedRange = useRef<Range | null>(null);
+  const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, fontSize: 3 });
+
+  const refreshActiveFormats = useCallback(() => {
+    const sel = window.getSelection();
+    const inGrid = !!sel && !!sel.rangeCount && !!editorRef.current && editorRef.current.contains(sel.getRangeAt(0).commonAncestorContainer);
+    setActiveFormats(inGrid
+      ? { bold: document.queryCommandState('bold'), italic: document.queryCommandState('italic'), fontSize: parseInt(document.queryCommandValue('fontSize') || '3', 10) }
+      : { bold: false, italic: false, fontSize: 3 });
+  }, []);
 
   useEffect(() => {
     const onSel = () => {
+      refreshActiveFormats();
       const sel = window.getSelection();
-      if (!sel || sel.isCollapsed || !sel.rangeCount || !editorRef.current) {
-        setSelPopup(null);
-        return;
-      }
+      if (!sel || sel.isCollapsed || !sel.rangeCount || !editorRef.current) return;
       const range = sel.getRangeAt(0);
-      if (!editorRef.current.contains(range.commonAncestorContainer)) {
-        setSelPopup(null);
-        return;
-      }
+      if (!editorRef.current.contains(range.commonAncestorContainer)) return;
       savedRange.current = range.cloneRange();
-      if (!isNarrow) return;
-      const rect = range.getBoundingClientRect();
-      setSelPopup({ x: rect.left + rect.width / 2, y: rect.top });
     };
     document.addEventListener('selectionchange', onSel);
     return () => document.removeEventListener('selectionchange', onSel);
-  }, []);
+  }, [refreshActiveFormats]);
 
   // Restore saved selection, run a formatting command, then re-save the range.
   const applyCmd = useCallback((cmd: () => void) => {
@@ -182,16 +188,12 @@ export const CueGridEditor = ({
     const sel = window.getSelection();
     if (sel && !sel.isCollapsed && sel.rangeCount) {
       savedRange.current = sel.getRangeAt(0).cloneRange();
-      const rect = sel.getRangeAt(0).getBoundingClientRect();
-      setSelPopup({ x: rect.left + rect.width / 2, y: rect.top });
     }
-  }, []);
+    refreshActiveFormats();
+  }, [refreshActiveFormats]);
 
-  const applyFontSize = useCallback((delta: 1 | -1) => {
-    applyCmd(() => {
-      const current = parseInt(document.queryCommandValue('fontSize') || '3', 10);
-      document.execCommand('fontSize', false, String(Math.min(Math.max(current + delta, 2), 4)));
-    });
+  const setFontSize = useCallback((size: 2 | 3 | 4) => {
+    applyCmd(() => document.execCommand('fontSize', false, String(size)));
   }, [applyCmd]);
 
   const writeBack = useCallback(
@@ -252,6 +254,8 @@ export const CueGridEditor = ({
         } : undefined}
         onTouchEnd={cancelLongPress}
         onTouchMove={cancelLongPress}
+        onFocus={() => setFocusedKey(key)}
+        onBlur={() => setFocusedKey(k => k === key ? null : k)}
       >
         <CueCell
           initialHtml={cells[key] ?? ''}
@@ -261,8 +265,38 @@ export const CueGridEditor = ({
     );
   };
 
+  const focusedCol = focusedKey ? parseInt(focusedKey.split(':')[2], 10) : null;
+  const canToggleSeparator = focusedKey != null && focusedCol !== COLS - 1;
+  const focusedHasSep = !!focusedKey && separators.has(focusedKey);
+
   return (
     <Box ref={editorRef}>
+      <Box sx={{
+        display: 'flex', alignItems: 'center', gap: 0.25, mb: 1, p: 0.5,
+        width: 'fit-content',
+        border: 1, borderColor: 'divider', borderRadius: 1,
+        bgcolor: 'background.paper', boxShadow: 1,
+      }}>
+        <FmtBtn label='B' title='Bold' active={activeFormats.bold} onAction={() => applyCmd(() => document.execCommand('bold'))}
+          style={{ fontWeight: 700, fontSize: '0.875rem' }} />
+        <FmtBtn label='I' title='Italic' active={activeFormats.italic} onAction={() => applyCmd(() => document.execCommand('italic'))}
+          style={{ fontStyle: 'italic', fontSize: '0.875rem' }} />
+        <Box sx={{ width: '1px', height: 20, bgcolor: 'divider', mx: 1 }} />
+        <FmtBtn label='A' title='Small text' active={activeFormats.fontSize === 2} onAction={() => setFontSize(2)}
+          style={{ fontWeight: 700, fontSize: '0.625rem' }} />
+        <FmtBtn label='A' title='Normal text' active={activeFormats.fontSize === 3} onAction={() => setFontSize(3)}
+          style={{ fontWeight: 700, fontSize: '0.8125rem' }} />
+        <FmtBtn label='A' title='Large text' active={activeFormats.fontSize === 4} onAction={() => setFontSize(4)}
+          style={{ fontWeight: 700, fontSize: '1rem' }} />
+        <Box sx={{ width: '1px', height: 20, bgcolor: 'divider', mx: 1 }} />
+        <FmtBtn
+          label={<BorderRightIcon fontSize='small' />}
+          title={!focusedKey ? 'Select a cell to toggle a separator' : focusedHasSep ? 'Remove separator after cell' : 'Add separator after cell'}
+          active={focusedHasSep}
+          disabled={!canToggleSeparator}
+          onAction={() => { if (focusedKey) handleToggleSeparator(focusedKey); }}
+        />
+      </Box>
       <Box sx={{ overflowX: 'auto', border: 1, borderColor: 'divider', borderRadius: 1, p: 1, width: 'fit-content', maxWidth: '100%' }}>
         <Box component='table' sx={{
           borderCollapse: 'collapse',
@@ -327,35 +361,6 @@ export const CueGridEditor = ({
           {menuState && separators.has(menuState.key) ? 'Remove separator' : 'Add separator after cell'}
         </MenuItem>
       </Menu>
-
-      {selPopup && createPortal(
-        <Box sx={{
-          position: 'fixed',
-          top: selPopup.y - 6,
-          left: selPopup.x,
-          transform: 'translate(-50%, -100%)',
-          zIndex: 1500,
-          bgcolor: 'background.paper',
-          border: 1,
-          borderColor: 'divider',
-          borderRadius: 1,
-          boxShadow: 4,
-          display: 'flex',
-          alignItems: 'center',
-          overflow: 'hidden',
-        }}>
-          <FmtBtn label='B' title='Bold' onAction={() => applyCmd(() => document.execCommand('bold'))}
-            style={{ fontWeight: 700, fontSize: '0.875rem' }} />
-          <FmtBtn label='I' title='Italic' onAction={() => applyCmd(() => document.execCommand('italic'))}
-            style={{ fontStyle: 'italic', fontSize: '0.875rem' }} />
-          <Box sx={{ width: '1px', alignSelf: 'stretch', bgcolor: 'divider', my: '4px' }} />
-          <FmtBtn label='A' title='Smaller text' onAction={() => applyFontSize(-1)}
-            style={{ fontWeight: 700, fontSize: '0.625rem' }} />
-          <FmtBtn label='A' title='Larger text' onAction={() => applyFontSize(1)}
-            style={{ fontWeight: 700, fontSize: '1rem' }} />
-        </Box>,
-        document.body
-      )}
     </Box>
   );
 };
