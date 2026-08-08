@@ -4,6 +4,13 @@ type DanceLike = {
   progression?: { name: string } | null;
 };
 
+type ChoreographedDanceLike = {
+  dances_choreographers: { choreographer: { name: string } }[];
+};
+
+export const makeChoreographerNames = (dance: ChoreographedDanceLike) =>
+  dance.dances_choreographers.map(dc => dc.choreographer.name).join(', ');
+
 export const makeFiguresLabel = (dance: DanceLike) => [
   dance.dance_type?.name?.toLowerCase() !== 'contra' ? dance.dance_type?.name : null,
   dance.formation?.name

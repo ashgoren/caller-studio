@@ -3,6 +3,7 @@ import type { FilterGroup } from '@/lib/types/fieldFilter';
 import { ExternalLink } from '@/components/shared';
 import { TooltipCell } from '@/components/TooltipCell';
 import { RelationCell } from '@/components/RelationCell';
+import { makeChoreographerNames } from './danceUtils';
 import type { MRT_ColumnDef } from 'material-react-table'
 import type { Dance, DanceInsert } from '@/lib/types/database';
 import '@tanstack/react-table';
@@ -65,7 +66,7 @@ export const columns: MRT_ColumnDef<Dance>[] = [
     enableColumnFilter: false,
     size: 200,
     minSize: 170,
-    Cell: ({ row }) => row.original.dances_choreographers.map(dc => dc.choreographer.name).join(', '),
+    Cell: ({ row }) => makeChoreographerNames(row.original),
     meta: { inputType: 'relation' },
   },
   {

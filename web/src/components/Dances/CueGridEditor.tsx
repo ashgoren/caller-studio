@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Box, Menu, MenuItem } from '@mui/material';
 import BorderRightIcon from '@mui/icons-material/BorderRight';
+import { ToolbarBar, ToolbarButton, ToolbarDivider } from '@/components/shared/Toolbar';
 import { SECTIONS, COLS, INTRO_COLS, CELL_HEIGHT, CELL_FONT_SIZE, cellKey } from './cueGridConstants';
 import { CueColGroup } from './CueGrid';
 import type { CueGridData } from '@/lib/types/database';
@@ -98,37 +99,6 @@ const CueCell = ({ initialHtml, onCommit }: { initialHtml: string; onCommit: (ht
       data-empty=''
       sx={editableSx}
     />
-  );
-};
-
-// Toolbar button — prevents focus loss on both mouse and touch.
-const FmtBtn = ({ label, title, onAction, style, active, disabled }: {
-  label: React.ReactNode; title: string; onAction: () => void; style?: React.CSSProperties; active?: boolean; disabled?: boolean;
-}) => {
-  const handleAction = () => { if (!disabled) onAction(); };
-  return (
-    <Box
-      component='button'
-      title={title}
-      disabled={disabled}
-      sx={{
-        border: 'none', background: 'none', cursor: 'pointer',
-        px: '9px', py: '7px',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        lineHeight: 1, color: 'text.primary', borderRadius: 0.5,
-        '&:hover': { bgcolor: 'action.hover' },
-        '&:active': { bgcolor: 'action.selected' },
-        ...(active && { bgcolor: 'action.selected', color: 'primary.main' }),
-        '&:disabled': { color: 'text.disabled', cursor: 'default', bgcolor: 'transparent' },
-      }}
-      style={style}
-      onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-      onTouchStart={(e: React.TouchEvent) => e.preventDefault()}
-      onTouchEnd={(e: React.TouchEvent) => { e.preventDefault(); handleAction(); }}
-      onClick={handleAction}
-    >
-      {label}
-    </Box>
   );
 };
 
@@ -271,31 +241,28 @@ export const CueGridEditor = ({
 
   return (
     <Box ref={editorRef}>
-      <Box sx={{
-        display: 'flex', alignItems: 'center', gap: 0.25, mb: 1, p: 0.5,
-        width: 'fit-content',
-        border: 1, borderColor: 'divider', borderRadius: 1,
-        bgcolor: 'background.paper', boxShadow: 1,
-      }}>
-        <FmtBtn label='B' title='Bold' active={activeFormats.bold} onAction={() => applyCmd(() => document.execCommand('bold'))}
-          style={{ fontWeight: 700, fontSize: '0.875rem' }} />
-        <FmtBtn label='I' title='Italic' active={activeFormats.italic} onAction={() => applyCmd(() => document.execCommand('italic'))}
-          style={{ fontStyle: 'italic', fontSize: '0.875rem' }} />
-        <Box sx={{ width: '1px', height: 20, bgcolor: 'divider', mx: 1 }} />
-        <FmtBtn label='A' title='Small text' active={activeFormats.fontSize === 2} onAction={() => setFontSize(2)}
-          style={{ fontWeight: 700, fontSize: '0.625rem' }} />
-        <FmtBtn label='A' title='Normal text' active={activeFormats.fontSize === 3} onAction={() => setFontSize(3)}
-          style={{ fontWeight: 700, fontSize: '0.8125rem' }} />
-        <FmtBtn label='A' title='Large text' active={activeFormats.fontSize === 4} onAction={() => setFontSize(4)}
-          style={{ fontWeight: 700, fontSize: '1rem' }} />
-        <Box sx={{ width: '1px', height: 20, bgcolor: 'divider', mx: 1 }} />
-        <FmtBtn
-          label={<BorderRightIcon fontSize='small' />}
-          title={!focusedKey ? 'Select a cell to toggle a separator' : focusedHasSep ? 'Remove separator after cell' : 'Add separator after cell'}
-          active={focusedHasSep}
-          disabled={!canToggleSeparator}
-          onAction={() => { if (focusedKey) handleToggleSeparator(focusedKey); }}
-        />
+      <Box sx={{ mb: 1 }}>
+        <ToolbarBar>
+          <ToolbarButton label='B' title='Bold' active={activeFormats.bold} onAction={() => applyCmd(() => document.execCommand('bold'))}
+            style={{ fontWeight: 700, fontSize: '0.875rem' }} />
+          <ToolbarButton label='I' title='Italic' active={activeFormats.italic} onAction={() => applyCmd(() => document.execCommand('italic'))}
+            style={{ fontStyle: 'italic', fontSize: '0.875rem' }} />
+          <ToolbarDivider />
+          <ToolbarButton label='A' title='Small text' active={activeFormats.fontSize === 2} onAction={() => setFontSize(2)}
+            style={{ fontWeight: 700, fontSize: '0.625rem' }} />
+          <ToolbarButton label='A' title='Normal text' active={activeFormats.fontSize === 3} onAction={() => setFontSize(3)}
+            style={{ fontWeight: 700, fontSize: '0.8125rem' }} />
+          <ToolbarButton label='A' title='Large text' active={activeFormats.fontSize === 4} onAction={() => setFontSize(4)}
+            style={{ fontWeight: 700, fontSize: '1rem' }} />
+          <ToolbarDivider />
+          <ToolbarButton
+            label={<BorderRightIcon fontSize='small' />}
+            title={!focusedKey ? 'Select a cell to toggle a separator' : focusedHasSep ? 'Remove separator after cell' : 'Add separator after cell'}
+            active={focusedHasSep}
+            disabled={!canToggleSeparator}
+            onAction={() => { if (focusedKey) handleToggleSeparator(focusedKey); }}
+          />
+        </ToolbarBar>
       </Box>
       <Box sx={{ overflowX: 'auto', border: 1, borderColor: 'divider', borderRadius: 1, p: 1, width: 'fit-content', maxWidth: '100%' }}>
         <Box component='table' sx={{

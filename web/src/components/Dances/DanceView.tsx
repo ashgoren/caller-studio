@@ -16,7 +16,7 @@ import { useUpdateDance } from '@/hooks/useDances';
 import { useUndoActions } from '@/contexts/UndoContext';
 import { useNotify } from '@/hooks/useNotify';
 import { FiguresList } from './FiguresList';
-import { makeFiguresLabel } from './danceUtils';
+import { makeFiguresLabel, makeChoreographerNames } from './danceUtils';
 import { PAGE_STYLE_COMBINED, PAGE_STYLE_CHOREOGRAPHY } from './printStyles';
 import { DancePrintPortals } from './DancePrintPortals';
 import { WalkthroughDialog } from './WalkthroughDialog';
@@ -61,7 +61,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
   const printChoreography = useReactToPrint({ contentRef: choreographyPrintRef, documentTitle: dance.title, pageStyle: PAGE_STYLE_CHOREOGRAPHY });
   const printCombined = useReactToPrint({ contentRef: combinedPrintRef, documentTitle: `${dance.title} - Combined`, pageStyle: PAGE_STYLE_COMBINED });
 
-  const choreographerNames = dance.dances_choreographers.map(dc => dc.choreographer.name).join(', ');
+  const choreographerNames = makeChoreographerNames(dance);
   const figuresLabel = makeFiguresLabel(dance);
   const figures = figureMode === 'calling' ? (dance.calling_figures ?? []) : dance.figures;
   const hasCues = !!dance.cues && Object.keys(dance.cues.cells).length > 0;

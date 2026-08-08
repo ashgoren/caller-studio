@@ -3,6 +3,7 @@ import { useEditor, useEditorState, EditorContent, type Editor } from '@tiptap/r
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from '@tiptap/markdown';
 import { Box, Typography } from '@mui/material';
+import { ToolbarBar, ToolbarButton } from './Toolbar';
 
 interface Props {
   value: string;
@@ -33,20 +34,6 @@ const PROSE_SX = {
   '& hr': { margin: '1.4em 0', borderColor: 'divider' },
 } as const;
 
-const fmtBtnSx = {
-  border: 'none', background: 'none', cursor: 'pointer',
-  px: '9px', py: '7px',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  lineHeight: 1, color: 'text.primary', borderRadius: 0.5,
-  '&:hover': { bgcolor: 'action.hover' },
-  '&:active': { bgcolor: 'action.selected' },
-} as const;
-
-const fmtBtnActiveSx = {
-  bgcolor: 'action.selected',
-  color: 'primary.main',
-} as const;
-
 // Bold/Italic toolbar for a RichTextEditor. Exported so a parent can render it
 // wherever it needs to live (e.g. pinned in a header, outside the scrolling content).
 export const RichTextToolbar = ({ editor }: { editor: Editor | null }) => {
@@ -60,29 +47,13 @@ export const RichTextToolbar = ({ editor }: { editor: Editor | null }) => {
 
   if (!editor) return null;
 
-  const fmtButtons = [
-    { label: 'B', active: activeFormats?.bold ?? false, style: { fontWeight: 700, fontSize: '0.875rem' } as React.CSSProperties, action: () => editor.chain().focus().toggleBold().run() },
-    { label: 'I', active: activeFormats?.italic ?? false, style: { fontStyle: 'italic', fontSize: '0.875rem' } as React.CSSProperties, action: () => editor.chain().focus().toggleItalic().run() },
-  ];
-
   return (
-    <Box sx={{
-      display: 'flex', alignItems: 'center', gap: 0.25, p: 0.5,
-      width: 'fit-content', flexShrink: 0,
-      border: 1, borderColor: 'divider', borderRadius: 1,
-      bgcolor: 'background.paper', boxShadow: 1,
-    }}>
-      {fmtButtons.map(({ label, style, action, active }) => (
-        <Box key={label} component='button' sx={{ ...fmtBtnSx, ...(active && fmtBtnActiveSx) }}
-          onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
-          onTouchStart={(e: React.TouchEvent) => e.preventDefault()}
-          onTouchEnd={(e: React.TouchEvent) => { e.preventDefault(); action(); }}
-          onClick={action}
-        >
-          <span style={style}>{label}</span>
-        </Box>
-      ))}
-    </Box>
+    <ToolbarBar>
+      <ToolbarButton label='B' title='Bold' active={activeFormats?.bold ?? false} onAction={() => editor.chain().focus().toggleBold().run()}
+        style={{ fontWeight: 700, fontSize: '0.875rem' }} />
+      <ToolbarButton label='I' title='Italic' active={activeFormats?.italic ?? false} onAction={() => editor.chain().focus().toggleItalic().run()}
+        style={{ fontStyle: 'italic', fontSize: '0.875rem' }} />
+    </ToolbarBar>
   );
 };
 

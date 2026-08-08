@@ -1,9 +1,6 @@
 import { createPortal } from 'react-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, IconButton, Tooltip, Typography, useMediaQuery } from '@mui/material';
-import PrintIcon from '@mui/icons-material/Print';
-import EditIcon from '@mui/icons-material/Edit';
-import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import ReplayIcon from '@mui/icons-material/Replay';
@@ -12,11 +9,31 @@ import { GRID_NATURAL_WIDTH, GRID_NATURAL_HEIGHT, CELL_HEIGHT } from './cueGridC
 import { CueGridView } from './CueGrid';
 import { CueGridEditor } from './CueGridEditor';
 import { FiguresList } from './FiguresList';
-import { makeFiguresLabel } from './danceUtils';
+import { DanceHeaderLine } from './DanceHeaderLine';
+import { DialogHeaderIcons } from './DialogHeaderIcons';
+import { makeFiguresLabel, makeChoreographerNames } from './danceUtils';
 import { PrintCuesTable } from './DancePrintPortals';
 import { PAGE_STYLE_CUES, PRINT_CUES_CARD } from './printStyles';
 import { useUndoActions } from '@/contexts/UndoContext';
 import type { CueGridData, Dance } from '@/lib/types/database';
+
+const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+const CuesTimer = ({ seconds, running, onToggle, onReset }: {
+  seconds: number; running: boolean; onToggle: () => void; onReset: () => void;
+}) => (
+  <Box sx={{ border: 2, borderColor: 'primary.main', borderRadius: 2, px: 2.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Typography sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1, letterSpacing: '0.02em', minWidth: 72 }}>
+      {formatTime(seconds)}
+    </Typography>
+    <Tooltip title={running ? 'Pause timer' : 'Start timer'}>
+      <IconButton onClick={onToggle}>{running ? <PauseIcon /> : <PlayArrowIcon />}</IconButton>
+    </Tooltip>
+    <Tooltip title='Reset timer'>
+      <IconButton onClick={onReset}><ReplayIcon /></IconButton>
+    </Tooltip>
+  </Box>
+);
 
 export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
   open: boolean;
@@ -74,7 +91,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
   const { cues, title } = dance;
   const hasCues = !!cues && Object.keys(cues.cells).length > 0;
   const figuresLabel = makeFiguresLabel(dance);
-  const choreographerNames = dance.dances_choreographers.map(dc => dc.choreographer.name).join(', ');
+  const choreographerNames = makeChoreographerNames(dance);
   const callingFigures = (dance.calling_figures && dance.calling_figures.length > 0)
     ? dance.calling_figures
     : (dance.figures && dance.figures.length > 0 ? dance.figures : null);
@@ -93,8 +110,6 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
     }
     return groups;
   }, [figures]);
-
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
   const cuesPrintRef = useRef<HTMLDivElement>(null);
   const printCues = useReactToPrint({ contentRef: cuesPrintRef, documentTitle: `${dance.title} - Cues`, pageStyle: PAGE_STYLE_CUES });
@@ -120,6 +135,9 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
     }
   };
 
+  const headerIcons = <DialogHeaderIcons onPrint={() => printCues()} onEdit={handleStartEdit} editLabel='Edit cues' onClose={onClose} />;
+  const timer = <CuesTimer seconds={timerSeconds} running={timerRunning} onToggle={() => setTimerRunning(r => !r)} onReset={() => { setTimerRunning(false); setTimerSeconds(0); }} />;
+
   return (
     <>
       <Dialog
@@ -135,13 +153,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
           <>
           <DialogContent sx={{ display: 'flex', gap: 3, overflow: 'hidden', p: 0, flexDirection: 'column' }}>
             <Box sx={{ px: 2, pt: 2 }}>
-              <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
-              {choreographerNames && (
-                <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
-              )}
-              {figuresLabel && (
-                <Typography variant='body2' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined}>{figuresLabel}</Typography>
-              )}
+              <DanceHeaderLine dance={dance} />
             </Box>
             <Box sx={{ display: 'flex', gap: 3, flex: 1, overflow: 'hidden', px: 2, pb: 2 }}>
               {/* Figures reference */}
@@ -195,40 +207,11 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
         ) : isNarrow ? (
           /* Compact fullscreen view mode (mobile/tablet) */
           <DialogContent sx={{ p: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', userSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'none' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, px: 1, py: 0.5, flexShrink: 0 }}>
-              <Tooltip title='Edit cues'>
-                <IconButton size='small' onClick={handleStartEdit}><EditIcon fontSize='small' /></IconButton>
-              </Tooltip>
-              <Tooltip title='Close'>
-                <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
-              </Tooltip>
-            </Box>
+            {headerIcons}
             <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
-                {choreographerNames && (
-                  <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
-                )}
-                {figuresLabel && (
-                  <Typography variant='body2' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined}>{figuresLabel}</Typography>
-                )}
-              </Box>
-              <Box sx={{ border: 2, borderColor: 'primary.main', borderRadius: 2, px: 2.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1, letterSpacing: '0.02em', minWidth: 72 }}>
-                  {formatTime(timerSeconds)}
-                </Typography>
-                <Tooltip title={timerRunning ? 'Pause timer' : 'Start timer'}>
-                  <IconButton onClick={() => setTimerRunning(r => !r)}>
-                    {timerRunning ? <PauseIcon /> : <PlayArrowIcon />}
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title='Reset timer'>
-                  <IconButton onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>
-                    <ReplayIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+              <DanceHeaderLine dance={dance} sx={{ justifyContent: 'center' }} />
+              {timer}
               <Box sx={{ overflow: 'hidden', width: GRID_NATURAL_WIDTH * cuesViewScale, height: GRID_NATURAL_HEIGHT * cuesViewScale, flexShrink: 0 }}>
                 <Box sx={{ transform: `scale(${cuesViewScale})`, transformOrigin: 'top left', width: GRID_NATURAL_WIDTH }}>
                   <CueGridView cues={cues} />
@@ -241,42 +224,12 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
           /* Desktop view mode */
           <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <Box sx={{ flexShrink: 0 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, px: 1, pt: 0.5 }}>
-                <Tooltip title='Print cues'>
-                  <IconButton size='small' onClick={() => printCues()}><PrintIcon fontSize='small' /></IconButton>
-                </Tooltip>
-                <Tooltip title='Edit cues'>
-                  <IconButton size='small' onClick={handleStartEdit}><EditIcon fontSize='small' /></IconButton>
-                </Tooltip>
-                <Tooltip title='Close'>
-                  <IconButton size='small' onClick={onClose}><CloseIcon fontSize='small' /></IconButton>
-                </Tooltip>
-              </Box>
+              {headerIcons}
               <Box sx={{ px: 1.5, pb: 0.5 }}>
-                <Typography variant='h6' sx={{ fontWeight: 600, lineHeight: 1.2 }}>{dance.title}</Typography>
-                {choreographerNames && (
-                  <Typography variant='body2' color='text.secondary' sx={{ fontStyle: 'italic' }}>by {choreographerNames}</Typography>
-                )}
-                {figuresLabel && (
-                  <Typography variant='body2' color={figuresLabel !== 'Improper' ? 'text.primary' : 'text.secondary'} fontWeight={figuresLabel !== 'Improper' ? 700 : undefined}>{figuresLabel}</Typography>
-                )}
+                <DanceHeaderLine dance={dance} />
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 1.5, pb: 1 }}>
-                <Box sx={{ border: 2, borderColor: 'primary.main', borderRadius: 2, px: 2.5, py: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography sx={{ fontVariantNumeric: 'tabular-nums', fontSize: '1.75rem', fontWeight: 700, lineHeight: 1, letterSpacing: '0.02em', minWidth: 72 }}>
-                    {formatTime(timerSeconds)}
-                  </Typography>
-                  <Tooltip title={timerRunning ? 'Pause timer' : 'Start timer'}>
-                    <IconButton onClick={() => setTimerRunning(r => !r)}>
-                      {timerRunning ? <PauseIcon /> : <PlayArrowIcon />}
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title='Reset timer'>
-                    <IconButton onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>
-                      <ReplayIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
+                {timer}
               </Box>
             </Box>
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: callingFigures ? { xs: 'column', md: 'row' } : 'row' }}>
