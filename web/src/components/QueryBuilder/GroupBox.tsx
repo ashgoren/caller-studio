@@ -1,14 +1,13 @@
 import type { Ref } from 'react';
-import { Box, Button, IconButton, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
-import Add from '@mui/icons-material/Add';
+import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import Close from '@mui/icons-material/Close';
-import CreateNewFolder from '@mui/icons-material/CreateNewFolder';
 import DragIndicator from '@mui/icons-material/DragIndicator';
 import { DragDropProvider } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { move } from '@dnd-kit/helpers';
 import { RuleRow } from './RuleRow';
-import { isFilterGroup, newFieldRule, newFilterGroup } from '@/lib/fieldFilter';
+import { AddRuleGroupButtons } from './AddRuleGroupButtons';
+import { isFilterGroup } from '@/lib/fieldFilter';
 import type { FilterGroup, FilterRule, Field } from '@/lib/types/fieldFilter';
 
 type GroupBoxProps = {
@@ -104,14 +103,7 @@ const GroupBox = ({ group, fields, index, showFigures, onUpdate, onRemove }: Gro
 
       <GroupBody group={group} fields={fields} showFigures={showFigures} onChange={onUpdate} />
 
-      <Box sx={{ display: 'flex', gap: 2, mt: group.rules.length ? 2 : 0 }}>
-        <Button size='small' color='secondary' startIcon={<Add />} onClick={() => onUpdate({ ...group, rules: [...group.rules, newFieldRule()] })}>
-          Add rule
-        </Button>
-        <Button size='small' color='secondary' startIcon={<CreateNewFolder />} onClick={() => onUpdate({ ...group, rules: [...group.rules, newFilterGroup()] })}>
-          Add group
-        </Button>
-      </Box>
+      <AddRuleGroupButtons rules={group.rules} onChange={rules => onUpdate({ ...group, rules })} />
     </Box>
   );
 };

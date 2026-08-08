@@ -7,6 +7,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import { useReactToPrint } from 'react-to-print';
 import { formatLocalDate } from '@/lib/utils';
 import { makeFiguresLabel } from '@/components/Dances/danceUtils';
+import { ProgramHeaderLine } from './ProgramHeaderLine';
 import type { Program } from '@/lib/types/database';
 import { isFigure } from '@/lib/types/database';
 
@@ -63,16 +64,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
       </Box>
 
       {/* Title */}
-      <Box sx={{ mb: 2, maxWidth: 900, mx: 'auto' }}>
-        <Typography variant='h4' component='h1' sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-          {program.date ? formatLocalDate(program.date) : 'No date'}
-        </Typography>
-        {program.location && (
-          <Typography variant='subtitle1' color='text.secondary' sx={{ mt: 0.5 }}>
-            {program.location}
-          </Typography>
-        )}
-      </Box>
+      <ProgramHeaderLine program={program} sx={{ mb: 2, maxWidth: 900, mx: 'auto' }} />
       <Divider sx={{ mb: 4, maxWidth: 900, mx: 'auto' }} />
 
       {/* Choreography grid */}

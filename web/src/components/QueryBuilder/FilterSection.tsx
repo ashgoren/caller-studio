@@ -1,8 +1,6 @@
-import { Box, Button, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import Add from '@mui/icons-material/Add';
-import CreateNewFolder from '@mui/icons-material/CreateNewFolder';
+import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { GroupBody } from './GroupBox';
-import { newFieldRule, newFilterGroup } from '@/lib/fieldFilter';
+import { AddRuleGroupButtons } from './AddRuleGroupButtons';
 import type { FilterGroup, Field } from '@/lib/types/fieldFilter';
 
 export const FilterSection = ({ fields, state, showFigures = false, onChange }: {
@@ -27,14 +25,7 @@ export const FilterSection = ({ fields, state, showFigures = false, onChange }: 
 
       <GroupBody group={state} fields={fields} showFigures={showFigures} onChange={onChange} />
 
-      <Box sx={{ display: 'flex', gap: 4, mt: state.rules.length ? 2 : 0 }}>
-        <Button size='small' color='secondary' startIcon={<Add />} onClick={() => onChange({ ...state, rules: [...state.rules, newFieldRule()] })}>
-          Add rule
-        </Button>
-        <Button size='small' color='secondary' startIcon={<CreateNewFolder />} onClick={() => onChange({ ...state, rules: [...state.rules, newFilterGroup()] })}>
-          Add group
-        </Button>
-      </Box>
+      <AddRuleGroupButtons rules={state.rules} onChange={rules => onChange({ ...state, rules })} gap={4} />
     </>
   );
 };

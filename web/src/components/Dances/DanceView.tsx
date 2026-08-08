@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 import { Box, Button, Divider, IconButton, Stack, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
@@ -8,8 +8,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ArticleIcon from '@mui/icons-material/Article';
 import GridOnIcon from '@mui/icons-material/GridOn';
-import LinkIcon from '@mui/icons-material/Link';
-import { ExternalLink } from '@/components/shared';
+import { ExternalLink, NotesFieldset, ShareLinkButton } from '@/components/shared';
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
 import { useUpdateDance } from '@/hooks/useDances';
@@ -22,8 +21,6 @@ import { DancePrintPortals } from './DancePrintPortals';
 import { WalkthroughDialog } from './WalkthroughDialog';
 import { CuesDialog } from './CuesDialog';
 import type { CueGridData, Dance } from '@/lib/types/database';
-
-const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }: { dance: Dance; onEdit: () => void; figureMode: 'choreography' | 'calling'; onFigureModeChange: (mode: 'choreography' | 'calling') => void }) => {
   const navigate = useNavigate();
@@ -80,14 +77,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
               <IconButton size='small' onClick={() => printCombined()}><PrintIcon fontSize='small' /></IconButton>
             </Tooltip>
           )}
-          <Tooltip title='Copy share link'>
-            <IconButton size='small' onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/share/d/${dance.share_token}`);
-              toastSuccess('Share link copied', { undo: false });
-            }}>
-              <LinkIcon fontSize='small' />
-            </IconButton>
-          </Tooltip>
+          <ShareLinkButton kind='d' token={dance.share_token} />
           <Tooltip title='Edit'>
             <IconButton onClick={onEdit} size='small'><EditIcon fontSize='small' /></IconButton>
           </Tooltip>
@@ -170,29 +160,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
             <FiguresList figures={figures} />
           )}
 
-          {dance.notes && (
-            <Box component='fieldset' sx={{
-              mt: 3,
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 1,
-              px: 2,
-              pt: 1,
-              pb: 2,
-            }}>
-              <Typography
-                component='legend'
-                variant='caption'
-                color='text.secondary'
-                sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5, px: 0.5 }}
-              >
-                Notes
-              </Typography>
-              <Suspense fallback={null}>
-                <RichTextEditor value={dance.notes} editable={false} />
-              </Suspense>
-            </Box>
-          )}
+          <NotesFieldset notes={dance.notes} />
         </Box>
 
         {/* Right: Metadata sidebar */}
