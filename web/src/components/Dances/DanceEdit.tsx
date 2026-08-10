@@ -13,7 +13,7 @@ import { VideosEditor } from './VideosEditor';
 import { isValidUrl } from '@/lib/callersBox';
 import { fetchAndResolveImport } from '@/lib/danceImport';
 import { newRecord } from './config';
-import { useCreateDance, useUpdateDance, useDeleteDance } from '@/hooks/useDances';
+import { useCreateDance, useUpdateDance, useDeleteDance, DANCE_JOIN_KEYS } from '@/hooks/useDances';
 import { useAddChoreographerToDance, useRemoveChoreographerFromDance } from '@/hooks/useDancesChoreographers';
 import { useAddKeyMoveToDance, useRemoveKeyMoveFromDance } from '@/hooks/useDancesKeyMoves';
 import { useAddVibeToDance, useRemoveVibeFromDance } from '@/hooks/useDancesVibes';
@@ -28,7 +28,7 @@ import { usePendingRelations } from '@/hooks/usePendingRelations';
 import { useFigures } from '@/hooks/useFigures';
 import { useNotify } from '@/hooks/useNotify';
 import { useTitle } from '@/contexts/TitleContext';
-import { useUndoActions, dbRecord, beforeValues, relationOps } from '@/contexts/UndoContext';
+import { useUndoActions, omit, relationOps } from '@/contexts/UndoContext';
 import type { Dance, DanceInsert, DanceUpdate } from '@/lib/types/database';
 const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
@@ -185,53 +185,25 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
       ? await createDance(updatesWithFigures as DanceInsert)
       : await updateDance({ id: dance!.id, updates: updatesWithFigures });
 
-    const { added: addedChoreographers, removed: removedChoreographers } = await pendingChoreographers.commitChanges(
-      (choreographerId) => addChoreographer({ danceId, choreographerId }),
-      (choreographerId) => removeChoreographer({ danceId, choreographerId }),
+    await pendingChoreographers.commitChanges(
+      (choreographerId) => addChoreographer({ aId: danceId, bId: choreographerId }),
+      (choreographerId) => removeChoreographer({ aId: danceId, bId: choreographerId }),
     );
-    const { added: addedKeyMoves, removed: removedKeyMoves } = await pendingKeyMoves.commitChanges(
-      (keyMoveId) => addKeyMove({ danceId, keyMoveId }),
-      (keyMoveId) => removeKeyMove({ danceId, keyMoveId }),
+    await pendingKeyMoves.commitChanges(
+      (keyMoveId) => addKeyMove({ aId: danceId, bId: keyMoveId }),
+      (keyMoveId) => removeKeyMove({ aId: danceId, bId: keyMoveId }),
     );
-    const { added: addedVibes, removed: removedVibes } = await pendingVibes.commitChanges(
-      (vibeId) => addVibe({ danceId, vibeId }),
-      (vibeId) => removeVibe({ danceId, vibeId }),
+    await pendingVibes.commitChanges(
+      (vibeId) => addVibe({ aId: danceId, bId: vibeId }),
+      (vibeId) => removeVibe({ aId: danceId, bId: vibeId }),
     );
-    const { addedVideoRows, removedVideos, updatedVideos } = await pendingVideoState.commitChanges(
-      danceId, { addVideo, removeVideo, updateVideo }
-    );
+    await pendingVideoState.commitChanges(danceId, { addVideo, removeVideo, updateVideo });
 
     if (isCreate) {
-      pushAction({
-        label: `Create Dance: ${formData.title}`,
-        ops: [
-          { type: 'insert', table: 'dances', record: { id: danceId, ...updatesWithFigures } },
-          ...relationOps('dances_choreographers', addedChoreographers, []),
-          ...relationOps('dances_key_moves', addedKeyMoves, []),
-          ...relationOps('dances_vibes', addedVibes, []),
-          ...addedVideoRows.map(r => ({ type: 'insert' as const, table: 'dance_videos', record: r })),
-        ],
-      });
       toastSuccess('Dance created');
       flushSync(() => setIsSaved(true)); // Synchronously set to disable blocker before navigating away
       navigate(`/dances/${danceId}`);
     } else {
-      pushAction({
-        label: `Edit Dance: ${formData.title}`,
-        ops: [
-          {
-            type: 'update', table: 'dances', id: danceId,
-            before: beforeValues(dance!, updatesWithFigures, newRecord),
-            after: dbRecord(updatesWithFigures, newRecord),
-          },
-          ...relationOps('dances_choreographers', addedChoreographers, removedChoreographers),
-          ...relationOps('dances_key_moves', addedKeyMoves, removedKeyMoves),
-          ...relationOps('dances_vibes', addedVibes, removedVibes),
-          ...addedVideoRows.map(r => ({ type: 'insert' as const, table: 'dance_videos', record: r })),
-          ...removedVideos.map(v => ({ type: 'delete' as const, table: 'dance_videos', id: v.id!, record: { id: v.id, dance_id: danceId, url: v.url, description: v.description } })),
-          ...updatedVideos.map(({ current: v, orig }) => ({ type: 'update' as const, table: 'dance_videos', id: v.id!, before: { url: orig.url, description: orig.description }, after: { url: v.url, description: v.description } })),
-        ],
-      });
       toastSuccess('Dance updated');
       onCancel?.(); // Go back to view mode
     }
@@ -249,7 +221,7 @@ export const DanceEditMode = ({ dance, onCancel, figureMode: initialFigureMode =
     pushAction({
       label: `Delete Dance: ${dance!.title}`,
       ops: [
-        { type: 'delete', table: 'dances', id: dance!.id, record: dbRecord(dance!, newRecord) },
+        { type: 'delete', table: 'dances', id: dance!.id, record: omit(dance!, DANCE_JOIN_KEYS) },
         ...relationOps('dances_choreographers', [],
           dance!.dances_choreographers.map(dc => ({ id: dc.id, dance_id: dance!.id, choreographer_id: dc.choreographer.id }))),
         ...relationOps('dances_key_moves', [],

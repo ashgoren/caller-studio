@@ -1,6 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useCallback, useState, useMemo, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
 import { queryClient } from '@/lib/react-query';
 import { closeSnackbar, enqueueSnackbar } from 'notistack';
 import { useNavigate, useLocation } from 'react-router';
@@ -53,6 +52,37 @@ function isDependent(op: UndoOp): boolean {
   return Object.keys(record).some(k => k.endsWith('_id'));
 }
 
+function isFkViolation(error: unknown): boolean {
+  return !!error && typeof error === 'object' && (error as { code?: string }).code === '23503';
+}
+
+// Wrap a Supabase/Postgres error as a real Error (so `err.message` keeps working everywhere
+// it's used today) while preserving `.code`, so isFkViolation can still recognize it after
+// it's been thrown and caught rather than read straight off the raw { error } result.
+export function supabaseError(error: { message: string; code?: string }): Error {
+  return Object.assign(new Error(error.message), { code: error.code });
+}
+
+// Table name -> the actual insert/update/delete functions used for live mutations on that
+// table, registered by each hook file. Lets undo/redo replay call the exact same code a live
+// edit would, instead of a second, separate raw-Supabase path.
+type Mutator = {
+  insert?: (record: Record<string, unknown>) => Promise<unknown>;
+  update?: (id: number, updates: Record<string, unknown>) => Promise<unknown>;
+  delete?: (id: number) => Promise<unknown>;
+};
+const mutatorRegistry = new Map<string, Mutator>();
+
+export function registerMutator(table: string, mutator: Mutator): void {
+  mutatorRegistry.set(table, mutator);
+}
+
+function getMutator(table: string): Mutator {
+  const mutator = mutatorRegistry.get(table);
+  if (!mutator) throw new Error(`No mutator registered for table "${table}"`);
+  return mutator;
+}
+
 function sortOps(ops: UndoOp[]): UndoOp[] {
   return [...ops].sort((a, b) => {
     if (a.type === 'delete' && b.type === 'insert') return -1;
@@ -72,27 +102,27 @@ async function executeOps(ops: UndoOp[], onPartial?: () => void): Promise<void> 
   let skipped = 0;
 
   for (const op of sorted) {
-    switch (op.type) {
-      case 'insert': {
-        const { error } = await supabase.from(op.table).insert(op.record);
-        if (error) {
-          if (error.code === '23503' && isDependent(op)) {
-            skipped++;
-          } else {
-            throw error;
-          }
-        }
-        break;
+    const mutator = getMutator(op.table);
+    try {
+      switch (op.type) {
+        case 'insert':
+          if (!mutator.insert) throw new Error(`No insert mutator for table "${op.table}"`);
+          await mutator.insert(op.record);
+          break;
+        case 'delete':
+          if (!mutator.delete) throw new Error(`No delete mutator for table "${op.table}"`);
+          await mutator.delete(op.id);
+          break;
+        case 'update':
+          if (!mutator.update) throw new Error(`No update mutator for table "${op.table}"`);
+          await mutator.update(op.id, op.after);
+          break;
       }
-      case 'delete': {
-        const { error } = await supabase.from(op.table).delete().eq('id', op.id);
-        if (error) throw error;
-        break;
-      }
-      case 'update': {
-        const { error } = await supabase.from(op.table).update(op.after).eq('id', op.id);
-        if (error) throw error;
-        break;
+    } catch (error) {
+      if (op.type === 'insert' && isDependent(op) && isFkViolation(error)) {
+        skipped++;
+      } else {
+        throw error;
       }
     }
   }
@@ -208,27 +238,46 @@ export const useUndoActions = () => {
 
 // Helpers for building undo ops at call sites
 
-export function dbRecord<T extends object>(
-  record: T,
-  configRecord: Record<string, unknown>
-): Record<string, unknown> {
-  const keys = new Set(['id', 'created_at', ...Object.keys(configRecord)]);
-  return Object.fromEntries(
-    Object.entries(record).filter(([key]) => keys.has(key))
-  );
+export function pick<T extends object>(obj: T | undefined | null, keys: (keyof T)[]): Partial<T> {
+  if (!obj) return {};
+  return Object.fromEntries(keys.filter(k => k in obj).map(k => [k, obj[k]])) as Partial<T>;
 }
 
-export function beforeValues<T extends object>(
-  current: T,
-  updates: Record<string, unknown>,
-  configRecord: Record<string, unknown>
-): Record<string, unknown> {
-  const keys = new Set(['id', 'created_at', ...Object.keys(configRecord)]);
+export function omit<T extends object>(obj: T, keys: (keyof T)[]): Partial<T> {
+  const excluded = new Set(keys);
   return Object.fromEntries(
-    Object.keys(updates)
-      .filter(key => keys.has(key))
-      .map(key => [key, (current as Record<string, unknown>)[key]])
-  );
+    Object.entries(obj).filter(([key]) => !excluded.has(key as keyof T))
+  ) as Partial<T>;
+}
+
+export function recordInsert(
+  pushAction: UndoActions['pushAction'],
+  table: string,
+  record: Record<string, unknown>,
+  label: string
+): void {
+  pushAction({ label, ops: [{ type: 'insert', table, record }] });
+}
+
+export function recordUpdate(
+  pushAction: UndoActions['pushAction'],
+  table: string,
+  id: number,
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+  label: string
+): void {
+  pushAction({ label, ops: [{ type: 'update', table, id, before, after }] });
+}
+
+export function recordDelete(
+  pushAction: UndoActions['pushAction'],
+  table: string,
+  id: number,
+  record: Record<string, unknown>,
+  label: string
+): void {
+  pushAction({ label, ops: [{ type: 'delete', table, id, record }] });
 }
 
 export function relationOps(

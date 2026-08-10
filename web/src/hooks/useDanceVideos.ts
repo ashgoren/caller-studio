@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useNotify } from '@/hooks/useNotify';
+import { useUndoActions, registerMutator, recordInsert, recordUpdate, recordDelete, pick, supabaseError } from '@/contexts/UndoContext';
 import type { Dance, DanceVideoRow } from '@/lib/types/database';
 
 export type PendingVideo = {
@@ -17,8 +18,8 @@ const addDanceVideo = async (danceId: number, url: string, description: string |
     .insert({ dance_id: danceId, url, description })
     .select()
     .single();
-  if (error) throw new Error(error.message);
-  return data;
+  if (error) throw supabaseError(error);
+  return data as DanceVideoRow;
 };
 
 const removeDanceVideo = async (id: number) => {
@@ -28,8 +29,8 @@ const removeDanceVideo = async (id: number) => {
     .eq('id', id)
     .select()
     .single();
-  if (error) throw new Error(error.message);
-  return data;
+  if (error) throw supabaseError(error);
+  return data as DanceVideoRow;
 };
 
 const updateDanceVideo = async (id: number, url: string, description: string | null) => {
@@ -39,9 +40,15 @@ const updateDanceVideo = async (id: number, url: string, description: string | n
     .eq('id', id)
     .select()
     .single();
-  if (error) throw new Error(error.message);
-  return data;
+  if (error) throw supabaseError(error);
+  return data as DanceVideoRow;
 };
+
+registerMutator('dance_videos', {
+  insert: (record) => addDanceVideo(record.dance_id as number, record.url as string, record.description as string | null),
+  update: (id, updates) => updateDanceVideo(id, updates.url as string, updates.description as string | null),
+  delete: removeDanceVideo,
+});
 
 export const commitVideoChanges = async (
   initialVideos: PendingVideo[],
@@ -89,13 +96,15 @@ export const usePendingVideos = (dance?: Dance) => {
 
 export const useAddDanceVideo = () => {
   const { toastError } = useNotify();
+  const { pushAction } = useUndoActions();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ danceId, url, description }: { danceId: number; url: string; description: string | null }) =>
       addDanceVideo(danceId, url, description),
-    onSuccess: (_, { danceId }) => {
+    onSuccess: (data, { danceId }) => {
       queryClient.invalidateQueries({ queryKey: ['dance', danceId] });
       queryClient.invalidateQueries({ queryKey: ['dances'] });
+      recordInsert(pushAction, 'dance_videos', data, `Add Video: ${data.description || data.url}`);
     },
     onError: (err: Error) => toastError(err.message || 'Error adding video'),
   });
@@ -103,13 +112,15 @@ export const useAddDanceVideo = () => {
 
 export const useRemoveDanceVideo = () => {
   const { toastError } = useNotify();
+  const { pushAction } = useUndoActions();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id }: { id: number; danceId: number }) =>
       removeDanceVideo(id),
-    onSuccess: (_, { danceId }) => {
+    onSuccess: (data, { danceId }) => {
       queryClient.invalidateQueries({ queryKey: ['dance', danceId] });
       queryClient.invalidateQueries({ queryKey: ['dances'] });
+      recordDelete(pushAction, 'dance_videos', data.id, data, `Delete Video: ${data.description || data.url}`);
     },
     onError: (err: Error) => toastError(err.message || 'Error removing video'),
   });
@@ -117,13 +128,19 @@ export const useRemoveDanceVideo = () => {
 
 export const useUpdateDanceVideo = () => {
   const { toastError } = useNotify();
+  const { pushAction } = useUndoActions();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, url, description }: { id: number; danceId: number; url: string; description: string | null }) =>
       updateDanceVideo(id, url, description),
-    onSuccess: (_, { danceId }) => {
+    onSuccess: (_, { id, danceId, url, description }) => {
+      const current = queryClient.getQueryData<Dance>(['dance', danceId])?.dance_videos.find(v => v.id === id);
       queryClient.invalidateQueries({ queryKey: ['dance', danceId] });
       queryClient.invalidateQueries({ queryKey: ['dances'] });
+      if (current) {
+        const updates = { url, description };
+        recordUpdate(pushAction, 'dance_videos', id, pick(current, Object.keys(updates) as (keyof DanceVideoRow)[]), updates, `Edit Video: ${description || url}`);
+      }
     },
     onError: (err: Error) => toastError(err.message || 'Error updating video'),
   });

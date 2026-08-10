@@ -1,38 +1,52 @@
 import { useNotify } from '@/hooks/useNotify';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { useUndoActions, registerMutator, recordInsert, recordUpdate, pick, omit, supabaseError } from '@/contexts/UndoContext';
 import type { Dance, DanceInsert, DanceUpdate } from '@/lib/types/database';
 
 const DANCE_SELECT = '*, programs_dances(id, order, program:programs(*)), dances_choreographers(id, choreographer:choreographers(*)), dances_key_moves(id, key_move:key_moves(*)), dances_vibes(id, vibe:vibes(*)), dance_videos(*), dance_type:dance_types(id, name, sort_order), formation:formations(id, name, sort_order), progression:progressions(id, name, sort_order)';
 
+// Keys present on the fetched/joined Dance view-model that aren't real columns on the
+// `dances` table — stripped out before a full row is stored as an undo insert/delete record.
+export const DANCE_JOIN_KEYS: (keyof Dance)[] = [
+  'programs_dances', 'dances_choreographers', 'dances_key_moves', 'dances_vibes', 'dance_videos',
+  'dance_type', 'formation', 'progression',
+];
+
 const getDances = async () => {
   const { data, error } = await supabase.from('dances').select(DANCE_SELECT);
-  if (error) throw new Error(error.message);
+  if (error) throw supabaseError(error);
   return data as Dance[];
 };
 
 const getDance = async (id: number) => {
   const { data, error } = await supabase.from('dances').select(DANCE_SELECT).eq('id', id).single();
-  if (error) throw new Error(error.message);
+  if (error) throw supabaseError(error);
   return data as Dance;
 };
 
 const updateDance = async (id: number, updates: DanceUpdate) => {
   const { data, error } = await supabase.from('dances').update(updates).eq('id', id).select(DANCE_SELECT).single();
-  if (error) throw new Error(error.message);
+  if (error) throw supabaseError(error);
   return data as Dance;
 };
 
 const createDance = async (newDance: DanceInsert) => {
   const { data, error } = await supabase.from('dances').insert(newDance).select(DANCE_SELECT).single();
-  if (error) throw new Error(error.message);
+  if (error) throw supabaseError(error);
   return data as Dance;
 };
 
 const deleteDance = async (id: number) => {
   const { error } = await supabase.from('dances').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) throw supabaseError(error);
 };
+
+registerMutator('dances', {
+  insert: (record) => createDance(record as DanceInsert),
+  update: (id, updates) => updateDance(id, updates as DanceUpdate),
+  delete: deleteDance,
+});
 
 
 export const useDances = () => {
@@ -54,18 +68,24 @@ export const useDance = (id: number) => {
 
 export const useUpdateDance = () => {
   const { toastError } = useNotify();
+  const { pushAction } = useUndoActions();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, updates }: { id: number; updates: DanceUpdate }) =>
       updateDance(id, updates),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['dance', variables.id] });
+    onSuccess: (_, { id, updates }) => {
+      const current = queryClient.getQueryData<Dance>(['dance', id]);
+      queryClient.invalidateQueries({ queryKey: ['dance', id] });
       queryClient.invalidateQueries({ queryKey: ['dances'] });
       queryClient.invalidateQueries({ queryKey: ['programs'] });
       queryClient.invalidateQueries({ queryKey: ['program'] });
       queryClient.invalidateQueries({ queryKey: ['choreographers'] });
       queryClient.invalidateQueries({ queryKey: ['key_moves'] });
       queryClient.invalidateQueries({ queryKey: ['vibes'] });
+      if (current) {
+        const keys = Object.keys(updates) as (keyof Dance)[];
+        recordUpdate(pushAction, 'dances', id, pick(current, keys), updates, `Edit Dance: ${current.title}`);
+      }
     },
     onError: (err: Error) => toastError(err.message || 'Error updating dance')
   });
@@ -73,11 +93,13 @@ export const useUpdateDance = () => {
 
 export const useCreateDance = () => {
   const { toastError } = useNotify();
+  const { pushAction } = useUndoActions();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (newDance: DanceInsert) => createDance(newDance),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['dances'] });
+      recordInsert(pushAction, 'dances', omit(data, DANCE_JOIN_KEYS), `Create Dance: ${data.title}`);
     },
     onError: (err: Error) => toastError(err.message || 'Error creating dance')
   });
