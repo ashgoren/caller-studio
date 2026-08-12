@@ -6,7 +6,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { useReactToPrint } from 'react-to-print';
 import { GRID_NATURAL_WIDTH, GRID_NATURAL_HEIGHT, CELL_HEIGHT } from './cueGridConstants';
-import { CueGridView } from './CueGrid';
+import { CueGridView, CueNotesView } from './CueGrid';
 import { CueGridEditor } from './CueGridEditor';
 import { FiguresList } from './FiguresList';
 import { DanceHeaderLine } from './DanceHeaderLine';
@@ -253,9 +253,10 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
               <DanceHeaderLine dance={dance} sx={{ justifyContent: 'center' }} />
               {timer}
+              <CueNotesView notes={cues?.notes} sx={{ textAlign: 'center', mb: 0 }} />
               <Box sx={{ overflow: 'hidden', width: GRID_NATURAL_WIDTH * cuesViewScale, height: GRID_NATURAL_HEIGHT * cuesViewScale, flexShrink: 0 }}>
                 <Box sx={{ transform: `scale(${cuesViewScale})`, transformOrigin: 'top left', width: GRID_NATURAL_WIDTH }}>
-                  <CueGridView cues={cues} notesSx={{ textAlign: 'center', mt: 1 }} />
+                  <CueGridView cues={cues} />
                 </Box>
               </Box>
             </Box>
@@ -280,6 +281,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
                 </Box>
               )}
               <Box sx={{ overflowY: 'auto', p: 2, flexShrink: 0 }}>
+                <CueNotesView notes={cues?.notes} />
                 <CueGridView cues={cues} />
               </Box>
             </Box>

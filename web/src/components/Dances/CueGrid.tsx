@@ -92,27 +92,26 @@ const CueTableBody = ({ cues }: { cues: CueGridData }) => {
   );
 };
 
-export const CueGridView = ({ cues, notesSx }: { cues: CueGridData | null; notesSx?: object }) => {
-  const hasCells = !!cues && Object.keys(cues.cells).length > 0;
-  if (!cues || (!hasCells && !cues.notes)) return null;
+export const CueNotesView = ({ notes, sx }: { notes?: string | null; sx?: object }) => {
+  if (!notes) return null;
+  return (
+    <Box sx={{ mb: 2, ...sx }}>
+      <Suspense fallback={null}>
+        <RichTextEditor value={notes} editable={false} />
+      </Suspense>
+    </Box>
+  );
+};
+
+export const CueGridView = ({ cues }: { cues: CueGridData | null }) => {
+  if (!cues || Object.keys(cues.cells).length === 0) return null;
 
   return (
-    <Box>
-      {cues.notes && (
-        <Box sx={{ mb: 2, ...notesSx }}>
-          <Suspense fallback={null}>
-            <RichTextEditor value={cues.notes} editable={false} />
-          </Suspense>
-        </Box>
-      )}
-      {hasCells && (
-        <Box sx={{ overflowX: 'auto' }}>
-          <Box component='table' sx={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-            <CueColGroup />
-            <CueTableBody cues={cues} />
-          </Box>
-        </Box>
-      )}
+    <Box sx={{ overflowX: 'auto' }}>
+      <Box component='table' sx={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+        <CueColGroup />
+        <CueTableBody cues={cues} />
+      </Box>
     </Box>
   );
 };
