@@ -1,6 +1,9 @@
+import { lazy, Suspense } from 'react';
 import { Box } from '@mui/material';
 import type { CueGridData } from '@/lib/types/database';
 import { SECTIONS, COLS, INTRO_COLS, CELL_HEIGHT, CELL_FONT_SIZE, LABEL_WIDTH, COL_WIDTH, cellKey } from './cueGridConstants';
+
+const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 // Shared column group — guarantees identical column widths in view and edit
 export const CueColGroup = () => (
@@ -89,15 +92,27 @@ const CueTableBody = ({ cues }: { cues: CueGridData }) => {
   );
 };
 
-export const CueGridView = ({ cues }: { cues: CueGridData | null }) => {
-  if (!cues || Object.keys(cues.cells).length === 0) return null;
+export const CueGridView = ({ cues, notesSx }: { cues: CueGridData | null; notesSx?: object }) => {
+  const hasCells = !!cues && Object.keys(cues.cells).length > 0;
+  if (!cues || (!hasCells && !cues.notes)) return null;
 
   return (
-    <Box sx={{ overflowX: 'auto' }}>
-      <Box component='table' sx={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-        <CueColGroup />
-        <CueTableBody cues={cues} />
-      </Box>
+    <Box>
+      {cues.notes && (
+        <Box sx={{ mb: 2, ...notesSx }}>
+          <Suspense fallback={null}>
+            <RichTextEditor value={cues.notes} editable={false} />
+          </Suspense>
+        </Box>
+      )}
+      {hasCells && (
+        <Box sx={{ overflowX: 'auto' }}>
+          <Box component='table' sx={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+            <CueColGroup />
+            <CueTableBody cues={cues} />
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };

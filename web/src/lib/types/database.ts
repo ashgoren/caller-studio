@@ -22,6 +22,7 @@ export const isFigure = (item: FigureItem): item is Extract<FigureItem, { kind: 
 export type CueGridData = {
   cells: Record<string, string>;
   separators?: string[];
+  notes?: string;
 };
 
 export type DanceRow = Tables['dances']['Row'];

@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, IconButton, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -16,6 +16,10 @@ import { PrintCuesTable } from './DancePrintPortals';
 import { PAGE_STYLE_CUES, PRINT_CUES_CARD } from './printStyles';
 import { useUndoActions } from '@/contexts/UndoContext';
 import type { CueGridData, Dance } from '@/lib/types/database';
+
+const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
+
+const NOTES_ASIDE_WIDTH = 420;
 
 const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
@@ -86,7 +90,8 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
   }, [open, isNarrow, isEditing]);
 
   const cuesViewScale = isNarrow ? Math.min(1, (windowWidth - 16) / GRID_NATURAL_WIDTH) : 1;
-  const cuesEditorScale = Math.min(1, (windowWidth - (isNarrow ? 32 : 96)) / (GRID_NATURAL_WIDTH + 18));
+  const showNotesAside = useMediaQuery('(min-width: 1200px)');
+  const cuesEditorScale = Math.min(1, (windowWidth - (isNarrow ? 32 : 96) - (showNotesAside ? NOTES_ASIDE_WIDTH + 16 : 0)) / (GRID_NATURAL_WIDTH + 18));
 
   const { cues, title } = dance;
   const hasCues = !!cues && Object.keys(cues.cells).length > 0;
@@ -130,6 +135,15 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
 
   const handleCancel = () => { if (!hasCues) onClose(); else setIsEditing(false); };
 
+  const handleNotesChange = useCallback((notes: string) => {
+    setDraft(d => {
+      const cells = d?.cells ?? {};
+      const separators = d?.separators ?? [];
+      const empty = Object.keys(cells).length === 0 && separators.length === 0 && !notes;
+      return empty ? null : { cells, ...(separators.length > 0 && { separators }), ...(notes && { notes }) };
+    });
+  }, []);
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -141,6 +155,15 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
       setIsSaving(false);
     }
   };
+
+  const notesEditor = (minHeight: number) => (
+    <Box component='fieldset' sx={{ border: 1, borderColor: 'divider', borderRadius: 1, px: 2, pt: 1, pb: 2 }}>
+      <Typography component='legend' variant='caption' color='text.secondary' sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5, px: 0.5 }}>Notes</Typography>
+      <Suspense fallback={<CircularProgress size={24} />}>
+        <RichTextEditor value={draft?.notes ?? ''} onChange={handleNotesChange} underline={false} minHeight={minHeight} />
+      </Suspense>
+    </Box>
+  );
 
   const headerIcons = <DialogHeaderIcons onPrint={() => printCues()} onEdit={handleStartEdit} editLabel='Edit cues' onClose={onClose} />;
   const timer = <CuesTimer seconds={timerSeconds} running={timerRunning} onToggle={() => setTimerRunning(r => !r)} onReset={() => { setTimerRunning(false); setTimerSeconds(0); }} />;
@@ -201,7 +224,18 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
                 <Box sx={{ transform: `scale(${cuesEditorScale})`, transformOrigin: 'top left', width: GRID_NATURAL_WIDTH + 18 }}>
                   <CueGridEditor value={draft} onChange={setDraft} />
                 </Box>
+                {!showNotesAside && (
+                  <Box sx={{ mt: 2 }}>
+                    {notesEditor(60)}
+                  </Box>
+                )}
               </Box>
+              {/* Notes, as a 3rd column when there's room */}
+              {showNotesAside && (
+                <Box sx={{ width: NOTES_ASIDE_WIDTH, flexShrink: 0, alignSelf: 'flex-start', overflowY: 'auto' }}>
+                  {notesEditor(240)}
+                </Box>
+              )}
             </Box>
           </DialogContent>
           <DialogActions>
@@ -221,7 +255,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
               {timer}
               <Box sx={{ overflow: 'hidden', width: GRID_NATURAL_WIDTH * cuesViewScale, height: GRID_NATURAL_HEIGHT * cuesViewScale, flexShrink: 0 }}>
                 <Box sx={{ transform: `scale(${cuesViewScale})`, transformOrigin: 'top left', width: GRID_NATURAL_WIDTH }}>
-                  <CueGridView cues={cues} />
+                  <CueGridView cues={cues} notesSx={{ textAlign: 'center', mt: 1 }} />
                 </Box>
               </Box>
             </Box>

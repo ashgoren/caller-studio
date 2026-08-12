@@ -111,6 +111,7 @@ export const CueGridEditor = ({
 }) => {
   const cells = useMemo(() => value?.cells ?? {}, [value]);
   const separators = useMemo(() => new Set(value?.separators ?? []), [value]);
+  const notes = value?.notes ?? '';
 
   const [menuState, setMenuState] = useState<{ x: number; y: number; key: string } | null>(null);
   const [focusedKey, setFocusedKey] = useState<string | null>(null);
@@ -167,10 +168,14 @@ export const CueGridEditor = ({
   }, [applyCmd]);
 
   const writeBack = useCallback(
-    (nextCells: Record<string, string>, nextSeps: Set<string>) => {
+    (nextCells: Record<string, string>, nextSeps: Set<string>, nextNotes: string) => {
       const sepArray = [...nextSeps];
-      const empty = Object.keys(nextCells).length === 0 && sepArray.length === 0;
-      onChange(empty ? null : { cells: nextCells, ...(sepArray.length > 0 && { separators: sepArray }) });
+      const empty = Object.keys(nextCells).length === 0 && sepArray.length === 0 && !nextNotes;
+      onChange(empty ? null : {
+        cells: nextCells,
+        ...(sepArray.length > 0 && { separators: sepArray }),
+        ...(nextNotes && { notes: nextNotes }),
+      });
     },
     [onChange],
   );
@@ -181,9 +186,9 @@ export const CueGridEditor = ({
       const nextCells = { ...cells };
       if (html) nextCells[key] = html;
       else delete nextCells[key];
-      writeBack(nextCells, separators);
+      writeBack(nextCells, separators, notes);
     },
-    [cells, separators, writeBack],
+    [cells, separators, notes, writeBack],
   );
 
   const handleToggleSeparator = useCallback(
@@ -191,9 +196,9 @@ export const CueGridEditor = ({
       const next = new Set(separators);
       if (next.has(key)) next.delete(key);
       else next.add(key);
-      writeBack(cells, next);
+      writeBack(cells, next, notes);
     },
-    [cells, separators, writeBack],
+    [cells, separators, notes, writeBack],
   );
 
   const renderCell = (section: string, row: number, col: number) => {
