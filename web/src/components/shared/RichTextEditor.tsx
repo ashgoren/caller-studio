@@ -60,6 +60,8 @@ export const RichTextToolbar = ({ editor }: { editor: Editor | null }) => {
 export const RichTextEditor = ({ value, onChange, editable = true, label, minHeight = 120, underline = true, autoFocus = false, toolbar = true, onEditorReady }: Props) => {
   const [focused, setFocused] = useState(false);
 
+  // Read-only viewers must recreate on value change to pick up external updates (tiptap only
+  // patches options in place otherwise); editable instances must not, or typing resets the cursor.
   const editor = useEditor({
     extensions: EXTENSIONS,
     content: value,
@@ -71,21 +73,12 @@ export const RichTextEditor = ({ value, onChange, editable = true, label, minHei
     },
     onFocus: () => setFocused(true),
     onBlur: () => setFocused(false),
-  });
+  }, editable ? [] : [value]);
 
   useEffect(() => {
     onEditorReady?.(editor);
     return () => onEditorReady?.(null);
   }, [editor, onEditorReady]);
-
-  // If the value changes externally while the editor is blurred, update the content. This would be if the user edits on another device.
-  useEffect(() => {
-    if (!editor || editor.isFocused) return;
-    const current = editor.getMarkdown();
-    if (current !== value) {
-      editor.commands.setContent(editor.storage.markdown.manager.parse(value), { emitUpdate: false });
-    }
-  }, [editor, value]);
 
   if (!editable) {
     if (!value.trim()) return null;

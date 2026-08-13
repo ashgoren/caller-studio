@@ -32,6 +32,7 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
   const { setFormActive } = useUndoActions();
 
   const walkthroughPrintRef = useRef<HTMLDivElement>(null);
+  const focusAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) { setIsEditing(false); return; }
@@ -73,6 +74,9 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
   const isDirty = draft !== (dance.walkthrough ?? '');
 
   const handleStartEdit = () => {
+    // Focus a stable element before the Edit button unmounts, so focus never touches <body>
+    // where MUI's FocusTrap could steal it back before tiptap's deferred autofocus lands.
+    focusAnchorRef.current?.focus();
     setDraft(dance.walkthrough ?? '');
     setIsEditing(true);
   };
@@ -110,7 +114,7 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
         )}
 
         {/* Content */}
-        <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: showColumns ? { xs: 'column', md: 'row' } : 'row' }}>
+        <Box ref={focusAnchorRef} tabIndex={-1} sx={{ display: 'flex', flex: 1, overflow: 'hidden', flexDirection: showColumns ? { xs: 'column', md: 'row' } : 'row', '&:focus': { outline: 'none' } }}>
           {showColumns && (
             <Box sx={{ flex: 1, overflowY: 'auto', p: 2, borderRight: { md: 1 }, borderBottom: { xs: 1, md: 0 }, borderColor: 'divider', minWidth: 0 }}>
               <FiguresList figures={callingFigures} />
@@ -127,7 +131,7 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
               </Box>
               <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
                 <Suspense fallback={<CircularProgress size={24} />}>
-                  <RichTextEditor value={draft} onChange={setDraft} underline={false} autoFocus toolbar={false} onEditorReady={setEditor} />
+                  <RichTextEditor key='edit' value={draft} onChange={setDraft} underline={false} autoFocus toolbar={false} onEditorReady={setEditor} />
                 </Suspense>
               </Box>
             </Box>
@@ -138,7 +142,7 @@ export const WalkthroughDialog = ({ open, onClose, dance, onSave, onOpenCues }: 
               </Box>
               <Box sx={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: { xs: '0.9rem', sm: '1.05rem' }, lineHeight: 1.7 }}>
                 <Suspense fallback={null}>
-                  <RichTextEditor value={dance.walkthrough ?? ''} editable={false} />
+                  <RichTextEditor key='view' value={dance.walkthrough ?? ''} editable={false} />
                 </Suspense>
               </Box>
             </Box>
