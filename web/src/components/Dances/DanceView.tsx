@@ -4,7 +4,8 @@ import { useReactToPrint } from 'react-to-print';
 import { Box, Button, Divider, IconButton, Stack, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import EditIcon from '@mui/icons-material/Edit';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ArticleIcon from '@mui/icons-material/Article';
 import GridOnIcon from '@mui/icons-material/GridOn';
@@ -69,19 +70,41 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
   const hasCues = !!dance.cues && Object.keys(dance.cues.cells).length > 0;
 
   const currentIndex = program?.programs_dances.findIndex(pd => pd.dance.id === dance.id) ?? -1;
+  const prevProgramDance = program && currentIndex > 0 ? program.programs_dances[currentIndex - 1] : undefined;
   const nextProgramDance = program && currentIndex >= 0 ? program.programs_dances[currentIndex + 1] : undefined;
   const nextDance = program && nextProgramDance
     ? { title: nextProgramDance.dance.title, onClick: () => navigate(`/dances/${nextProgramDance.dance.id}?program=${program.id}`) }
     : null;
+  const goToProgramDance = (programDance: { dance: { id: number } }) => navigate(`/dances/${programDance.dance.id}?program=${program!.id}`);
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto' }}>
 
       {/* Nav + actions */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(program ? `/programs/${program.id}` : '/dances')} size='small' color='secondary'>
-          {program ? (program.date ? formatLocalDate(program.date) : 'Program') : 'Dances'}
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          {program && (
+            <Tooltip title={prevProgramDance ? `Previous: ${prevProgramDance.dance.title}` : ''}>
+              <span>
+                <IconButton size='small' disabled={!prevProgramDance} onClick={() => prevProgramDance && goToProgramDance(prevProgramDance)}>
+                  <ChevronLeftIcon fontSize='small' />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
+          <Button onClick={() => navigate(program ? `/programs/${program.id}` : '/dances')} size='small' color='secondary'>
+            {program ? (program.date ? formatLocalDate(program.date) : 'Program') : 'Dances'}
+          </Button>
+          {program && (
+            <Tooltip title={nextProgramDance ? `Next: ${nextProgramDance.dance.title}` : ''}>
+              <span>
+                <IconButton size='small' disabled={!nextProgramDance} onClick={() => nextProgramDance && goToProgramDance(nextProgramDance)}>
+                  <ChevronRightIcon fontSize='small' />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
+        </Box>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           {figures.length > 0 && dance.cues && Object.keys(dance.cues).length > 0 && (
             <Tooltip title='Print combined (8.5x11)'>
