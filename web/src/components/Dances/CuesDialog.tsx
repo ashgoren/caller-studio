@@ -4,6 +4,7 @@ import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, Ic
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import ReplayIcon from '@mui/icons-material/Replay';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useReactToPrint } from 'react-to-print';
 import { GRID_NATURAL_WIDTH, GRID_NATURAL_HEIGHT, CELL_HEIGHT } from './cueGridConstants';
 import { CueGridView, CueNotesView } from './CueGrid';
@@ -39,12 +40,13 @@ const CuesTimer = ({ seconds, running, onToggle, onReset }: {
   </Box>
 );
 
-export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
+export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer, nextDance }: {
   open: boolean;
   onClose: () => void;
   dance: Dance;
   onSave: (v: CueGridData | null) => Promise<void>;
   autoStartTimer?: boolean;
+  nextDance?: { title: string; onClick: () => void } | null;
 }) => {
   const isNarrow = useMediaQuery('(max-width: 900px)');
   const [windowWidth, setWindowWidth] = useState(() => window.innerWidth);
@@ -286,6 +288,17 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer }: {
               </Box>
             </Box>
           </DialogContent>
+        )}
+        {!isEditing && nextDance && (
+          <Button
+            variant='contained'
+            color='secondary'
+            endIcon={<ArrowForwardIcon />}
+            onClick={nextDance.onClick}
+            sx={{ position: 'fixed', bottom: 16, right: 16 }}
+          >
+            {nextDance.title}
+          </Button>
         )}
       </Dialog>
 

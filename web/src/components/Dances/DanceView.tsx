@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useReactToPrint } from 'react-to-print';
 import { Box, Button, Divider, IconButton, Stack, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
@@ -12,8 +12,10 @@ import { ExternalLink, NotesFieldset, ShareLinkButton } from '@/components/share
 import { RelationCell } from '@/components/RelationCell';
 import { useTitle } from '@/contexts/TitleContext';
 import { useUpdateDance } from '@/hooks/useDances';
+import { useProgram } from '@/hooks/usePrograms';
 import { useUndoActions } from '@/contexts/UndoContext';
 import { useNotify } from '@/hooks/useNotify';
+import { formatLocalDate } from '@/lib/utils';
 import { FiguresList } from './FiguresList';
 import { makeFiguresLabel, makeChoreographerNames } from './danceUtils';
 import { PAGE_STYLE_COMBINED, PAGE_STYLE_CHOREOGRAPHY } from './printStyles';
@@ -24,6 +26,9 @@ import type { CueGridData, Dance } from '@/lib/types/database';
 
 export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }: { dance: Dance; onEdit: () => void; figureMode: 'choreography' | 'calling'; onFigureModeChange: (mode: 'choreography' | 'calling') => void }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const programId = Number(searchParams.get('program')) || 0;
+  const { data: program } = useProgram(programId);
   const { mutateAsync: updateDance } = useUpdateDance();
   const { pushAction } = useUndoActions();
   const { toastSuccess } = useNotify();
@@ -63,13 +68,19 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
   const figures = figureMode === 'calling' ? (dance.calling_figures ?? []) : dance.figures;
   const hasCues = !!dance.cues && Object.keys(dance.cues.cells).length > 0;
 
+  const currentIndex = program?.programs_dances.findIndex(pd => pd.dance.id === dance.id) ?? -1;
+  const nextProgramDance = program && currentIndex >= 0 ? program.programs_dances[currentIndex + 1] : undefined;
+  const nextDance = program && nextProgramDance
+    ? { title: nextProgramDance.dance.title, onClick: () => navigate(`/dances/${nextProgramDance.dance.id}?program=${program.id}`) }
+    : null;
+
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto' }}>
 
       {/* Nav + actions */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/dances')} size='small' color='secondary'>
-          Dances
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(program ? `/programs/${program.id}` : '/dances')} size='small' color='secondary'>
+          {program ? (program.date ? formatLocalDate(program.date) : 'Program') : 'Dances'}
         </Button>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           {figures.length > 0 && dance.cues && Object.keys(dance.cues).length > 0 && (
@@ -219,7 +230,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
 
       <WalkthroughDialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} dance={dance} onSave={handleSaveWalkthrough} onOpenCues={() => { setWalkthroughOpen(false); setCuesAutoStart(true); setCuesOpen(true); }} />
 
-      <CuesDialog open={cuesOpen} onClose={() => { setCuesOpen(false); setCuesAutoStart(false); }} dance={dance} onSave={handleSaveCues} autoStartTimer={cuesAutoStart} />
+      <CuesDialog open={cuesOpen} onClose={() => { setCuesOpen(false); setCuesAutoStart(false); }} dance={dance} onSave={handleSaveCues} autoStartTimer={cuesAutoStart} nextDance={nextDance} />
 
       <DancePrintPortals
         dance={dance}

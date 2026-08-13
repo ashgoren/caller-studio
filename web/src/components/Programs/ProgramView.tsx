@@ -49,6 +49,7 @@ export const ProgramViewMode = ({ program, onEdit, onChoreography }: { program: 
               model='dance'
               getId={pd => pd.dance.id}
               getLabel={pd => `${pd.order} - ${pd.dance.title}`}
+              getSearchParams={() => `program=${program.id}`}
             />
           </Box>
         </Box>
