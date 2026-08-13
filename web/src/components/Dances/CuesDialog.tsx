@@ -167,7 +167,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer, nextD
     </Box>
   );
 
-  const headerIcons = <DialogHeaderIcons onPrint={() => printCues()} onEdit={handleStartEdit} editLabel='Edit cues' onClose={onClose} />;
+  const headerIcons = <DialogHeaderIcons onPrint={() => printCues()} onEdit={handleStartEdit} editLabel='Edit cues' onClose={onClose} hideButtons={timerRunning} />;
   const timer = <CuesTimer seconds={timerSeconds} running={timerRunning} onToggle={() => setTimerRunning(r => !r)} onReset={() => { setTimerRunning(false); setTimerSeconds(0); }} />;
 
   return (
@@ -289,7 +289,7 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer, nextD
             </Box>
           </DialogContent>
         )}
-        {!isEditing && nextDance && (
+        {!isEditing && nextDance && !timerRunning && (
           <Button
             variant='contained'
             color='secondary'
