@@ -261,7 +261,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
 
       <WalkthroughDialog open={walkthroughOpen} onClose={() => setWalkthroughOpen(false)} dance={dance} onSave={handleSaveWalkthrough} onOpenCues={() => { setWalkthroughOpen(false); setCuesAutoStart(true); setCuesOpen(true); }} />
 
-      <CuesDialog open={cuesOpen} onClose={() => { setCuesOpen(false); setCuesAutoStart(false); }} dance={dance} onSave={handleSaveCues} autoStartTimer={cuesAutoStart} nextDance={nextDance} />
+      <CuesDialog open={cuesOpen} onClose={() => { setCuesOpen(false); setCuesAutoStart(false); }} dance={dance} onSave={handleSaveCues} autoStartTimer={cuesAutoStart} nextDance={nextDance} onOpenWalkthrough={() => { setCuesOpen(false); setCuesAutoStart(false); setWalkthroughOpen(true); }} />
 
       <DancePrintPortals
         dance={dance}

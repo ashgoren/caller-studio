@@ -5,6 +5,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import ReplayIcon from '@mui/icons-material/Replay';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArticleIcon from '@mui/icons-material/Article';
 import { useReactToPrint } from 'react-to-print';
 import { GRID_NATURAL_WIDTH, GRID_NATURAL_HEIGHT, CELL_HEIGHT } from './cueGridConstants';
 import { CueGridView, CueNotesView } from './CueGrid';
@@ -40,13 +41,14 @@ const CuesTimer = ({ seconds, running, onToggle, onReset }: {
   </Box>
 );
 
-export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer, nextDance }: {
+export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer, nextDance, onOpenWalkthrough }: {
   open: boolean;
   onClose: () => void;
   dance: Dance;
   onSave: (v: CueGridData | null) => Promise<void>;
   autoStartTimer?: boolean;
   nextDance?: { title: string; onClick: () => void } | null;
+  onOpenWalkthrough?: () => void;
 }) => {
   const isNarrow = useMediaQuery('(max-width: 900px)');
   const [windowWidth, setWindowWidth] = useState(() => window.innerWidth);
@@ -288,6 +290,17 @@ export const CuesDialog = ({ open, onClose, dance, onSave, autoStartTimer, nextD
               </Box>
             </Box>
           </DialogContent>
+        )}
+        {!isEditing && onOpenWalkthrough && !timerRunning && (
+          <Button
+            variant='contained'
+            color='secondary'
+            startIcon={<ArticleIcon />}
+            onClick={onOpenWalkthrough}
+            sx={{ position: 'fixed', bottom: 16, left: 16 }}
+          >
+            Walkthrough
+          </Button>
         )}
         {!isEditing && nextDance && !timerRunning && (
           <Button
