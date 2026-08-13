@@ -43,6 +43,7 @@ export const columns: MRT_ColumnDef<Program>[] = [
       model='dance'
       getId={(joinRow) => joinRow.dance.id}
       getLabel={(joinRow) => `${joinRow.order} - ${joinRow.dance.title}`}
+      getSearchParams={() => `program=${row.original.id}`}
     />,
     meta: { inputType: 'relation' },
   }

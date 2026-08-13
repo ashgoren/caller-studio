@@ -80,7 +80,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
             >
               <Link
                 component={RouterLink}
-                to={`/dances/${pd.dance.id}`}
+                to={`/dances/${pd.dance.id}?program=${program.id}`}
                 variant='subtitle2'
                 fontWeight={700}
                 underline='hover'
