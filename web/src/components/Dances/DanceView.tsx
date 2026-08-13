@@ -27,7 +27,7 @@ import type { CueGridData, Dance } from '@/lib/types/database';
 
 export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }: { dance: Dance; onEdit: () => void; figureMode: 'choreography' | 'calling'; onFigureModeChange: (mode: 'choreography' | 'calling') => void }) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const programId = Number(searchParams.get('program')) || 0;
   const { data: program } = useProgram(programId);
   const { mutateAsync: updateDance } = useUpdateDance();
@@ -40,6 +40,14 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
   const [cuesOpen, setCuesOpen] = useState(false);
   const [cuesAutoStart, setCuesAutoStart] = useState(false);
+
+  useEffect(() => {
+    if (!searchParams.get('openWalkthrough')) return;
+    setWalkthroughOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete('openWalkthrough');
+    setSearchParams(next, { replace: true });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSaveWalkthrough = async (value: string) => {
     await updateDance({ id: dance.id, updates: { walkthrough: value } });
@@ -73,7 +81,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
   const prevProgramDance = program && currentIndex > 0 ? program.programs_dances[currentIndex - 1] : undefined;
   const nextProgramDance = program && currentIndex >= 0 ? program.programs_dances[currentIndex + 1] : undefined;
   const nextDance = program && nextProgramDance
-    ? { title: nextProgramDance.dance.title, onClick: () => navigate(`/dances/${nextProgramDance.dance.id}?program=${program.id}`) }
+    ? { title: nextProgramDance.dance.title, onClick: () => navigate(`/dances/${nextProgramDance.dance.id}?program=${program.id}&openWalkthrough=1`) }
     : null;
   const goToProgramDance = (programDance: { dance: { id: number } }) => navigate(`/dances/${programDance.dance.id}?program=${program!.id}`);
 
