@@ -37,13 +37,12 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
   const { setTitle } = useTitle();
   useEffect(() => setTitle(dance.title), [setTitle, dance.title]);
 
-  const [walkthroughOpen, setWalkthroughOpen] = useState(false);
+  const [walkthroughOpen, setWalkthroughOpen] = useState(() => !!searchParams.get('openWalkthrough'));
   const [cuesOpen, setCuesOpen] = useState(false);
   const [cuesAutoStart, setCuesAutoStart] = useState(false);
 
   useEffect(() => {
     if (!searchParams.get('openWalkthrough')) return;
-    setWalkthroughOpen(true);
     const next = new URLSearchParams(searchParams);
     next.delete('openWalkthrough');
     setSearchParams(next, { replace: true });
