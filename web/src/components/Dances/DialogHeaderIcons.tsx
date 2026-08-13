@@ -11,7 +11,7 @@ export const DialogHeaderIcons = ({ onPrint, onEdit, editLabel, onClose, hideBut
   onClose: () => void;
   hideButtons?: boolean;
 }) => (
-  <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, px: 1, py: 0.5, flexShrink: 0, minHeight: 40 }}>
+  <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, px: 1, py: 0.5, flexShrink: 0, minHeight: 40 }}>
     {!hideButtons && onPrint && (
       <Tooltip title='Print'>
         <IconButton size='small' onClick={onPrint} sx={{ '@media (max-width: 900px)': { display: 'none' } }}><PrintIcon fontSize='small' /></IconButton>

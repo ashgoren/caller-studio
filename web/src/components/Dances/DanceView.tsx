@@ -172,7 +172,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
                 Calling
               </ToggleButton>
             </ToggleButtonGroup>
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', gap: 1.5 }}>
               {dance.figures.length > 0 && (
                 <Tooltip title='Print choreography'>
                   <IconButton size='small' onClick={() => printChoreography()} sx={{ '@media (max-width: 900px)': { display: 'none' } }}>
