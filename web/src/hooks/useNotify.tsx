@@ -10,7 +10,6 @@ export const useNotify = () => {
   return {
     toastSuccess: (message: string, options: { undo?: boolean } = {}) => enqueueSnackbar(message, {
       variant: 'success',
-      anchorOrigin: { vertical: 'top', horizontal: 'right' },
       action: (snackbarId) => (
         <>
           {options.undo !== false && (
@@ -24,9 +23,6 @@ export const useNotify = () => {
         </>
       )
     }),
-    toastError: (message: string) => enqueueSnackbar(message, {
-      variant: 'error',
-      anchorOrigin: { vertical: 'top', horizontal: 'center' }
-    })
+    toastError: (message: string) => enqueueSnackbar(message, { variant: 'error' })
   };
 };

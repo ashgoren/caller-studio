@@ -26,7 +26,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
         autoHideDuration={4000}
         disableWindowBlurListener
         iconVariant={{ error: <ErrorOutlineIcon sx={{mr: 1}} />  }}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         action={(snackbarId) => (
           <IconButton size='small' color='inherit' onClick={() => closeSnackbar(snackbarId)}>
             <CloseIcon fontSize='small' />
