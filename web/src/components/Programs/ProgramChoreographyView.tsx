@@ -58,7 +58,7 @@ export const ProgramChoreographyView = ({ program, onBack }: { program: Program;
         </Button>
         {allPhrases.length > 0 && (
           <Tooltip title='Print choreography'>
-            <IconButton size='small' onClick={() => printChoreography()}><PrintIcon fontSize='small' /></IconButton>
+            <IconButton size='small' onClick={() => printChoreography()} sx={{ '@media (max-width: 900px)': { display: 'none' } }}><PrintIcon fontSize='small' /></IconButton>
           </Tooltip>
         )}
       </Box>

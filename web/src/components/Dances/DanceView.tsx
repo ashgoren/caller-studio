@@ -115,7 +115,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           {figures.length > 0 && dance.cues && Object.keys(dance.cues).length > 0 && (
             <Tooltip title='Print combined (8.5x11)'>
-              <IconButton size='small' onClick={() => printCombined()}><PrintIcon fontSize='small' /></IconButton>
+              <IconButton size='small' onClick={() => printCombined()} sx={{ '@media (max-width: 900px)': { display: 'none' } }}><PrintIcon fontSize='small' /></IconButton>
             </Tooltip>
           )}
           <ShareLinkButton kind='d' token={dance.share_token} />
@@ -175,7 +175,7 @@ export const DanceViewMode = ({ dance, onEdit, figureMode, onFigureModeChange }:
             <Box sx={{ display: 'flex', gap: 0.5 }}>
               {dance.figures.length > 0 && (
                 <Tooltip title='Print choreography'>
-                  <IconButton size='small' onClick={() => printChoreography()}>
+                  <IconButton size='small' onClick={() => printChoreography()} sx={{ '@media (max-width: 900px)': { display: 'none' } }}>
                     <PrintIcon fontSize='small' />
                   </IconButton>
                 </Tooltip>
