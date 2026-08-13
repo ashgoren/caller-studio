@@ -44,8 +44,19 @@ export const PAGE_STYLE_CUES = `
 `;
 
 export const PAGE_STYLE_COMBINED = `
-  @page { size: 8.5in 11in; margin: 0.25in 3.5in 0.25in 0.25in; }
-` + BASE_SANS;
+  @page { size: 8.5in 11in; margin: 0.4in; }
+  @page :first { margin: 0.25in 3.5in 0.25in 0.25in; }
+` + BASE_SANS + `
+  .print-walkthrough-page, .print-walkthrough-page * { font-family: Georgia, serif !important; }
+  .print-walkthrough-content p { margin: 0 0 1em 0 !important; font-size: 11pt !important; }
+  .print-walkthrough-content p:last-child { margin-bottom: 0 !important; }
+  .print-walkthrough-content h1 { font-size: 20pt !important; font-weight: bold !important; margin: 0 0 0.4em 0 !important; }
+  .print-walkthrough-content h2 { font-size: 16pt !important; font-weight: bold !important; margin: 0 0 0.4em 0 !important; }
+  .print-walkthrough-content h3 { font-size: 13pt !important; font-weight: bold !important; margin: 0 0 0.4em 0 !important; }
+  .print-walkthrough-content ul, .print-walkthrough-content ol { margin: 0 0 0.6em 0 !important; padding-left: 1.4em !important; font-size: 11pt !important; }
+  .print-walkthrough-content li { font-size: 11pt !important; }
+  .print-walkthrough-content hr { margin: 1.4em 0 !important; border-color: #888 !important; }
+`;
 
 export const PAGE_STYLE_CHOREOGRAPHY = `
   @page { size: 8.5in 11in; margin: 0.5in 0.6in; }

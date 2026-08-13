@@ -1,8 +1,10 @@
 import { createPortal } from 'react-dom';
-import type { RefObject } from 'react';
+import { lazy, Suspense, type RefObject } from 'react';
 import { SECTIONS, COLS, INTRO_COLS, cellKey } from './cueGridConstants';
 import { PRINT_CUES_COMBINED } from './printStyles';
 import type { Dance, FigureItem, CueGridData } from '@/lib/types/database';
+
+const RichTextEditor = lazy(() => import('@/components/shared/RichTextEditor').then(m => ({ default: m.RichTextEditor })));
 
 // --- Shared print helpers ---
 
@@ -106,6 +108,17 @@ export const PrintCuesTable = ({
   );
 };
 
+const PrintHeader = ({ title, figuresLabel, choreographerNames }: { title: string; figuresLabel: string; choreographerNames: string }) => (
+  <>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+      <div style={{ fontSize: '16pt', fontWeight: 'bold', lineHeight: 1.2, fontFamily: 'Georgia, serif' }}>{title}</div>
+      {figuresLabel && <div style={{ fontSize: '10pt', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'Georgia, serif' }}>{figuresLabel}</div>}
+    </div>
+    {choreographerNames && <div style={{ fontSize: '10pt', fontStyle: 'italic', marginBottom: '0.3em', fontFamily: 'Georgia, serif' }}>by {choreographerNames}</div>}
+    <hr style={{ border: 'none', borderTop: '1px solid black', margin: '0.2em 0 0.8em 0' }} />
+  </>
+);
+
 // --- Exported component ---
 
 export const DancePrintPortals = ({
@@ -134,12 +147,7 @@ export const DancePrintPortals = ({
         <div style={{ position: 'fixed', top: '-9999px', left: 0, width: 456 }}>
           <div ref={combinedPrintRef} style={{ background: 'white', color: 'black' }}>
             <div style={{ height: 504, overflow: 'hidden', boxSizing: 'border-box', borderBottom: '2px dashed #999' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <div style={{ fontSize: '16pt', fontWeight: 'bold', lineHeight: 1.2, fontFamily: 'Georgia, serif' }}>{title}</div>
-                {figuresLabel && <div style={{ fontSize: '10pt', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'Georgia, serif' }}>{figuresLabel}</div>}
-              </div>
-              {choreographerNames && <div style={{ fontSize: '10pt', fontStyle: 'italic', marginBottom: '0.3em', fontFamily: 'Georgia, serif' }}>by {choreographerNames}</div>}
-              <hr style={{ border: 'none', borderTop: '1px solid black', margin: '0.2em 0 0.8em 0' }} />
+              <PrintHeader title={title} figuresLabel={figuresLabel} choreographerNames={choreographerNames} />
               <div style={{ fontFamily: 'Georgia, serif' }}>
                 <PrintFigureList figures={printFigures} fontSize='10pt' phraseGap='0.8em' contGap='0.25em' beatsWidth='2.8em' />
               </div>
@@ -147,6 +155,16 @@ export const DancePrintPortals = ({
             <div style={{ height: 504, overflow: 'hidden', boxSizing: 'border-box' }}>
               <PrintCuesTable cues={cues} {...PRINT_CUES_COMBINED} />
             </div>
+            {dance.walkthrough && (
+              <div className='print-walkthrough-page' style={{ breakBefore: 'page' }}>
+                <PrintHeader title={title} figuresLabel={figuresLabel} choreographerNames={choreographerNames} />
+                <div className='print-walkthrough-content' style={{ fontSize: '11pt', lineHeight: 1.4 }}>
+                  <Suspense fallback={null}>
+                    <RichTextEditor value={dance.walkthrough} editable={false} />
+                  </Suspense>
+                </div>
+              </div>
+            )}
           </div>
         </div>,
         document.body
